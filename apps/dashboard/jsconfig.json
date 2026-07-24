@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"],
+      "@ui/*": ["../../packages/ui/*"],
+      "ui/components/*": ["../../packages/ui/components/ui/*"],
+      "utils": ["../../packages/utils/index.js"],
+      "utils/*": ["../../packages/utils/src/*"]
+    }
+  }
+}

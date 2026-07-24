@@ -1,0 +1,28 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.*
+**/node_modules
+
+# Build & cache
+.turbo
+**/.next
+**/out
+**/dist
+node_modules/.pnpm-store
+
+# Env (keep .env.example)
+# .env
+# .env.*
+!.env.example
+
+# Logs & debug
+*.log
+.pnpm-debug.log*
+.DS_Store
+
+# IDE
+.idea
+temp_auto_push.bat
+temp_interactive_push.bat
+branch_structure.json
