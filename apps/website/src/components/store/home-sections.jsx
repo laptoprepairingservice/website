@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Award, Headphones, Shield, Truck } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@ui/shadcn/components/button";
 import { ProductGrid } from "@/components/store/product-card";
 import { StarRating } from "@/components/store/star-rating";
 import {

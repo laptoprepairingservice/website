@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { ArrowRight, Mail } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@ui/shadcn/components/button";
+import { Input } from "@ui/shadcn/components/input";
 import { toast } from "sonner";
 
 export function Newsletter({ className }) {

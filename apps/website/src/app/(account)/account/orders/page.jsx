@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@ui/shadcn/components/badge";
 import { formatPrice } from "@/lib/format";
 
 const ORDERS = [

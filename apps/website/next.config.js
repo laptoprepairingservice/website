@@ -1,4 +1,5 @@
 const nextConfig = {
+  transpilePackages: ["@ui/shadcn"],
   images: {
     remotePatterns: [
       {

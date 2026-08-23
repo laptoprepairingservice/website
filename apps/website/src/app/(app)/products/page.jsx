@@ -1,5 +1,5 @@
-import { Breadcrumb } from "@/components/ui/breadcrumb";
-import { Pagination } from "@/components/ui/pagination";
+import { Breadcrumb } from "@ui/shadcn/components/breadcrumb";
+import { Pagination } from "@ui/shadcn/components/pagination";
 import { ProductFilters } from "@/components/store/product-filters";
 import { ProductGrid } from "@/components/store/product-card";
 import { CATEGORIES, PRODUCTS, getProductsByCategory } from "@/lib/data/products";

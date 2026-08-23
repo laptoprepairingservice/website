@@ -2,10 +2,10 @@
 
 import { useEffect } from "react";
 import { X } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { cn } from "../lib/utils";
+import { Button } from "./button";
 
-export function Modal({ open, onClose, title, description, children, className }) {
+function Modal({ open, onClose, title, description, children, className }) {
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -26,6 +26,7 @@ export function Modal({ open, onClose, title, description, children, className }
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? "modal-title" : undefined}
+        data-slot="dialog"
         className={cn("relative z-10 w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-xl", className)}
       >
         <div className="mb-4 flex items-start justify-between gap-4">
@@ -47,7 +48,7 @@ export function Modal({ open, onClose, title, description, children, className }
   );
 }
 
-export function Drawer({ open, onClose, title, children, side = "right", className }) {
+function Drawer({ open, onClose, title, children, side = "right", className }) {
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -77,6 +78,7 @@ export function Drawer({ open, onClose, title, children, side = "right", classNa
       <div
         role="dialog"
         aria-modal="true"
+        data-slot="sheet"
         className={cn(
           "fixed z-50 flex flex-col border-border bg-card shadow-xl transition-transform duration-300",
           sideClasses[side],
@@ -95,3 +97,5 @@ export function Drawer({ open, onClose, title, children, side = "right", classNa
     </>
   );
 }
+
+export { Modal, Drawer };

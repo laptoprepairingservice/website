@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { FormField, Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@ui/shadcn/components/button";
+import { FormField, Input } from "@ui/shadcn/components/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@ui/shadcn/components/card";
 import { OrderTimeline } from "@/components/store/order-timeline";
 
 export default function OrderTrackingPage() {

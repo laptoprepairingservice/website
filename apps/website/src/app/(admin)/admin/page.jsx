@@ -1,5 +1,5 @@
 import { FileText, Image, Package, Settings } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@ui/shadcn/components/card";
 
 export const metadata = {
   title: "Admin Dashboard",

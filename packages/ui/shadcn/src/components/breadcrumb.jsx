@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { ChevronRight, Home } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "../lib/utils";
 
-export function Breadcrumb({ items = [], className }) {
+function Breadcrumb({ items = [], className }) {
   return (
-    <nav aria-label="Breadcrumb" className={cn("flex items-center gap-1 text-sm text-muted-foreground", className)}>
+    <nav
+      aria-label="Breadcrumb"
+      data-slot="breadcrumb"
+      className={cn("flex items-center gap-1 text-sm text-muted-foreground", className)}
+    >
       <Link href="/" className="flex items-center gap-1 transition-colors hover:text-foreground">
         <Home className="size-3.5" />
         <span className="sr-only">Home</span>
@@ -26,3 +30,5 @@ export function Breadcrumb({ items = [], className }) {
     </nav>
   );
 }
+
+export { Breadcrumb };

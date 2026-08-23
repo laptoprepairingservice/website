@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { Clock, Search, TrendingUp } from "lucide-react";
-import { Breadcrumb } from "@/components/ui/breadcrumb";
-import { Input } from "@/components/ui/input";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Breadcrumb } from "@ui/shadcn/components/breadcrumb";
+import { Input } from "@ui/shadcn/components/input";
+import { EmptyState } from "@ui/shadcn/components/empty-state";
 import { ProductGrid } from "@/components/store/product-card";
-import { Button } from "@/components/ui/button";
+import { Button } from "@ui/shadcn/components/button";
 import { POPULAR_SEARCHES, PRODUCTS, RECENT_SEARCHES } from "@/lib/data/products";
 
 export function SearchResults({ query = "" }) {

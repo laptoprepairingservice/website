@@ -4,8 +4,8 @@ import { useState } from "react";
 import Image from "next/image";
 import { Grid, List, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@ui/shadcn/components/button";
+import { Input } from "@ui/shadcn/components/input";
 
 const MEDIA = [
   { id: "1", name: "rtx-4090-hero.jpg", url: "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=400&h=300&fit=crop", size: "245 KB" },

@@ -3,11 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Breadcrumb } from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FormField, Input, Textarea } from "@/components/ui/input";
-import { RadioGroup } from "@/components/ui/form-controls";
+import { Breadcrumb } from "@ui/shadcn/components/breadcrumb";
+import { Button } from "@ui/shadcn/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@ui/shadcn/components/card";
+import { FormField, Input, Textarea } from "@ui/shadcn/components/input";
+import { RadioGroup } from "@ui/shadcn/components/form-controls";
 import { formatPrice } from "@/lib/format";
 import { PRODUCTS } from "@/lib/data/products";
 import { STORE } from "@/lib/store-config";

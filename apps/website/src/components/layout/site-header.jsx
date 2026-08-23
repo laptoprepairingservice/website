@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Heart, Menu, Search, ShoppingCart, User, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@ui/shadcn/components/button";
+import { Input } from "@ui/shadcn/components/input";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { NAV_LINKS, STORE } from "@/lib/store-config";
 import { cn } from "@/lib/utils";

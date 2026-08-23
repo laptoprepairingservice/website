@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FormField, Input, Textarea } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@ui/shadcn/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@ui/shadcn/components/card";
+import { FormField, Input, Textarea } from "@ui/shadcn/components/input";
+import { Badge } from "@ui/shadcn/components/badge";
 
 const PAGES = [
   { id: "1", title: "About Us", slug: "/about", status: "Published", updated: "Jan 15, 2026" },

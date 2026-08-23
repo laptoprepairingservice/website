@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { FormField, Input } from "@/components/ui/input";
+import { Button } from "@ui/shadcn/components/button";
+import { FormField, Input } from "@ui/shadcn/components/input";
 
 export default function ForgotPasswordPage() {
   const handleSubmit = (e) => {

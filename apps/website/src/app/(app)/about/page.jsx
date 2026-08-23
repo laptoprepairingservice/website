@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Award, MapPin, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@ui/shadcn/components/button";
 import { STORE } from "@/lib/store-config";
 
 export const metadata = {

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, Heart, Package, ShoppingBag } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@ui/shadcn/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@ui/shadcn/components/card";
+import { Badge } from "@ui/shadcn/components/badge";
 import { formatPrice } from "@/lib/format";
 import { PRODUCTS } from "@/lib/data/products";
 

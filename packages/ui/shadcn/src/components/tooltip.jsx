@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "../lib/utils";
 
-export function Tooltip({ content, children, className }) {
+function Tooltip({ content, children, className }) {
   const [visible, setVisible] = useState(false);
 
   return (
@@ -18,6 +18,7 @@ export function Tooltip({ content, children, className }) {
       {visible && (
         <span
           role="tooltip"
+          data-slot="tooltip"
           className="absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-primary px-3 py-1.5 text-xs text-primary-foreground shadow-md"
         >
           {content}
@@ -26,3 +27,5 @@ export function Tooltip({ content, children, className }) {
     </span>
   );
 }
+
+export { Tooltip };

@@ -1,13 +1,17 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { cn } from "../lib/utils";
+import { Button } from "./button";
 
-export function Pagination({ currentPage = 1, totalPages = 1, baseHref = "?", className }) {
+function Pagination({ currentPage = 1, totalPages = 1, baseHref = "?", className }) {
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   return (
-    <nav aria-label="Pagination" className={cn("flex items-center justify-center gap-2", className)}>
+    <nav
+      aria-label="Pagination"
+      data-slot="pagination"
+      className={cn("flex items-center justify-center gap-2", className)}
+    >
       <Button
         variant="outline"
         size="icon-sm"
@@ -60,3 +64,5 @@ export function Pagination({ currentPage = 1, totalPages = 1, baseHref = "?", cl
     </nav>
   );
 }
+
+export { Pagination };

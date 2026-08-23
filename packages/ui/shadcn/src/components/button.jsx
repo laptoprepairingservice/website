@@ -1,11 +1,11 @@
 "use client";
 
-import { cloneElement, isValidElement } from "react";
+import { Slot } from "@radix-ui/react-slot";
 import { cva } from "class-variance-authority";
-import { cn } from "@/lib/utils";
+import { cn } from "../lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -31,21 +31,16 @@ const buttonVariants = cva(
   }
 );
 
-export function Button({ className, variant, size, asChild, children, ...props }) {
-  const classes = cn(buttonVariants({ variant, size, className }));
-
-  if (asChild && isValidElement(children)) {
-    return cloneElement(children, {
-      ...props,
-      className: cn(classes, children.props.className),
-    });
-  }
+function Button({ className, variant, size, asChild = false, ...props }) {
+  const Comp = asChild ? Slot : "button";
 
   return (
-    <button className={classes} {...props}>
-      {children}
-    </button>
+    <Comp
+      data-slot="button"
+      className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+    />
   );
 }
 
-export { buttonVariants };
+export { Button, buttonVariants };

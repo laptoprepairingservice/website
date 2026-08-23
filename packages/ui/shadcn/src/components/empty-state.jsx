@@ -1,8 +1,11 @@
-import { cn } from "@/lib/utils";
+import { cn } from "../lib/utils";
 
-export function EmptyState({ icon: Icon, title, description, action, className }) {
+function EmptyState({ icon: Icon, title, description, action, className }) {
   return (
-    <div className={cn("flex flex-col items-center justify-center px-4 py-16 text-center", className)}>
+    <div
+      data-slot="empty-state"
+      className={cn("flex flex-col items-center justify-center px-4 py-16 text-center", className)}
+    >
       {Icon && (
         <div className="mb-4 flex size-16 items-center justify-center rounded-2xl bg-muted">
           <Icon className="size-8 text-muted-foreground" />
@@ -15,7 +18,7 @@ export function EmptyState({ icon: Icon, title, description, action, className }
   );
 }
 
-export function ErrorState({ title = "Something went wrong", description, action, className }) {
+function ErrorState({ title = "Something went wrong", description, action, className }) {
   return (
     <EmptyState
       className={className}
@@ -26,7 +29,7 @@ export function ErrorState({ title = "Something went wrong", description, action
   );
 }
 
-export function LoadingState({ message = "Loading..." }) {
+function LoadingState({ message = "Loading..." }) {
   return (
     <div className="flex flex-col items-center justify-center py-24">
       <div className="size-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
@@ -34,3 +37,5 @@ export function LoadingState({ message = "Loading..." }) {
     </div>
   );
 }
+
+export { EmptyState, ErrorState, LoadingState };

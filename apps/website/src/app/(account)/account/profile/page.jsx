@@ -1,9 +1,9 @@
 "use client";
 
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FormField, Input } from "@/components/ui/input";
+import { Button } from "@ui/shadcn/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@ui/shadcn/components/card";
+import { FormField, Input } from "@ui/shadcn/components/input";
 
 export default function ProfilePage() {
   const handleSubmit = (e) => {

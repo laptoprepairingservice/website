@@ -1,9 +1,9 @@
 "use client";
 
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FormField, Input, Textarea } from "@/components/ui/input";
+import { Button } from "@ui/shadcn/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@ui/shadcn/components/card";
+import { FormField, Input, Textarea } from "@ui/shadcn/components/input";
 import { STORE } from "@/lib/store-config";
 
 export default function AdminSettingsPage() {

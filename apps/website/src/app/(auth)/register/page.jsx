@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { FormField, Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/form-controls";
+import { Button } from "@ui/shadcn/components/button";
+import { FormField, Input } from "@ui/shadcn/components/input";
+import { Checkbox } from "@ui/shadcn/components/form-controls";
 
 export default function RegisterPage() {
   const handleSubmit = (e) => {

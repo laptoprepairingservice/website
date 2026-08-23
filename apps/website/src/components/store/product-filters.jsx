@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Checkbox, Select } from "@/components/ui/form-controls";
-import { Drawer } from "@/components/ui/modal";
+import { Button } from "@ui/shadcn/components/button";
+import { Checkbox, Select } from "@ui/shadcn/components/form-controls";
+import { Drawer } from "@ui/shadcn/components/modal";
 import { BRANDS, CATEGORIES } from "@/lib/data/products";
 import { cn } from "@/lib/utils";
 
