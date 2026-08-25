@@ -9,9 +9,10 @@ import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { NAV_LINKS, STORE } from "@/lib/store-config";
 import { cn } from "@/lib/utils";
 
-export function SiteHeader() {
+export function SiteHeader({ user }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const isSignedIn = Boolean(user);
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur-md">
@@ -72,9 +73,9 @@ export function SiteHeader() {
               </Link>
             </Button>
             <Button variant="outline" size="sm" className="hidden sm:inline-flex" asChild>
-              <Link href="/login">
+              <Link href={isSignedIn ? "/account" : "/login"}>
                 <User />
-                Login
+                {isSignedIn ? "Account" : "Login"}
               </Link>
             </Button>
           </div>
@@ -123,11 +124,11 @@ export function SiteHeader() {
             </Link>
           ))}
           <Link
-            href="/login"
+            href={isSignedIn ? "/account" : "/login"}
             className="block rounded-lg px-4 py-3 text-sm font-medium hover:bg-accent"
             onClick={() => setMobileMenuOpen(false)}
           >
-            Login / Register
+            {isSignedIn ? "Account" : "Login / Register"}
           </Link>
         </nav>
       </div>

@@ -1,14 +1,31 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { toast } from "sonner";
 import { Button } from "@ui/shadcn/components/button";
 import { FormField, Input } from "@ui/shadcn/components/input";
+import { forgotPasswordAction } from "@/lib/auth-actions";
 
 export default function ForgotPasswordPage() {
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    toast.success("Reset link sent!", { description: "Check your email for instructions." });
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [pending, setPending] = useState(false);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setPending(true);
+    setError("");
+    setSuccess(false);
+
+    const result = await forgotPasswordAction(new FormData(event.currentTarget));
+    setPending(false);
+
+    if (result?.error) {
+      setError(result.error);
+      return;
+    }
+
+    setSuccess(true);
   };
 
   return (
@@ -20,14 +37,28 @@ export default function ForgotPasswordPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <FormField label="Email" id="email">
-          <Input id="email" type="email" required placeholder="you@example.com" />
-        </FormField>
-        <Button type="submit" size="lg" className="w-full">
-          Send Reset Link
-        </Button>
-      </form>
+      {success ? (
+        <p className="rounded-xl bg-success/10 px-4 py-3 text-sm text-success">
+          If an account exists for that email, a reset link is on its way.
+        </p>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <FormField label="Email" id="email">
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              required
+              placeholder="you@example.com"
+              autoComplete="email"
+            />
+          </FormField>
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          <Button type="submit" size="lg" className="w-full" disabled={pending}>
+            {pending ? "Sending..." : "Send Reset Link"}
+          </Button>
+        </form>
+      )}
 
       <p className="text-center text-sm text-muted-foreground">
         <Link href="/login" className="font-medium text-primary hover:underline">

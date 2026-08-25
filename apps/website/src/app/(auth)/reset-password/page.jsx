@@ -1,14 +1,25 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { toast } from "sonner";
 import { Button } from "@ui/shadcn/components/button";
 import { FormField, Input } from "@ui/shadcn/components/input";
+import { resetPasswordAction } from "@/lib/auth-actions";
 
 export default function ResetPasswordPage() {
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    toast.success("Password updated!", { description: "You can now sign in with your new password." });
+  const [error, setError] = useState("");
+  const [pending, setPending] = useState(false);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setPending(true);
+    setError("");
+
+    const result = await resetPasswordAction(new FormData(event.currentTarget));
+    if (result?.error) {
+      setError(result.error);
+      setPending(false);
+    }
   };
 
   return (
@@ -20,13 +31,30 @@ export default function ResetPasswordPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <FormField label="New Password" id="password">
-          <Input id="password" type="password" required placeholder="Min. 8 characters" minLength={8} />
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            required
+            placeholder="Min. 8 characters"
+            minLength={8}
+            autoComplete="new-password"
+          />
         </FormField>
-        <FormField label="Confirm Password" id="confirmPassword">
-          <Input id="confirmPassword" type="password" required placeholder="Confirm password" minLength={8} />
+        <FormField label="Confirm Password" id="confirm_password">
+          <Input
+            id="confirm_password"
+            name="confirm_password"
+            type="password"
+            required
+            placeholder="Confirm password"
+            minLength={8}
+            autoComplete="new-password"
+          />
         </FormField>
-        <Button type="submit" size="lg" className="w-full">
-          Update Password
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <Button type="submit" size="lg" className="w-full" disabled={pending}>
+          {pending ? "Updating..." : "Update Password"}
         </Button>
       </form>
 

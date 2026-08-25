@@ -1,3 +1,8 @@
+/**
+ * @file old-utility.js
+ * @deprecated This entire file is deprecated. Migrate to 'new-utility.js'.
+ */
+
 export const STORE = {
   name: "Ranuja",
   tagline: "Premium Computer Hardware",
