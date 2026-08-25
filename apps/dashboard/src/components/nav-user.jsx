@@ -20,7 +20,6 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "ui/
 import { Switch } from "ui/components/switch";
 import { ThemeSwitcherMenu } from "./theme-switcher-menu";
 import { AvatarImage } from "./user/avatar";
-import { signOut } from "next-auth/react";
 
 export function NavUser({ user }) {
   const { isMobile } = useSidebar();
@@ -28,8 +27,7 @@ export function NavUser({ user }) {
 
   const router = useRouter();
   function handleLogout() {
-    signOut();
-    router.push("/login");
+    router.push("/logout");
   }
 
   const toggleSensitiveOps = () => {
@@ -39,7 +37,9 @@ export function NavUser({ user }) {
     }));
   };
 
-  const userType = user?.user_type?.charAt(0).toUpperCase() + user?.user_type?.slice(1);
+  const userType = user?.role
+    ? `${user.role.charAt(0).toUpperCase()}${user.role.slice(1)}`
+    : "Admin";
 
   return (
     <SidebarMenu>

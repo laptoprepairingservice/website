@@ -1,9 +1,9 @@
 {
-  "name": "frontend-admin",
-  "version": "1.0.2",
+  "name": "dashboard",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3001",
+    "dev": "next dev -p 3003",
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --ext js,jsx,ts,tsx",
@@ -13,8 +13,11 @@
   "dependencies": {
     "@7span/react-list": "^0.0.6",
     "@hookform/resolvers": "^5.2.2",
+    "@supabase/ssr": "^0.12.4",
+    "@supabase/supabase-js": "^2.112.3",
     "@tanstack/react-query": "^5.90.12",
     "@tanstack/react-table": "^8.21.3",
+    "@ui/shadcn": "workspace:*",
     "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -24,7 +27,7 @@
     "lucide-react": "^0.544.0",
     "motion": "^12.23.24",
     "next": "^16.1.6",
-    "next-auth": "^4.24.13",
+    "next-auth": "5.0.0-beta.32",
     "puppeteer": "^24.37.5",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",

@@ -1,7 +1,10 @@
+import { DashboardHeader } from "./_components/dashboard-header";
 
-export default async function RootLayout({ children }) {
-  
+export default function AppLayout({ children }) {
   return (
-      <>{children}</>
+    <div className="bg-background min-h-svh">
+      <DashboardHeader />
+      <main className="p-6">{children}</main>
+    </div>
   );
 }

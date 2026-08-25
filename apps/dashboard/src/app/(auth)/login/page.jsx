@@ -1,10 +1,10 @@
-"use client";
+import { Suspense } from "react";
+import LoginForm from "./_components/login-form";
 
-
-export default function Page() {
+export default function LoginPage() {
   return (
-    <div className="grid min-h-svh lg:grid-cols-2">
-            Do Nothing Just Code...
-    </div>
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

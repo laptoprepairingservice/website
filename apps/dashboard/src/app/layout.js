@@ -1,38 +1,32 @@
-import { Federo, Lexend, Mulish } from "next/font/google";
+import { Mulish } from "next/font/google";
+import { Toaster } from "sonner";
+import { AppProvider } from "@/app/_context";
+import { getCurrentUser } from "@/lib/user";
 import "./globals.css";
 
 const mulish = Mulish({
-  variable: "--font-body",
+  variable: "--font-inter",
   subsets: ["latin"],
   weight: ["200", "300", "400", "500", "600", "700", "800", "900"],
 });
 
-const lexend = Lexend({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
-});
-
-const federo = Federo({
-  variable: "--font-decorative",
-  subsets: ["latin"],
-  weight: ["400"],
-});
-
 export const generateMetadata = async () => {
   return {
-    title: "Dashboard",
-    description: "Sabako jaldi hein",
+    title: "Ranuja Admin",
+    description: "Ranuja store dashboard",
   };
 };
 
-export default function Layout({ children }) {
+export default async function Layout({ children }) {
+  const user = await getCurrentUser();
+
   return (
-    <html lang="en" suppressHydrationWarning className="theme-soft-pop">
-      <body
-        className={`${mulish.variable} ${lexend.variable} ${federo.variable} font-body font-semibold antialiased`}
-      >
-        <>{children}</>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${mulish.variable} font-sans antialiased`}>
+        <AppProvider user={user}>
+          {children}
+          <Toaster position="top-right" richColors closeButton />
+        </AppProvider>
       </body>
     </html>
   );

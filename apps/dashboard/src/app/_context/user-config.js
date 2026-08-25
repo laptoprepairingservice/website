@@ -2,12 +2,11 @@ export const normalizeUser = (userData) => {
   if (!userData) return null;
   return {
     ...userData,
-    isAdmin: userData.user_type == "admin" ? true : false,
+    isAdmin: userData.role === "admin" || userData.isAdmin === true,
   };
 };
 
-export const normalizeEntitlements = (userData) => {
-  if (!userData) return null;
+export const normalizeEntitlements = () => {
   return {
     isSensitiveVisible: false,
   };

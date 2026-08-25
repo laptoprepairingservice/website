@@ -1,5 +1,13 @@
 {
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
+    "jsx": "preserve",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
       "@/*": ["./src/*"],
       "@ui/*": ["../../packages/ui/*"],
@@ -8,5 +16,7 @@
       "utils": ["../../packages/utils/index.js"],
       "utils/*": ["../../packages/utils/src/*"]
     }
-  }
+  },
+  "include": ["**/*.js", "**/*.jsx"],
+  "exclude": ["node_modules"]
 }

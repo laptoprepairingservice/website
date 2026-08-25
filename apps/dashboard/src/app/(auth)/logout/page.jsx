@@ -1,26 +1,12 @@
 "use client";
 
-import Cookies from "js-cookie";
-import { signOut } from "next-auth/react";
 import { useEffect } from "react";
+import { logoutAction } from "./_components/logout-action";
 
-export default function Page() {
+export default function LogoutPage() {
   useEffect(() => {
-    const run = async () => {
-      Cookies.remove("token");
-      await signOut({ redirect: false });
-
-      const params = new URLSearchParams(window.location.search);
-      const callbackUrl = params.get("callbackUrl");
-      const loginUrl = callbackUrl
-        ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
-        : "/login";
-
-      window.location.replace(loginUrl);
-    };
-
-    run();
+    logoutAction();
   }, []);
 
-  return null;
+  return <p className="text-muted-foreground text-sm">Signing out...</p>;
 }
