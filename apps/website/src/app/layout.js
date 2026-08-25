@@ -1,8 +1,8 @@
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
-import { STORE } from "@/lib/store-config";
-import { AuthSessionProvider } from "@/components/providers/session-provider";
+import { AppProvider } from "@/app/_context";
+import { getCurrentUser } from "@/lib/user";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -11,40 +11,23 @@ const inter = Inter({
 });
 
 export const metadata = {
-  metadataBase: new URL("https://Ranuja.in"),
   title: {
-    default: `${STORE.name} — ${STORE.tagline} | Ahmedabad`,
-    template: `%s | ${STORE.name}`,
-  },
-  description:
-    "Premium computer hardware store in Ahmedabad, India. Genuine processors, graphics cards, motherboards, RAM, SSDs, monitors, and peripherals with fast delivery across Gujarat.",
-  keywords: [
-    "computer hardware Ahmedabad",
-    "PC components India",
-    "graphics card",
-    "processor",
-    "gaming PC parts",
-    "Ranuja",
-  ],
-  openGraph: {
-    type: "website",
-    locale: "en_IN",
-    siteName: STORE.name,
-  },
-  robots: {
-    index: true,
-    follow: true,
+    default: `Ahmedabad`,
+    template: `%s | default`,
   },
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const user = await getCurrentUser();
+  console.log(user);
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <AuthSessionProvider>
+        <AppProvider user={user}>
           {children}
           <Toaster position="top-right" richColors closeButton />
-        </AuthSessionProvider>
+        </AppProvider>
       </body>
     </html>
   );

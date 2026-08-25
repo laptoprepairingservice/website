@@ -1,8 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight, Heart, Package, ShoppingBag } from "lucide-react";
 import { Button } from "@ui/shadcn/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@ui/shadcn/components/card";
 import { Badge } from "@ui/shadcn/components/badge";
+import { useAppContext } from "@/app/_context";
+import { LogoutButton } from "@/components/auth/logout-button";
 import { formatPrice } from "@/lib/format";
 import { PRODUCTS } from "@/lib/data/products";
 
@@ -13,11 +17,17 @@ const RECENT_ORDERS = [
 ];
 
 export default function AccountDashboardPage() {
+  const { user } = useAppContext();
+  const firstName = user?.first_name || user?.name || "there";
+
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold md:text-3xl">Dashboard</h1>
-        <p className="mt-1 text-muted-foreground">Welcome back, Rahul!</p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold md:text-3xl">Dashboard</h1>
+          <p className="mt-1 text-muted-foreground">Welcome back, {firstName}!</p>
+        </div>
+        <LogoutButton />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">

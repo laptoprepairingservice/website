@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@ui/shadcn/components/button";
 import { FormField, Input } from "@ui/shadcn/components/input";
-import { resetPasswordAction } from "@/lib/auth-actions";
+import { resetPasswordAction } from "./_components/reset-password-action";
 
 export default function ResetPasswordPage() {
   const [error, setError] = useState("");

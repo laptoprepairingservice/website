@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@ui/shadcn/components/button";
 import { FormField, Input } from "@ui/shadcn/components/input";
-import { forgotPasswordAction } from "@/lib/auth-actions";
+import { forgotPasswordAction } from "./_components/forgot-password-action";
 
 export default function ForgotPasswordPage() {
   const [error, setError] = useState("");

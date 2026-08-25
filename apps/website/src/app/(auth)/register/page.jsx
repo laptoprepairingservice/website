@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@ui/shadcn/components/button";
 import { FormField, Input } from "@ui/shadcn/components/input";
 import { Checkbox } from "@ui/shadcn/components/form-controls";
-import { signupAction } from "@/lib/auth-actions";
+import { signupAction } from "./_components/signup-action";
 
 export default function RegisterPage() {
   const [error, setError] = useState("");

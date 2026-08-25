@@ -50,9 +50,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           password: parsed.data.password,
         });
 
-        console.log(data);
-        console.log(error);
-
         if (error || !data.user) {
           if (error?.message?.toLowerCase().includes("email not confirmed")) {
             throw new Error("EMAIL_NOT_CONFIRMED");

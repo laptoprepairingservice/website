@@ -6,13 +6,14 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@ui/shadcn/components/button";
 import { FormField, Input } from "@ui/shadcn/components/input";
 import { Checkbox } from "@ui/shadcn/components/form-controls";
-import { loginAction } from "@/lib/auth-actions";
+import { loginAction } from "./login-action";
 
 export default function LoginForm() {
   const searchParams = useSearchParams();
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const verified = searchParams.get("verified") === "1";
+  const nextPath = searchParams.get("next") || "/";
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -40,6 +41,7 @@ export default function LoginForm() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <input type="hidden" name="next" value={nextPath} />
         <FormField label="Email" id="email">
           <Input
             id="email"
