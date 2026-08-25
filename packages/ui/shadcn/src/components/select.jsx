@@ -7,7 +7,7 @@ function Select({ className, options = [], placeholder, ...props }) {
     <select
       data-slot="select"
       className={cn(
-        "input-base appearance-none bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-10",
+        "appearance-none bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-10",
         className
       )}
       {...props}

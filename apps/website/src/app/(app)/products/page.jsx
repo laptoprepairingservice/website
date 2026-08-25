@@ -16,12 +16,12 @@ export default async function ProductsPage({ searchParams }) {
   const categoryName = category ? CATEGORIES.find((c) => c.id === category)?.name : "All Products";
 
   return (
-    <div className="container-store py-8 lg:py-12">
+    <div className="py-8 lg:py-12">
       <Breadcrumb items={[{ label: "Products", href: "/products" }, { label: categoryName }]} />
       <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-3xl font-semibold">{categoryName}</h1>
-          <p className="mt-1 text-muted-foreground">{products.length} products found</p>
+          <p className="text-muted-foreground mt-1">{products.length} products found</p>
         </div>
       </div>
 

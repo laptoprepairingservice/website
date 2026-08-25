@@ -28,18 +28,21 @@ export function ProductDetail({ product }) {
   ];
 
   return (
-    <div className="container-store py-8 lg:py-12">
+    <div className="py-8 lg:py-12">
       <Breadcrumb
         items={[
           { label: "Products", href: "/products" },
-          { label: product.category.replace("-", " "), href: `/products?category=${product.category}` },
+          {
+            label: product.category.replace("-", " "),
+            href: `/products?category=${product.category}`,
+          },
           { label: product.name },
         ]}
       />
 
       <div className="mt-8 grid gap-12 lg:grid-cols-2">
         <div className="space-y-4">
-          <div className="relative aspect-square overflow-hidden rounded-2xl border border-border bg-muted/30 p-8">
+          <div className="border-border bg-muted/30 relative aspect-square overflow-hidden rounded-2xl border p-8">
             <Image
               src={product.images[activeImage] || product.image}
               alt={product.name}
@@ -57,7 +60,7 @@ export function ProductDetail({ product }) {
                   type="button"
                   onClick={() => setActiveImage(i)}
                   className={cn(
-                    "relative size-20 overflow-hidden rounded-xl border-2 bg-muted/30 p-2 transition-colors",
+                    "bg-muted/30 relative size-20 overflow-hidden rounded-xl border-2 p-2 transition-colors",
                     activeImage === i ? "border-primary" : "border-border"
                   )}
                 >
@@ -70,7 +73,9 @@ export function ProductDetail({ product }) {
 
         <div className="space-y-6">
           <div>
-            <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">{product.brand}</p>
+            <p className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
+              {product.brand}
+            </p>
             <h1 className="mt-2 text-2xl font-semibold md:text-3xl">{product.name}</h1>
             <div className="mt-4">
               <StarRating rating={product.rating} reviewCount={product.reviewCount} size="md" />
@@ -81,7 +86,9 @@ export function ProductDetail({ product }) {
             <span className="text-3xl font-semibold">{formatPrice(product.price)}</span>
             {product.originalPrice > product.price && (
               <>
-                <span className="text-lg text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
+                <span className="text-muted-foreground text-lg line-through">
+                  {formatPrice(product.originalPrice)}
+                </span>
                 <Badge variant="discount">-{discount}%</Badge>
               </>
             )}
@@ -94,27 +101,39 @@ export function ProductDetail({ product }) {
             <p>
               <span className="text-muted-foreground">Availability:</span>{" "}
               {product.inStock ? (
-                <span className="font-medium text-success">In Stock ({product.stockCount} units)</span>
+                <span className="text-success font-medium">
+                  In Stock ({product.stockCount} units)
+                </span>
               ) : (
-                <span className="font-medium text-destructive">Out of Stock</span>
+                <span className="text-destructive font-medium">Out of Stock</span>
               )}
             </p>
           </div>
 
           <p className="text-muted-foreground">{product.shortDescription}</p>
 
-          <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/30 p-4 text-sm">
-            <Truck className="size-5 shrink-0 text-primary" />
+          <div className="border-border bg-muted/30 flex items-center gap-2 rounded-xl border p-4 text-sm">
+            <Truck className="text-primary size-5 shrink-0" />
             <span>Free delivery across Gujarat on orders above ₹5,000</span>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="flex items-center rounded-xl border border-border">
-              <Button variant="ghost" size="icon-sm" onClick={() => setQuantity(Math.max(1, quantity - 1))} aria-label="Decrease quantity">
+            <div className="border-border flex items-center rounded-xl border">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                aria-label="Decrease quantity"
+              >
                 <Minus />
               </Button>
               <span className="w-12 text-center text-sm font-medium">{quantity}</span>
-              <Button variant="ghost" size="icon-sm" onClick={() => setQuantity(quantity + 1)} aria-label="Increase quantity">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => setQuantity(quantity + 1)}
+                aria-label="Increase quantity"
+              >
                 <Plus />
               </Button>
             </div>
@@ -127,7 +146,12 @@ export function ProductDetail({ product }) {
               <ShoppingCart />
               Add to Cart
             </Button>
-            <Button variant="outline" size="icon" onClick={() => toast.success("Added to wishlist")} aria-label="Add to wishlist">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => toast.success("Added to wishlist")}
+              aria-label="Add to wishlist"
+            >
               <Heart />
             </Button>
             <Button variant="outline" size="icon" aria-label="Share">
@@ -138,7 +162,7 @@ export function ProductDetail({ product }) {
       </div>
 
       <div className="mt-16">
-        <div className="flex gap-1 border-b border-border">
+        <div className="border-border flex gap-1 border-b">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -147,7 +171,7 @@ export function ProductDetail({ product }) {
               className={cn(
                 "px-6 py-3 text-sm font-medium transition-colors",
                 activeTab === tab.id
-                  ? "border-b-2 border-primary text-foreground"
+                  ? "border-primary text-foreground border-b-2"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -157,15 +181,20 @@ export function ProductDetail({ product }) {
         </div>
         <div className="py-8">
           {activeTab === "description" && (
-            <div className="max-w-none text-muted-foreground">
+            <div className="text-muted-foreground max-w-none">
               <p>{product.description}</p>
             </div>
           )}
           {activeTab === "specifications" && (
             <dl className="grid gap-4 sm:grid-cols-2">
               {Object.entries(product.specs).map(([key, value]) => (
-                <div key={key} className="flex justify-between rounded-lg border border-border px-4 py-3">
-                  <dt className="text-sm text-muted-foreground capitalize">{key.replace("-", " ")}</dt>
+                <div
+                  key={key}
+                  className="border-border flex justify-between rounded-lg border px-4 py-3"
+                >
+                  <dt className="text-muted-foreground text-sm capitalize">
+                    {key.replace("-", " ")}
+                  </dt>
                   <dd className="text-sm font-medium">{value}</dd>
                 </div>
               ))}
@@ -177,23 +206,25 @@ export function ProductDetail({ product }) {
                 <span className="text-4xl font-semibold">{product.rating}</span>
                 <div>
                   <StarRating rating={product.rating} showCount={false} size="md" />
-                  <p className="mt-1 text-sm text-muted-foreground">{product.reviewCount} reviews</p>
+                  <p className="text-muted-foreground mt-1 text-sm">
+                    {product.reviewCount} reviews
+                  </p>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground">Customer reviews will appear here.</p>
+              <p className="text-muted-foreground text-sm">Customer reviews will appear here.</p>
             </div>
           )}
         </div>
       </div>
 
       {related.length > 0 && (
-        <section className="mt-16 border-t border-border pt-16">
+        <section className="border-border mt-16 border-t pt-16">
           <h2 className="mb-8 text-2xl font-semibold">Related Products</h2>
           <ProductGrid products={related} />
         </section>
       )}
 
-      <section className="mt-16 border-t border-border pt-16">
+      <section className="border-border mt-16 border-t pt-16">
         <h2 className="mb-8 text-2xl font-semibold">Recently Viewed</h2>
         <ProductGrid products={PRODUCTS.slice(0, 4)} />
       </section>

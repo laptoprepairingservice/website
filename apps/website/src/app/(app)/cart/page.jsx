@@ -40,7 +40,7 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="container-store py-12">
+      <div className="py-12">
         <EmptyState
           icon={ShoppingBag}
           title="Your cart is empty"
@@ -56,37 +56,69 @@ export default function CartPage() {
   }
 
   return (
-    <div className="container-store py-8 lg:py-12">
+    <div className="py-8 lg:py-12">
       <Breadcrumb items={[{ label: "Shopping Cart" }]} />
       <h1 className="mt-6 text-3xl font-semibold">Shopping Cart</h1>
-      <p className="mt-1 text-muted-foreground">{items.length} items</p>
+      <p className="text-muted-foreground mt-1">{items.length} items</p>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           {items.map((item) => (
-            <div key={item.id} className="flex gap-4 rounded-xl border border-border bg-card p-4 sm:gap-6 sm:p-6">
-              <Link href={`/products/${item.slug}`} className="relative size-24 shrink-0 overflow-hidden rounded-lg bg-muted/30 sm:size-28">
-                <Image src={item.image} alt={item.name} fill className="object-contain p-2" sizes="112px" />
+            <div
+              key={item.id}
+              className="border-border bg-card flex gap-4 rounded-xl border p-4 sm:gap-6 sm:p-6"
+            >
+              <Link
+                href={`/products/${item.slug}`}
+                className="bg-muted/30 relative size-24 shrink-0 overflow-hidden rounded-lg sm:size-28"
+              >
+                <Image
+                  src={item.image}
+                  alt={item.name}
+                  fill
+                  className="object-contain p-2"
+                  sizes="112px"
+                />
               </Link>
               <div className="flex min-w-0 flex-1 flex-col justify-between gap-4 sm:flex-row">
                 <div>
-                  <p className="text-xs font-medium uppercase text-muted-foreground">{item.brand}</p>
-                  <Link href={`/products/${item.slug}`} className="mt-1 block font-medium hover:text-primary">
+                  <p className="text-muted-foreground text-xs font-medium uppercase">
+                    {item.brand}
+                  </p>
+                  <Link
+                    href={`/products/${item.slug}`}
+                    className="hover:text-primary mt-1 block font-medium"
+                  >
                     {item.name}
                   </Link>
                   <p className="mt-2 font-semibold">{formatPrice(item.price)}</p>
                 </div>
                 <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end">
-                  <div className="flex items-center rounded-lg border border-border">
-                    <Button variant="ghost" size="icon-sm" onClick={() => updateQuantity(item.id, -1)} aria-label="Decrease">
+                  <div className="border-border flex items-center rounded-lg border">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => updateQuantity(item.id, -1)}
+                      aria-label="Decrease"
+                    >
                       <Minus />
                     </Button>
                     <span className="w-10 text-center text-sm">{item.quantity}</span>
-                    <Button variant="ghost" size="icon-sm" onClick={() => updateQuantity(item.id, 1)} aria-label="Increase">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => updateQuantity(item.id, 1)}
+                      aria-label="Increase"
+                    >
                       <Plus />
                     </Button>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => removeItem(item.id)} className="text-destructive hover:text-destructive">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeItem(item.id)}
+                    className="text-destructive hover:text-destructive"
+                  >
                     <Trash2 className="size-4" />
                     Remove
                   </Button>
@@ -113,16 +145,16 @@ export default function CartPage() {
               <span>{shipping === 0 ? "Free" : formatPrice(shipping)}</span>
             </div>
             {shipping > 0 && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Add {formatPrice(STORE.freeShippingThreshold - subtotal)} more for free shipping
               </p>
             )}
-            <div className="border-t border-border pt-4">
+            <div className="border-border border-t pt-4">
               <div className="flex justify-between font-semibold">
                 <span>Estimated Total</span>
                 <span>{formatPrice(total)}</span>
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">Inclusive of GST</p>
+              <p className="text-muted-foreground mt-1 text-xs">Inclusive of GST</p>
             </div>
             <Button size="lg" className="w-full" asChild>
               <Link href="/checkout">Proceed to Checkout</Link>

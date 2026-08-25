@@ -24,9 +24,9 @@ export function ProductCard({ product, className }) {
   };
 
   return (
-    <article className={cn("group card-interactive overflow-hidden", className)}>
+    <article className={cn("group overflow-hidden", className)}>
       <Link href={`/products/${product.slug}`} className="block">
-        <div className="relative aspect-square overflow-hidden bg-muted/30 p-6">
+        <div className="bg-muted/30 relative aspect-square overflow-hidden p-6">
           <Image
             src={product.image}
             alt={product.name}
@@ -35,12 +35,12 @@ export function ProductCard({ product, className }) {
             className="object-contain transition-transform duration-500 group-hover:scale-105"
           />
           {discount > 0 && (
-            <Badge variant="discount" className="absolute left-3 top-3">
+            <Badge variant="discount" className="absolute top-3 left-3">
               -{discount}%
             </Badge>
           )}
           {product.isNew && (
-            <Badge variant="secondary" className="absolute right-3 top-3">
+            <Badge variant="secondary" className="absolute top-3 right-3">
               New
             </Badge>
           )}
@@ -66,22 +66,26 @@ export function ProductCard({ product, className }) {
         </div>
 
         <div className="space-y-3 p-4">
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{product.brand}</p>
-          <h3 className="line-clamp-2 text-sm font-medium leading-snug transition-colors group-hover:text-primary">
+          <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+            {product.brand}
+          </p>
+          <h3 className="group-hover:text-primary line-clamp-2 text-sm leading-snug font-medium transition-colors">
             {product.name}
           </h3>
           <StarRating rating={product.rating} reviewCount={product.reviewCount} />
           <div className="flex flex-wrap items-baseline gap-2">
             <span className="text-lg font-semibold">{formatPrice(product.price)}</span>
             {product.originalPrice > product.price && (
-              <span className="text-sm text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
+              <span className="text-muted-foreground text-sm line-through">
+                {formatPrice(product.originalPrice)}
+              </span>
             )}
           </div>
           <div className="flex items-center justify-between gap-2">
             {product.inStock ? (
-              <span className="badge-success">In Stock</span>
+              <span className="">In Stock</span>
             ) : (
-              <span className="badge-destructive">Out of Stock</span>
+              <span className="">Out of Stock</span>
             )}
             <Button
               size="sm"
@@ -102,7 +106,12 @@ export function ProductCard({ product, className }) {
 
 export function ProductGrid({ products, className }) {
   return (
-    <div className={cn("grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4", className)}>
+    <div
+      className={cn(
+        "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+        className
+      )}
+    >
       {products.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}

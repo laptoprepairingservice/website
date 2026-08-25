@@ -30,22 +30,23 @@ const SOCIAL = [
   { icon: Youtube, href: "#", label: "YouTube" },
 ];
 
-export function SiteFooter() {
+export function Footer() {
   return (
-    <footer className="border-t border-border bg-muted/30">
-      <div className="container-store section-padding">
+    <footer className="border-border bg-muted/30 border-t">
+      <div className="">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2">
-              <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
+              <div className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-lg text-sm font-bold">
                 CV
               </div>
               <span className="text-lg font-semibold">{STORE.name}</span>
             </Link>
-            <p className="mt-4 max-w-sm text-sm text-muted-foreground">
-              Ahmedabad&apos;s trusted destination for premium computer hardware. Genuine products, expert support, and fast delivery across Gujarat.
+            <p className="text-muted-foreground mt-4 max-w-sm text-sm">
+              Ahmedabad&apos;s trusted destination for premium computer hardware. Genuine products,
+              expert support, and fast delivery across Gujarat.
             </p>
-            <div className="mt-6 space-y-2 text-sm text-muted-foreground">
+            <div className="text-muted-foreground mt-6 space-y-2 text-sm">
               <p className="flex items-center gap-2">
                 <MapPin className="size-4 shrink-0" />
                 {STORE.address}
@@ -65,7 +66,7 @@ export function SiteFooter() {
                   key={label}
                   href={href}
                   aria-label={label}
-                  className="flex size-9 items-center justify-center rounded-lg border border-border bg-background transition-colors hover:bg-accent"
+                  className="border-border bg-background hover:bg-accent flex size-9 items-center justify-center rounded-lg border transition-colors"
                 >
                   <Icon className="size-4" />
                 </a>
@@ -75,11 +76,14 @@ export function SiteFooter() {
 
           {Object.entries(FOOTER_LINKS).map(([title, links]) => (
             <div key={title}>
-              <h3 className="text-sm font-semibold uppercase tracking-wider">{title}</h3>
+              <h3 className="text-sm font-semibold tracking-wider uppercase">{title}</h3>
               <ul className="mt-4 space-y-3">
                 {links.map((link) => (
                   <li key={link.href}>
-                    <Link href={link.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                    <Link
+                      href={link.href}
+                      className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+                    >
                       {link.label}
                     </Link>
                   </li>
@@ -89,14 +93,20 @@ export function SiteFooter() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 sm:flex-row">
-          <p className="text-xs text-muted-foreground">
+        <div className="border-border mt-12 flex flex-col items-center justify-between gap-4 border-t pt-8 sm:flex-row">
+          <p className="text-muted-foreground text-xs">
             © {new Date().getFullYear()} {STORE.name}. All rights reserved. GSTIN: {STORE.gstin}
           </p>
-          <div className="flex gap-4 text-xs text-muted-foreground">
-            <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
-            <Link href="/terms" className="hover:text-foreground">Terms</Link>
-            <Link href="/returns" className="hover:text-foreground">Returns</Link>
+          <div className="text-muted-foreground flex gap-4 text-xs">
+            <Link href="/privacy" className="hover:text-foreground">
+              Privacy
+            </Link>
+            <Link href="/terms" className="hover:text-foreground">
+              Terms
+            </Link>
+            <Link href="/returns" className="hover:text-foreground">
+              Returns
+            </Link>
           </div>
         </div>
       </div>

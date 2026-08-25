@@ -1,12 +1,12 @@
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
+import { Footer } from "./_components/footer";
+import { Header } from "./_components/header";
 
 export default function AppLayout({ children }) {
   return (
     <div className="flex min-h-svh flex-col">
-      <SiteHeader />
+      <Header />
       <main className="flex-1">{children}</main>
-      <SiteFooter />
+      <Footer />
     </div>
   );
 }

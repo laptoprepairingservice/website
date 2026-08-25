@@ -5,7 +5,7 @@ import { STORE } from "@/lib/store-config";
 export function AnnouncementBar() {
   return (
     <div className="bg-primary text-primary-foreground">
-      <div className="container-store flex h-10 items-center justify-center gap-2 text-xs sm:text-sm">
+      <div className="flex h-10 items-center justify-center gap-2 text-xs sm:text-sm">
         <Truck className="size-3.5 shrink-0" aria-hidden />
         <p>
           Free shipping on orders above{" "}

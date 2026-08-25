@@ -1,0 +1,106 @@
+"use client";
+
+import { useAppContext } from "@/app/_context";
+import { NAV_LINKS, STORE } from "@/lib/store-config";
+import { getUserShortName } from "@/lib/utils";
+import { Button } from "@ui/shadcn/components/button";
+import { Input } from "@ui/shadcn/components/input";
+import { Heart, ShoppingCart } from "lucide-react";
+import Link from "next/link";
+import { AnnouncementBar } from "./announcement-bar";
+import { MobileMenuSheet } from "./mobile-menu-sheet";
+
+function SearchForm({ className }) {
+  return (
+    <form action="/search" className={className}>
+      <div className="relative">
+        <Input name="q" placeholder="Search processors, GPUs, RAM, SSDs..." className="pl-10" />
+      </div>
+    </form>
+  );
+}
+
+export function Header() {
+  const { user } = useAppContext();
+
+  const isSignedIn = Boolean(user && !user.isGuest);
+  const accountHref = isSignedIn ? "/account" : "/login";
+  const accountLabel = isSignedIn ? getUserShortName(user) : "Login";
+
+  return (
+    <header className="border-border bg-background/95 sticky top-0 z-40 border-b backdrop-blur-md">
+      <AnnouncementBar />
+
+      <div className="container">
+        <div className="flex h-14 items-center justify-between gap-3 sm:h-16 lg:h-20">
+          {/* Left side */}
+          <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+            <Link href="/" className="flex min-w-0 items-center gap-2">
+              <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold sm:size-9">
+                CV
+              </div>
+              <div className="hidden min-w-0 sm:block">
+                <span className="text-lg font-semibold tracking-tight">{STORE.name}</span>
+                <p className="text-muted-foreground text-xs">{STORE.location}</p>
+              </div>
+            </Link>
+          </div>
+
+          {/* Desktop search */}
+          <SearchForm className="hidden max-w-xl flex-1 px-4 md:block" />
+
+          {/* Right side */}
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+            <Button variant="ghost" size="icon-sm" asChild aria-label="Wishlist">
+              <Link href="/wishlist">
+                <Heart />
+              </Link>
+            </Button>
+
+            <Button variant="ghost" size="icon-sm" asChild aria-label="Cart" className="relative">
+              <Link href="/cart">
+                <ShoppingCart />
+                <span className="bg-primary text-primary-foreground absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full text-[10px] font-medium">
+                  2
+                </span>
+              </Link>
+            </Button>
+
+            <div className="md:hidden">
+              <MobileMenuSheet
+                accountHref={accountHref}
+                accountLabel={accountLabel}
+                isSignedIn={isSignedIn}
+              />
+            </div>
+
+            <Button
+              variant="outline"
+              size="icon"
+              className="hidden rounded-full sm:inline-flex"
+              asChild
+            >
+              <Link href={accountHref}>{accountLabel}</Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* Desktop navigation */}
+        <nav className="border-border hidden border-t lg:block" aria-label="Main navigation">
+          <ul className="hide-scrollbar flex h-12 items-center gap-1 overflow-x-auto">
+            {NAV_LINKS.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className="text-muted-foreground hover:text-foreground px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </header>
+  );
+}

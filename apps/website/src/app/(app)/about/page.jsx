@@ -11,7 +11,7 @@ export const metadata = {
 
 export default function AboutPage() {
   return (
-    <div className="container-store py-8 lg:py-16">
+    <div className="py-8 lg:py-16">
       <div className="mx-auto max-w-3xl">
         <span className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
           About Ranuja

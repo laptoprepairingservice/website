@@ -26,11 +26,13 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = (e) => {
     e.preventDefault();
-    toast.success("Order placed successfully!", { description: "You will receive a confirmation email shortly." });
+    toast.success("Order placed successfully!", {
+      description: "You will receive a confirmation email shortly.",
+    });
   };
 
   return (
-    <div className="container-store py-8 lg:py-12">
+    <div className="py-8 lg:py-12">
       <Breadcrumb items={[{ label: "Cart", href: "/cart" }, { label: "Checkout" }]} />
       <h1 className="mt-6 text-3xl font-semibold">Checkout</h1>
 
@@ -95,7 +97,10 @@ export default function CheckoutPage() {
                 value={deliveryMethod}
                 onChange={setDeliveryMethod}
                 options={[
-                  { value: "standard", label: `Standard Delivery (3-5 business days) — ${shipping === 0 ? "Free" : formatPrice(shipping)}` },
+                  {
+                    value: "standard",
+                    label: `Standard Delivery (3-5 business days) — ${shipping === 0 ? "Free" : formatPrice(shipping)}`,
+                  },
                   { value: "express", label: "Express Delivery (1-2 business days) — ₹199" },
                 ]}
               />
@@ -128,11 +133,11 @@ export default function CheckoutPage() {
           <CardContent className="space-y-4">
             {ORDER_ITEMS.map((item) => (
               <div key={item.id} className="flex justify-between gap-4 text-sm">
-                <span className="line-clamp-2 text-muted-foreground">{item.name}</span>
+                <span className="text-muted-foreground line-clamp-2">{item.name}</span>
                 <span className="shrink-0 font-medium">{formatPrice(item.price)}</span>
               </div>
             ))}
-            <div className="space-y-2 border-t border-border pt-4 text-sm">
+            <div className="border-border space-y-2 border-t pt-4 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
                 <span>{formatPrice(subtotal)}</span>
@@ -147,7 +152,7 @@ export default function CheckoutPage() {
                   <span>{formatPrice(codFee)}</span>
                 </div>
               )}
-              <div className="flex justify-between border-t border-border pt-2 font-semibold">
+              <div className="border-border flex justify-between border-t pt-2 font-semibold">
                 <span>Total</span>
                 <span>{formatPrice(finalTotal)}</span>
               </div>

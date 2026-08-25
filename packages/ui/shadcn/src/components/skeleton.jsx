@@ -1,12 +1,12 @@
 import { cn } from "../lib/utils";
 
 function Skeleton({ className, ...props }) {
-  return <div data-slot="skeleton" className={cn("skeleton-shimmer", className)} {...props} />;
+  return <div data-slot="skeleton" className={cn("", className)} {...props} />;
 }
 
 function ProductCardSkeleton() {
   return (
-    <div className="space-y-4 rounded-xl border border-border p-4">
+    <div className="border-border space-y-4 rounded-xl border p-4">
       <Skeleton className="aspect-square w-full" />
       <Skeleton className="h-3 w-16" />
       <Skeleton className="h-4 w-full" />

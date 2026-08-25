@@ -103,19 +103,5 @@
   --sidebar-ring: oklch(0.6 0.15 250);
 }
 
-@layer components {
-  .card-elevated {
-    @apply rounded-xl border border-border bg-card shadow-sm transition-shadow duration-300 hover:shadow-md;
-  }
-
-  .input-base {
-    @apply h-11 w-full rounded-xl border border-input bg-background px-4 text-sm transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/20;
-  }
-
-  .skeleton-shimmer {
-    @apply animate-pulse rounded-xl bg-muted;
-  }
-}
-
 @source "../../../../../apps/**/*.{js,jsx}";
 @source "../**/*.{js,jsx}";

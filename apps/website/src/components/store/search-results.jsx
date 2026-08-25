@@ -20,12 +20,12 @@ export function SearchResults({ query = "" }) {
     : [];
 
   return (
-    <div className="container-store py-8 lg:py-12">
+    <div className="py-8 lg:py-12">
       <Breadcrumb items={[{ label: "Search Results" }]} />
 
       <div className="mt-6">
         <form action="/search" className="relative max-w-2xl">
-          <Search className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
+          <Search className="text-muted-foreground absolute top-1/2 left-4 size-5 -translate-y-1/2" />
           <Input
             name="q"
             defaultValue={query}
@@ -38,7 +38,7 @@ export function SearchResults({ query = "" }) {
       {!query && (
         <div className="mt-12 grid gap-8 md:grid-cols-2">
           <div>
-            <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            <h2 className="text-muted-foreground flex items-center gap-2 text-sm font-semibold tracking-wider uppercase">
               <Clock className="size-4" />
               Recent Searches
             </h2>
@@ -47,7 +47,7 @@ export function SearchResults({ query = "" }) {
                 <Link
                   key={term}
                   href={`/search?q=${encodeURIComponent(term)}`}
-                  className="rounded-full border border-border px-4 py-2 text-sm transition-colors hover:bg-accent"
+                  className="border-border hover:bg-accent rounded-full border px-4 py-2 text-sm transition-colors"
                 >
                   {term}
                 </Link>
@@ -55,7 +55,7 @@ export function SearchResults({ query = "" }) {
             </div>
           </div>
           <div>
-            <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            <h2 className="text-muted-foreground flex items-center gap-2 text-sm font-semibold tracking-wider uppercase">
               <TrendingUp className="size-4" />
               Popular Searches
             </h2>
@@ -64,7 +64,7 @@ export function SearchResults({ query = "" }) {
                 <Link
                   key={term}
                   href={`/search?q=${encodeURIComponent(term)}`}
-                  className="rounded-full border border-border px-4 py-2 text-sm transition-colors hover:bg-accent"
+                  className="border-border hover:bg-accent rounded-full border px-4 py-2 text-sm transition-colors"
                 >
                   {term}
                 </Link>
@@ -76,7 +76,7 @@ export function SearchResults({ query = "" }) {
 
       {query && results.length > 0 && (
         <div className="mt-12">
-          <p className="mb-8 text-muted-foreground">
+          <p className="text-muted-foreground mb-8">
             {results.length} results for &ldquo;{query}&rdquo;
           </p>
           <ProductGrid products={results} />

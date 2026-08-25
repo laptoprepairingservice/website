@@ -31,10 +31,8 @@ export async function getCurrentUser() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   if (!user) {
     return null;
   }
-
   return mapAuthUser(user);
 }

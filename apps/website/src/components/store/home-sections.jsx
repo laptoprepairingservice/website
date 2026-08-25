@@ -58,7 +58,7 @@ function SectionHeader({ title, description, href, linkText = "View All" }) {
 export function HeroBanner() {
   return (
     <section className="bg-muted/40 relative overflow-hidden">
-      <div className="container-store">
+      <div className="">
         <div className="grid min-h-[480px] items-center gap-8 py-12 lg:grid-cols-2 lg:py-16">
           <div className="space-y-6">
             <span className="border-border bg-background inline-flex rounded-full border px-4 py-1.5 text-xs font-medium">
@@ -101,8 +101,8 @@ export function HeroBanner() {
 
 export function FeaturedCategories() {
   return (
-    <section className="section-padding">
-      <div className="container-store">
+    <section className="">
+      <div className="">
         <SectionHeader
           title="Shop by Category"
           description="Find the perfect components for your build"
@@ -113,7 +113,7 @@ export function FeaturedCategories() {
             <Link
               key={cat.id}
               href={`/products?category=${cat.id}`}
-              className="group card-interactive overflow-hidden"
+              className="group overflow-hidden"
             >
               <div className="bg-muted/30 relative aspect-[4/3] overflow-hidden">
                 <Image
@@ -139,7 +139,7 @@ export function FeaturedCategories() {
 export function PopularBrands() {
   return (
     <section className="border-border bg-muted/20 border-y py-12">
-      <div className="container-store">
+      <div className="">
         <h2 className="text-muted-foreground mb-8 text-center text-sm font-semibold tracking-wider uppercase">
           Authorized Brands
         </h2>
@@ -161,8 +161,8 @@ export function PopularBrands() {
 
 export function FeaturedProductsSection() {
   return (
-    <section className="section-padding">
-      <div className="container-store">
+    <section className="">
+      <div className="">
         <SectionHeader
           title="Featured Products"
           description="Hand-picked premium components"
@@ -176,8 +176,8 @@ export function FeaturedProductsSection() {
 
 export function BestSellersSection() {
   return (
-    <section className="section-padding bg-muted/20">
-      <div className="container-store">
+    <section className="bg-muted/20">
+      <div className="">
         <SectionHeader
           title="Best Sellers"
           description="Most popular among our customers"
@@ -194,8 +194,8 @@ export function RecentlyAddedSection() {
   if (products.length === 0) return null;
 
   return (
-    <section className="section-padding">
-      <div className="container-store">
+    <section className="">
+      <div className="">
         <SectionHeader
           title="Recently Added"
           description="Latest arrivals in our store"
@@ -209,8 +209,8 @@ export function RecentlyAddedSection() {
 
 export function PromotionalBanner() {
   return (
-    <section className="section-padding">
-      <div className="container-store">
+    <section className="">
+      <div className="">
         <div className="bg-primary text-primary-foreground relative overflow-hidden rounded-2xl px-8 py-12 md:px-16 md:py-16">
           <div className="relative z-10 max-w-xl">
             <span className="text-sm font-medium opacity-80">Limited Time Offer</span>
@@ -235,8 +235,8 @@ export function PromotionalBanner() {
 
 export function WhyChooseUs() {
   return (
-    <section className="section-padding bg-muted/20">
-      <div className="container-store">
+    <section className="bg-muted/20">
+      <div className="">
         <SectionHeader
           title="Why Choose Ranuja"
           description="Your trusted hardware partner in Ahmedabad"
@@ -259,8 +259,8 @@ export function WhyChooseUs() {
 
 export function CustomerReviews() {
   return (
-    <section className="section-padding">
-      <div className="container-store">
+    <section className="">
+      <div className="">
         <SectionHeader title="Customer Reviews" description="What our customers say about us" />
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {REVIEWS.map((review) => (

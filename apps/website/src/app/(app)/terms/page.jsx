@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="container-store py-8 lg:py-16">
+    <div className="py-8 lg:py-16">
       <article className="prose prose-neutral mx-auto max-w-3xl">
         <h1>Terms & Conditions</h1>
         <p className="lead text-muted-foreground">Last updated: January 2026</p>
