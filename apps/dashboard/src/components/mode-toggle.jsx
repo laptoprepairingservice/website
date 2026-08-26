@@ -2,37 +2,51 @@
 
 import { cn } from "@/lib/utils";
 import { useAppThemeContext } from "@/provider/app-theme-context";
+import { Button } from "@ui/shadcn/components/button";
 import { Laptop, Moon, Sun } from "lucide-react";
-import { ToggleGroup, ToggleGroupItem } from "ui/components/toggle-group";
+import { useEffect, useState } from "react";
+
+const MODES = [
+  { value: "light", label: "Light mode", icon: Sun },
+  { value: "dark", label: "Dark mode", icon: Moon },
+  { value: "system", label: "System mode", icon: Laptop },
+];
 
 /**
  * Light / dark / system — toggles `.dark` on `<html>` (class-based dark mode).
+ * Shortcut: Ctrl/Cmd+D toggles light ↔ dark.
  */
 export function ModeToggle({ className }) {
   const { mode, setMode } = useAppThemeContext();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const value = mode === "system" ? "system" : mode;
 
   return (
-    <ToggleGroup
-      type="single"
-      className={cn(className)}
-      value={value}
-      onValueChange={(v) => v && setMode(v)}
-      variant="outline"
-      size="sm"
-      spacing={0}
+    <div
+      className={cn("inline-flex items-center rounded-lg border p-0.5", className)}
+      role="group"
       aria-label="Color mode"
+      title="Toggle dark mode (Ctrl+D)"
     >
-      <ToggleGroupItem value="light" aria-label="Light mode">
-        <Sun className="size-4" />
-      </ToggleGroupItem>
-      <ToggleGroupItem value="dark" aria-label="Dark mode">
-        <Moon className="size-4" />
-      </ToggleGroupItem>
-      <ToggleGroupItem value="system" aria-label="System mode">
-        <Laptop className="size-4" />
-      </ToggleGroupItem>
-    </ToggleGroup>
+      {MODES.map(({ value: itemValue, label, icon: Icon }) => (
+        <Button
+          key={itemValue}
+          type="button"
+          variant={mounted && value === itemValue ? "secondary" : "ghost"}
+          size="icon-sm"
+          className="size-8"
+          aria-label={label}
+          aria-pressed={mounted ? value === itemValue : false}
+          onClick={() => setMode(itemValue)}
+        >
+          <Icon className="size-4" />
+        </Button>
+      ))}
+    </div>
   );
 }

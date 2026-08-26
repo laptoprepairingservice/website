@@ -1,5 +1,6 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import { Breadcrumb, BreadcrumbProvider } from "@/components/breadcrumb";
+import { ModeToggle } from "@/components/mode-toggle";
 import { Separator } from "@ui/shadcn/components/separator";
 import {
   SidebarInset,
@@ -17,6 +18,9 @@ export default function AppLayout({ children }) {
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 hidden h-4 sm:block" />
             <Breadcrumb />
+            <div className="ml-auto">
+              <ModeToggle />
+            </div>
           </header>
           <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">{children}</div>
         </BreadcrumbProvider>

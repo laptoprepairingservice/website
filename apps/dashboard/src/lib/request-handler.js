@@ -1,0 +1,113 @@
+"use client";
+
+import { createClient } from "@/lib/supabase/client";
+
+const requestHandler =
+  () =>
+  async ({
+    endpoint,
+    page = 1,
+    perPage = 10,
+    search,
+    sortBy,
+    sortOrder = "desc",
+    filters = {},
+    meta = {},
+  }) => {
+    const supabase = createClient();
+
+    try {
+      const from = (page - 1) * perPage;
+      const to = from + perPage - 1;
+      const { select = meta.select, search: searchColumn, filters: filterConfig = {} } = meta;
+
+      let query = supabase.from(endpoint).select(select, {
+        count: "exact",
+      });
+
+      if (search && searchColumn) {
+        query = query.ilike(searchColumn, `%${search}%`);
+      }
+
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value === undefined || value === null || value === "") {
+          return;
+        }
+
+        const config = filterConfig[key];
+
+        if (!config) {
+          return;
+        }
+
+        const column = config.column ?? key;
+        const operator = config.operator ?? "eq";
+
+        switch (operator) {
+          case "eq":
+            query = query.eq(column, value);
+            break;
+
+          case "neq":
+            query = query.neq(column, value);
+            break;
+
+          case "gt":
+            query = query.gt(column, value);
+            break;
+
+          case "gte":
+            query = query.gte(column, value);
+            break;
+
+          case "lt":
+            query = query.lt(column, value);
+            break;
+
+          case "lte":
+            query = query.lte(column, value);
+            break;
+
+          case "in":
+            query = query.in(column, Array.isArray(value) ? value : [value]);
+            break;
+
+          case "ilike":
+            query = query.ilike(column, `%${value}%`);
+            break;
+
+          default:
+            query = query.eq(column, value);
+            break;
+        }
+      });
+
+      if (sortBy) {
+        query = query.order(sortBy, {
+          ascending: sortOrder !== "desc",
+        });
+      }
+
+      query = query.range(from, to);
+
+      const { data, count, error } = await supabase
+        .from(endpoint)
+        .select("*", { count: "exact" })
+        .range(from, to);
+
+      if (error) {
+        console.error("[ReactList] Supabase fetch error:", error);
+        throw error;
+      }
+
+      return {
+        items: data ?? [],
+        count: count ?? 0,
+      };
+    } catch (error) {
+      console.error("[ReactList] Request handler error:", error);
+      throw error;
+    }
+  };
+
+export default requestHandler;

@@ -2,6 +2,7 @@ import { Mulish } from "next/font/google";
 import { Toaster } from "sonner";
 import { AppProvider } from "@/app/_context";
 import { getCurrentUser } from "@/lib/user";
+import { AppThemeProvider } from "@/provider/app-theme-context";
 import "./globals.css";
 
 const mulish = Mulish({
@@ -23,10 +24,12 @@ export default async function Layout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${mulish.variable} font-sans antialiased`}>
-        <AppProvider user={user}>
-          {children}
-          <Toaster position="top-right" richColors closeButton />
-        </AppProvider>
+        <AppThemeProvider>
+          <AppProvider user={user}>
+            {children}
+            <Toaster position="top-right" richColors closeButton />
+          </AppProvider>
+        </AppThemeProvider>
       </body>
     </html>
   );
