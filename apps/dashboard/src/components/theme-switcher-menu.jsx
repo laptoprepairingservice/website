@@ -1,4 +1,4 @@
-import { THEME_REGISTRY } from "@/lib/theme-registry";
+// import { THEME_REGISTRY } from "@/lib/theme-registry";
 import React from "react";
 import { useAppThemeContext } from "@/provider/app-theme-context";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/components/ui/tooltip";

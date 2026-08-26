@@ -1,10 +1,26 @@
-import { DashboardHeader } from "./_components/dashboard-header";
+import { AppSidebar } from "@/components/app-sidebar";
+import { Breadcrumb, BreadcrumbProvider } from "@/components/breadcrumb";
+import { Separator } from "@ui/shadcn/components/separator";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@ui/shadcn/components/sidebar";
 
 export default function AppLayout({ children }) {
   return (
-    <div className="bg-background min-h-svh">
-      <DashboardHeader />
-      <main className="p-6">{children}</main>
-    </div>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <BreadcrumbProvider>
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 hidden h-4 sm:block" />
+            <Breadcrumb />
+          </header>
+          <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">{children}</div>
+        </BreadcrumbProvider>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

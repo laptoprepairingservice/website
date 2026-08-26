@@ -1,7 +1,7 @@
 "use client";
 
-import { useAppThemeContext } from "@/provider/app-theme-context";
 import { cn } from "@/lib/utils";
+import { useAppThemeContext } from "@/provider/app-theme-context";
 import { Laptop, Moon, Sun } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "ui/components/toggle-group";
 

@@ -1,41 +1,50 @@
 "use client";
 
-import { Bell, ChevronsUpDown, LogOut, Settings, User } from "lucide-react";
-import Link from "next/link";
+import { ChevronsUpDown, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import { useAppContext } from "@/app/_context";
-import { Avatar } from "ui/components/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+} from "@ui/shadcn/components/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "ui/components/dropdown-menu";
-import { Label } from "ui/components/label";
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "ui/components/sidebar";
-import { Switch } from "ui/components/switch";
-import { ThemeSwitcherMenu } from "./theme-switcher-menu";
-import { AvatarImage } from "./user/avatar";
+} from "@ui/shadcn/components/dropdown-menu";
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@ui/shadcn/components/sidebar";
+
+function getInitials(user) {
+  if (user?.first_name || user?.last_name) {
+    return [user.first_name?.[0], user.last_name?.[0]].filter(Boolean).join("").toUpperCase();
+  }
+  if (user?.name) {
+    return user.name
+      .trim()
+      .split(/\s+/)
+      .map((part) => part[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+  }
+  return user?.email?.[0]?.toUpperCase() || "A";
+}
 
 export function NavUser({ user }) {
   const { isMobile } = useSidebar();
-  const { entitlements, setEntitlements } = useAppContext();
-
   const router = useRouter();
+
   function handleLogout() {
     router.push("/logout");
   }
-
-  const toggleSensitiveOps = () => {
-    setEntitlements((prev) => ({
-      ...prev,
-      isSensitiveVisible: !prev.isSensitiveVisible,
-    }));
-  };
 
   const userType = user?.role
     ? `${user.role.charAt(0).toUpperCase()}${user.role.slice(1)}`
@@ -51,10 +60,10 @@ export function NavUser({ user }) {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage name={user?.name} image={user?.avatar} />
+                <AvatarFallback className="rounded-lg">{getInitials(user)}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user?.name}</span>
+                <span className="truncate font-medium">{user?.name || "Admin"}</span>
                 <span className="truncate text-xs">{userType}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
@@ -69,54 +78,14 @@ export function NavUser({ user }) {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage name={user?.name} image={user?.avatar} />
+                  <AvatarFallback className="rounded-lg">{getInitials(user)}</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user?.name}</span>
+                  <span className="truncate font-medium">{user?.name || "Admin"}</span>
                   <span className="truncate text-xs">{user?.email}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
-            {user?.isAdmin && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={(e) => e.preventDefault()}>
-                    <div className="flex w-full items-center justify-between">
-                      <Label>Secure Field</Label>
-                      <Switch
-                        checked={entitlements.isSensitiveVisible}
-                        onCheckedChange={toggleSensitiveOps}
-                      />
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard/settings">
-                      <Settings />
-                      Settings
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </>
-            )}
-            <DropdownMenuGroup>
-              <DropdownMenuItem asChild>
-                <Link href="/dashboard/profile">
-                  <User />
-                  Profile
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
-                Notifications
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <ThemeSwitcherMenu />
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut />

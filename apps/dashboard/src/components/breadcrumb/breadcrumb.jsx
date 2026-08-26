@@ -7,8 +7,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "ui/components/breadcrumb";
-import { SidebarTrigger } from "ui/components/sidebar";
+} from "@ui/shadcn/components/breadcrumb";
 import Link from "next/link";
 import { useBreadcrumb } from "./breadcrumb-provider";
 
@@ -20,8 +19,7 @@ export function Breadcrumb() {
   }
 
   return (
-    <UiBreadcrumb className="flex items-center gap-2">
-      <SidebarTrigger />
+    <UiBreadcrumb>
       <BreadcrumbList>
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
