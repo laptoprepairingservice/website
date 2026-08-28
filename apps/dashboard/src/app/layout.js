@@ -27,7 +27,7 @@ export default async function Layout({ children }) {
         <AppThemeProvider>
           <AppProvider user={user}>
             {children}
-            <Toaster position="top-right" richColors closeButton />
+            <Toaster position="top-right" />
           </AppProvider>
         </AppThemeProvider>
       </body>

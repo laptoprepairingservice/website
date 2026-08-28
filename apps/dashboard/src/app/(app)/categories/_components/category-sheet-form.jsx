@@ -1,0 +1,246 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+
+import { FormSwitch } from "@/components/ui/form-switch";
+import { FormSelect, toSelectOptions } from "@/components/ui/select";
+
+import { FormSheet } from "@/components/form-sheet";
+import { slugify } from "@/lib/slug";
+import {
+  createCategoryAction,
+  deleteCategoryAction,
+  getCategoryParentOptionsAction,
+  updateCategoryAction,
+} from "../_actions/category-actions";
+import {
+  categoryFormSchema,
+  getCategoryFormDefaults,
+  toCategoryFormValues,
+  updateCategoryFormSchema,
+} from "../_lib/category-schema";
+import { Button } from "@ui/shadcn/components/button";
+import { Input } from "@ui/shadcn/components/input";
+import { Label } from "@ui/shadcn/components/label";
+import { Textarea } from "@ui/shadcn/components/textarea";
+
+const formId = "category-sheet-form";
+const inputClassName =
+  "h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs";
+
+function FieldError({ message }) {
+  if (!message) {
+    return null;
+  }
+
+  return <p className="text-destructive text-sm">{message}</p>;
+}
+
+export function CategorySheetForm({ open, onOpenChange, category, onSuccess }) {
+  const isEdit = Boolean(category?.id);
+  const [slugTouched, setSlugTouched] = useState(isEdit);
+  const [parentOptions, setParentOptions] = useState([]);
+  const [deleting, setDeleting] = useState(false);
+  const schema = isEdit ? updateCategoryFormSchema : categoryFormSchema;
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    control,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: getCategoryFormDefaults(),
+  });
+
+  const categoryName = watch("name");
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    reset(category ? toCategoryFormValues(category) : getCategoryFormDefaults());
+    setSlugTouched(isEdit);
+
+    getCategoryParentOptionsAction(category?.id).then((result) => {
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      setParentOptions(result.categories);
+    });
+  }, [open, category, isEdit, reset]);
+
+  useEffect(() => {
+    if (isEdit || slugTouched || !categoryName) {
+      return;
+    }
+
+    setValue("slug", slugify(categoryName), { shouldValidate: true });
+  }, [categoryName, isEdit, setValue, slugTouched]);
+
+  const onSubmit = async (values) => {
+    const result = isEdit
+      ? await updateCategoryAction(values)
+      : await createCategoryAction(values);
+
+    if (result.error) {
+      toast.error(result.error);
+      return;
+    }
+
+    toast.success(isEdit ? "Category updated." : "Category created.");
+    onSuccess?.();
+    onOpenChange(false);
+  };
+
+  const handleDelete = async () => {
+    if (!category?.id) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Delete "${category.name}"? This fails if products or child categories still reference it.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeleting(true);
+    const result = await deleteCategoryAction(category.id);
+    setDeleting(false);
+
+    if (result.error) {
+      toast.error(result.error);
+      return;
+    }
+
+    toast.success("Category deleted.");
+    onSuccess?.();
+    onOpenChange(false);
+  };
+
+  const loading = isSubmitting || deleting;
+
+  return (
+    <FormSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEdit ? "Edit category" : "New category"}
+      description={
+        isEdit
+          ? "Update category details used across the catalog."
+          : "Create a category for organizing products."
+      }
+      formId={formId}
+      loading={loading}
+      footerStart={
+        isEdit ? (
+          <Button
+            type="button"
+            variant="destructive"
+            className="mr-auto"
+            onClick={handleDelete}
+            disabled={loading}
+          >
+            Delete
+          </Button>
+        ) : null
+      }
+    >
+      <form id={formId} onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="category-name">Name</Label>
+          <Input id="category-name" className={inputClassName} {...register("name")} />
+          <FieldError message={errors.name?.message} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="category-slug">Slug</Label>
+          <Input
+            id="category-slug"
+            className={inputClassName}
+            {...register("slug", { onChange: () => setSlugTouched(true) })}
+          />
+          <FieldError message={errors.slug?.message} />
+        </div>
+
+        <FormSelect
+          label="Parent category"
+          name="parent_id"
+          control={control}
+          options={toSelectOptions(parentOptions)}
+          error={errors.parent_id?.message}
+          optional
+          optionalLabel="None (top level)"
+          coerceNumber
+        />
+
+        <div className="space-y-2">
+          <Label htmlFor="category-sort">Sort order</Label>
+          <Input
+            id="category-sort"
+            type="number"
+            className={inputClassName}
+            {...register("sort_order")}
+          />
+          <FieldError message={errors.sort_order?.message} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="category-description">Description</Label>
+          <Textarea id="category-description" {...register("description")} />
+          <FieldError message={errors.description?.message} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="category-image">Image path</Label>
+          <Input
+            id="category-image"
+            className={inputClassName}
+            placeholder="categories/ram.webp"
+            {...register("image_path")}
+          />
+          <FieldError message={errors.image_path?.message} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="category-meta-title">Meta title</Label>
+          <Input id="category-meta-title" className={inputClassName} {...register("meta_title")} />
+          <FieldError message={errors.meta_title?.message} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="category-meta-description">Meta description</Label>
+          <Textarea id="category-meta-description" {...register("meta_description")} />
+          <FieldError message={errors.meta_description?.message} />
+        </div>
+
+        <Controller
+          name="is_active"
+          control={control}
+          render={({ field }) => (
+            <FormSwitch
+              id="category-active"
+              label="Active"
+              description="Inactive categories are hidden from the storefront."
+              checked={Boolean(field.value)}
+              onCheckedChange={field.onChange}
+            />
+          )}
+        />
+
+        {isEdit ? <input type="hidden" {...register("id")} /> : null}
+      </form>
+    </FormSheet>
+  );
+}

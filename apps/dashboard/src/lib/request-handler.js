@@ -19,7 +19,7 @@ const requestHandler =
     try {
       const from = (page - 1) * perPage;
       const to = from + perPage - 1;
-      const { select = meta.select, search: searchColumn, filters: filterConfig = {} } = meta;
+      const { select, search: searchColumn, filters: filterConfig = {} } = meta;
 
       let query = supabase.from(endpoint).select(select, {
         count: "exact",
@@ -92,7 +92,7 @@ const requestHandler =
 
       const { data, count, error } = await supabase
         .from(endpoint)
-        .select("*", { count: "exact" })
+        .select(meta.select, { count: "exact" })
         .range(from, to);
 
       if (error) {

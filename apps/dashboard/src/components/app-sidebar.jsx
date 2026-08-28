@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, Package } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
@@ -33,6 +33,20 @@ export function AppSidebar({ ...props }) {
           url: "/",
           icon: LayoutDashboard,
           isActive: pathname === "/",
+        },
+        {
+          title: "Catalog",
+          url: "/products",
+          icon: Package,
+          isActive:
+            pathname.startsWith("/products") ||
+            pathname.startsWith("/categories") ||
+            pathname.startsWith("/brands"),
+          items: [
+            { title: "Products", url: "/products" },
+            { title: "Categories", url: "/categories" },
+            { title: "Brands", url: "/brands" },
+          ],
         },
       ],
     }),

@@ -48,6 +48,7 @@ export default function List({
   renderFilters,
   searchPlaceholder = "Search",
   meta = {},
+  select = "*",
   teleportFilterButton = false,
   filters = {},
   onDataChange = () => {},
@@ -95,7 +96,7 @@ export default function List({
         showHeader={showHeader}
         paginationMode="pagination"
         version={reactListVersion}
-        meta={meta}
+        meta={{ select, ...meta }}
       >
         {({
           filters: currentFilters,

@@ -26,7 +26,7 @@ export default async function RootLayout({ children }) {
       <body className={`${inter.variable} font-sans antialiased`}>
         <AppProvider user={user}>
           {children}
-          <Toaster position="top-right" richColors closeButton />
+          <Toaster position="top-right" />
         </AppProvider>
       </body>
     </html>
