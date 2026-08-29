@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Search } from "lucide-react";
 import { Button } from "@ui/shadcn/components/button";
-import { FormField, Input } from "@ui/shadcn/components/input";
+import { FormField } from "@ui/shadcn/components/form-field";
+import { Input } from "@ui/shadcn/components/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@ui/shadcn/components/card";
 import { OrderTimeline } from "@/components/store/order-timeline";
 

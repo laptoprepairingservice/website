@@ -3,7 +3,9 @@
 import { toast } from "sonner";
 import { Button } from "@ui/shadcn/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@ui/shadcn/components/card";
-import { FormField, Input, Textarea } from "@ui/shadcn/components/input";
+import { FormField } from "@ui/shadcn/components/form-field";
+import { Input } from "@ui/shadcn/components/input";
+import { Textarea } from "@ui/shadcn/components/textarea";
 import { STORE } from "@/lib/store-config";
 
 export default function AdminSettingsPage() {
