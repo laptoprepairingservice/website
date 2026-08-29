@@ -38,7 +38,7 @@ export default function List({
   hidePagination = false,
   showSearch = true,
   page = 1,
-  rowClassName,
+  rowClassName = "min-h-12",
   perPage = 25,
   search = "",
   sortBy = "created_at",

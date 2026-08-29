@@ -1,9 +1,10 @@
-export async function fetchProductWithDefaultVariant(supabase, productId) {
+export async function fetchProductWithDefaultVariant(supabase, productPublicId) {
   const { data, error } = await supabase
     .from("products")
     .select(
       `
       id,
+      public_id,
       name,
       slug,
       category_id,
@@ -18,6 +19,7 @@ export async function fetchProductWithDefaultVariant(supabase, productId) {
       meta_description,
       product_variants (
         id,
+        public_id,
         sku,
         barcode,
         variant_name,
@@ -31,7 +33,7 @@ export async function fetchProductWithDefaultVariant(supabase, productId) {
       )
     `
     )
-    .eq("id", productId)
+    .eq("public_id", productPublicId)
     .single();
 
   if (error) {
@@ -48,23 +50,28 @@ export async function fetchProductWithDefaultVariant(supabase, productId) {
 }
 
 export async function insertProduct(supabase, payload) {
-  return supabase.from("products").insert(payload).select("id").single();
+  return supabase.from("products").insert(payload).select("id, public_id").single();
 }
 
 export async function insertDefaultVariant(supabase, payload) {
   return supabase.from("product_variants").insert(payload).select("id").single();
 }
 
-export async function updateProductById(supabase, productId, payload) {
-  return supabase.from("products").update(payload).eq("id", productId).select("id").single();
+export async function updateProductByPublicId(supabase, productPublicId, payload) {
+  return supabase
+    .from("products")
+    .update(payload)
+    .eq("public_id", productPublicId)
+    .select("id, public_id")
+    .single();
 }
 
-export async function updateVariantById(supabase, variantId, payload) {
+export async function updateVariantByPublicId(supabase, variantPublicId, payload) {
   return supabase
     .from("product_variants")
     .update(payload)
-    .eq("id", variantId)
-    .select("id")
+    .eq("public_id", variantPublicId)
+    .select("id, public_id")
     .single();
 }
 

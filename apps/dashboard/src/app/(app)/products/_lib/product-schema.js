@@ -78,10 +78,10 @@ export const productFormSchema = z
   });
 
 export const updateProductFormSchema = productFormSchema.safeExtend({
-  id: z.coerce.number().int().positive(),
+  public_id: z.string().uuid("Invalid product identifier"),
 
   default_variant: defaultVariantSchema.extend({
-    id: z.coerce.number().int().positive(),
+    public_id: z.string().uuid("Invalid variant identifier"),
   }),
 });
 

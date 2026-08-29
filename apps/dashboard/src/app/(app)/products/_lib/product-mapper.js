@@ -66,7 +66,7 @@ export function toVariantUpdatePayload(values) {
 
 export function toProductFormValues(product, defaultVariant) {
   return getProductFormDefaults({
-    id: product.id,
+    public_id: product.public_id,
     name: product.name ?? "",
     slug: product.slug ?? "",
     category_id: product.category_id ?? "",
@@ -80,7 +80,7 @@ export function toProductFormValues(product, defaultVariant) {
     meta_title: product.meta_title ?? "",
     meta_description: product.meta_description ?? "",
     default_variant: {
-      id: defaultVariant.id,
+      public_id: defaultVariant.public_id,
       sku: defaultVariant.sku ?? "",
       barcode: defaultVariant.barcode ?? "",
       variant_name: defaultVariant.variant_name ?? "",

@@ -1,99 +1,146 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Pagination as PaginationRoot } from "ui/components/pagination";
+import {
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  Pagination as PaginationRoot,
+} from "ui/components/pagination";
 
 export default function Pagination({
-  page = 1,
-  pagesCount = 1,
-  perPage = 10,
-  count = 0,
+  page,
+  pagesCount,
+  perPage,
+  count,
+  pagesToDisplay = [1, 2, 3],
   setPage,
-  maxVisiblePages = 3,
-  className,
+  next,
+  prev,
+  first,
+  last,
 }) {
-  const currentPage = Math.max(1, page);
-  const totalPages = Math.max(1, pagesCount);
+  const current_page = page;
+  const last_page = pagesCount;
+  const per_page = perPage;
+  const total = count;
 
-  const from = count === 0 ? 0 : (currentPage - 1) * perPage + 1;
-  const to = Math.min(currentPage * perPage, count);
+  const MAX_BUTTONS = 3;
+  const from = (page - 1) * per_page + 1;
+  const to = Math.min(page * per_page, total);
 
-  const canGoPrevious = currentPage > 1;
-  const canGoNext = currentPage < totalPages;
-
-  const handlePageChange = (nextPage) => {
-    if (nextPage < 1 || nextPage > totalPages || nextPage === currentPage) {
-      return;
+  const handlePageChange = (p, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
     }
-
-    setPage(nextPage);
+    if (p >= 1 && p <= last_page && p !== current_page) {
+      setPage(p);
+    }
   };
 
-  const getPageNumbers = () => {
+  const renderPageNumbers = () => {
     const pages = [];
+    const windowSize = MAX_BUTTONS;
 
-    const windowSize = Math.max(1, maxVisiblePages);
-
-    let start = Math.max(1, currentPage - Math.floor(windowSize / 2));
-
+    // --- calculate sliding window ---
+    let start = Math.max(1, current_page - Math.floor(windowSize / 2));
     let end = start + windowSize - 1;
 
-    if (end > totalPages) {
-      end = totalPages;
+    if (end > last_page) {
+      end = last_page;
       start = Math.max(1, end - windowSize + 1);
     }
 
-    // First page
+    // --- Always show "1" ---
     if (start > 1) {
-      pages.push(1);
+      pages.push(
+        <PaginationItem key={1}>
+          <PaginationLink href="#" onClick={(e) => handlePageChange(1, e)}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
 
       if (start > 2) {
-        pages.push("start-ellipsis");
+        pages.push(
+          <PaginationItem key="ellipsis-start">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
       }
     }
 
-    // Visible pages
-    for (let pageNumber = start; pageNumber <= end; pageNumber++) {
-      pages.push(pageNumber);
+    // --- Window pages ---
+    for (let p = start; p <= end; p++) {
+      pages.push(
+        <PaginationItem key={p}>
+          <PaginationLink
+            href="#"
+            isActive={p === current_page}
+            onClick={(e) => handlePageChange(p, e)}
+          >
+            {p}
+          </PaginationLink>
+        </PaginationItem>
+      );
     }
 
-    // Last page
-    if (end < totalPages) {
-      if (end < totalPages - 1) {
-        pages.push("end-ellipsis");
+    // --- Always show last page ---
+    if (end < last_page) {
+      if (end < last_page - 1) {
+        pages.push(
+          <PaginationItem key="ellipsis-end">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
       }
 
-      pages.push(totalPages);
+      pages.push(
+        <PaginationItem key={last_page}>
+          <PaginationLink href="#" onClick={(e) => handlePageChange(last_page, e)}>
+            {last_page}
+          </PaginationLink>
+        </PaginationItem>
+      );
     }
 
     return pages;
   };
 
-  if (totalPages <= 1) {
-    return null;
-  }
+  if (pagesCount <= 1) return null;
 
   return (
-    <div
-      className={cn(
-        "flex flex-col items-center justify-between gap-4 px-2 py-4 sm:flex-row",
-        className
-      )}
-    >
-      {/* Results */}
-      <p className="text-muted-foreground text-sm">
-        Showing <span className="text-foreground font-medium">{from}</span> to{" "}
-        <span className="text-foreground font-medium">{to}</span> of{" "}
-        <span className="text-foreground font-medium">{count}</span>
-      </p>
+    <div className="flex flex-col items-center justify-between gap-4 px-2 py-4 sm:flex-row">
+      <div className="text-muted-foreground text-sm">
+        Showing {from} to {to} of {total}
+      </div>
 
-      {/* Pagination */}
-      <PaginationRoot
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-      />
+      <div className="flex items-center gap-4">
+        <PaginationRoot>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => handlePageChange(current_page - 1, e)}
+                className={current_page === 1 ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+
+            {renderPageNumbers()}
+
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(e) => handlePageChange(current_page + 1, e)}
+                className={current_page === last_page ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </PaginationRoot>
+      </div>
     </div>
   );
 }

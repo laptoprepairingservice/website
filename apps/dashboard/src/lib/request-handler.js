@@ -8,7 +8,7 @@ const requestHandler =
     endpoint,
     page = 1,
     perPage = 10,
-    search,
+    search = "",
     sortBy,
     sortOrder = "desc",
     filters = {},
@@ -19,16 +19,19 @@ const requestHandler =
     try {
       const from = (page - 1) * perPage;
       const to = from + perPage - 1;
-      const { select, search: searchColumn, filters: filterConfig = {} } = meta;
+
+      const { select = "*", search: searchColumn, filters: filterConfig = {} } = meta;
 
       let query = supabase.from(endpoint).select(select, {
         count: "exact",
       });
 
+      // Search
       if (search && searchColumn) {
         query = query.ilike(searchColumn, `%${search}%`);
       }
 
+      // Filters
       Object.entries(filters).forEach(([key, value]) => {
         if (value === undefined || value === null || value === "") {
           return;
@@ -82,18 +85,15 @@ const requestHandler =
         }
       });
 
+      // Sorting
       if (sortBy) {
         query = query.order(sortBy, {
           ascending: sortOrder !== "desc",
         });
       }
 
-      query = query.range(from, to);
-
-      const { data, count, error } = await supabase
-        .from(endpoint)
-        .select(meta.select, { count: "exact" })
-        .range(from, to);
+      // Pagination + execute query
+      const { data, count, error } = await query.range(from, to);
 
       if (error) {
         console.error("[ReactList] Supabase fetch error:", error);

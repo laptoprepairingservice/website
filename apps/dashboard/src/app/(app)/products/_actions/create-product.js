@@ -49,5 +49,5 @@ export async function createProductAction(values) {
     };
   }
 
-  return { productId: product.id };
+  return { productPublicId: product.public_id };
 }

@@ -18,7 +18,7 @@ export default function Page() {
         </Button>
       </div>
 
-      <List endpoint="products" select="id, name, product_variants(price), created_at">
+      <List endpoint="products" select="id, public_id, name, product_variants(price), created_at">
         {({ items }) => (
           <div className="divide-y rounded-xl border">
             {items.length === 0 ? (
@@ -27,7 +27,7 @@ export default function Page() {
               items.map((product) => (
                 <Link
                   key={product.id}
-                  href={`/products/${product.id}/edit`}
+                  href={`/products/${product.public_id}/edit`}
                   className="hover:bg-muted/40 flex items-center justify-between p-4 transition-colors"
                 >
                   <span className="font-medium">{product.name}</span>

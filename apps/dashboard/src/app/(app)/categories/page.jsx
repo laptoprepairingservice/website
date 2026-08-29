@@ -19,7 +19,6 @@ export default function CategoriesPage() {
     () => [
       { accessorKey: "name", header: "Name" },
       { accessorKey: "slug", header: "Slug" },
-      { accessorKey: "sort_order", header: "Sort" },
       {
         accessorKey: "is_active",
         header: "Status",

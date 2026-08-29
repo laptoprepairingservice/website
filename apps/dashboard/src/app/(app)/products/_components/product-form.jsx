@@ -106,7 +106,7 @@ export function ProductForm({ mode, catalogOptions, initialValues }) {
       return;
     }
 
-    router.push(`/products/${result.productId}/edit`);
+    router.push(`/products/${result.productPublicId}/edit`);
   };
 
   const categoryOptions = toSelectOptions(catalogOptions.categories);
@@ -360,8 +360,8 @@ export function ProductForm({ mode, catalogOptions, initialValues }) {
           </div>
         </FormSection>
 
-        {isEdit ? <input type="hidden" {...register("id")} /> : null}
-        {isEdit ? <input type="hidden" {...register("default_variant.id")} /> : null}
+        {isEdit ? <input type="hidden" {...register("public_id")} /> : null}
+        {isEdit ? <input type="hidden" {...register("default_variant.public_id")} /> : null}
       </form>
     </>
   );
