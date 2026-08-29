@@ -12,14 +12,15 @@ const inter = Inter({
 
 export const metadata = {
   title: {
-    default: `Ahmedabad`,
-    template: `%s | default`,
+    default: `Ranuja | Coming Soon - Laptop Repair & Hardware Store`,
+    template: `%s | Ranuja`,
   },
+  description:
+    "We are currently building something amazing. Genuine laptop repairing services, computer hardware, and spare parts in Ahmedabad.",
 };
 
 export default async function RootLayout({ children }) {
   const user = await getCurrentUser();
-  console.log(user);
 
   return (
     <html lang="en" suppressHydrationWarning>
