@@ -1,6 +1,6 @@
-import * as React from "react"
-
-import { cn } from "@ui/shadcn/lib/utils"
+import * as React from "react";
+import { cn } from "@ui/shadcn/lib/utils";
+import { Textarea } from "./textarea";
 
 function Input({
   className,
@@ -17,8 +17,24 @@ function Input({
         "aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
         className
       )}
-      {...props} />
+      {...props}
+    />
   );
 }
 
-export { Input }
+function FormField({ label, id, error, required, children, className }) {
+  return (
+    <div className={cn("space-y-1.5", className)}>
+      {label && (
+        <label htmlFor={id} className="text-xs font-semibold text-foreground">
+          {label}
+          {required && <span className="text-destructive ml-0.5">*</span>}
+        </label>
+      )}
+      {children}
+      {error && <p className="text-xs text-destructive">{error}</p>}
+    </div>
+  );
+}
+
+export { Input, Textarea, FormField };
