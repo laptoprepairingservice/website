@@ -15,8 +15,8 @@ export function ProductCard({ product, className, compact = false }) {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const discount = formatDiscount(product.price, product.originalPrice);
-  const savings = product.originalPrice && product.originalPrice > product.price 
-    ? product.originalPrice - product.price 
+  const savings = product.originalPrice && product.originalPrice > product.price
+    ? product.originalPrice - product.price
     : 0;
 
   // Extract key specs for preview pills
@@ -59,7 +59,7 @@ export function ProductCard({ product, className, compact = false }) {
   return (
     <article
       className={cn(
-        "group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/80 bg-card text-card-foreground shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl dark:hover:shadow-primary/5",
+        "group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/80 bg-card text-card-foreground shadow-xs transition-all duration-300 hover:border-primary/40 hover:shadow-xl dark:hover:shadow-primary/5",
         className
       )}
     >
@@ -71,7 +71,7 @@ export function ProductCard({ product, className, compact = false }) {
             alt={product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-contain p-4 transition-transform duration-500 group-hover:scale-108"
+            className="object-contain p-4 transition-transform duration-500"
           />
 
           {/* Floating Badges */}
