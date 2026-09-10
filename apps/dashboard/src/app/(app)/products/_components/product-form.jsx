@@ -20,6 +20,7 @@ import {
   updateProductFormSchema,
   VARIANT_CONDITIONS,
 } from "../_lib/product-schema";
+import { ProductAssetsManager } from "./product-assets-manager";
 import { Button } from "@ui/shadcn/components/button";
 import {
   Card,
@@ -203,6 +204,13 @@ export function ProductForm({ mode, catalogOptions, initialValues }) {
             </div>
           </div>
         </FormSection>
+
+        <ProductAssetsManager
+          productPublicId={initialValues?.public_id || initialValues?.id}
+          initialAssets={initialValues?.assets || []}
+          onChange={(newAssets) => setValue("assets", newAssets, { shouldDirty: true })}
+          disabled={isSubmitting}
+        />
 
         <FormSection
           title="Publishing"

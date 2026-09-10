@@ -34,6 +34,22 @@ export const defaultVariantSchema = z.object({
   is_active: z.boolean().default(true),
 });
 
+export const productAssetSchema = z.object({
+  id: z.coerce.number().optional(),
+  public_id: z.string().optional(),
+  storage_path: z.string().min(1, "Storage path is required"),
+  alt_text: z.string().trim().nullable().optional(),
+  width: optionalPositiveInt,
+  height: optionalPositiveInt,
+  sort_order: z.coerce.number().default(0),
+  is_banner: z.boolean().default(false),
+  media_type: z.enum(["image", "video"]).default("image"),
+  file_name: z.string().nullable().optional(),
+  file_size: optionalPositiveInt,
+  mime_type: z.string().nullable().optional(),
+  url: z.string().optional(),
+});
+
 export const productFormSchema = z
   .object({
     name: z.string().trim().min(1, "Product name is required"),
@@ -56,6 +72,7 @@ export const productFormSchema = z
     meta_title: z.string().trim().optional(),
     meta_description: z.string().trim().optional(),
     default_variant: defaultVariantSchema,
+    assets: z.array(productAssetSchema).default([]),
   })
   .superRefine((data, ctx) => {
     const { compare_at_price, price } = data.default_variant;
@@ -110,6 +127,7 @@ export function getProductFormDefaults(overrides = {}) {
       weight_grams: "",
       is_active: true,
     },
+    assets: [],
     ...overrides,
   };
 }
