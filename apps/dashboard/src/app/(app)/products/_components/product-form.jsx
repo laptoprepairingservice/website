@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { BreadcrumbSetter } from "@/components/breadcrumb/breadcrumb-setter";
 import { FormSwitch } from "@/components/ui/form-switch";
 import { FormSelect, toConstantSelectOptions, toSelectOptions } from "@/components/ui/select";
+import { FormRichTextEditor } from "@/components/ui/rich-text-editor";
 import { createProductAction } from "../_actions/create-product";
 import { updateProductAction } from "../_actions/update-product";
 import { slugify } from "../_lib/slug";
@@ -197,10 +198,16 @@ export function ProductForm({ mode, catalogOptions, initialValues }) {
               <FieldError message={errors.short_description?.message} />
             </div>
 
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="description">Full description</Label>
-              <Textarea id="description" rows={6} {...register("description")} />
-              <FieldError message={errors.description?.message} />
+            <div className="md:col-span-2">
+              <FormRichTextEditor
+                label="Full description"
+                name="description"
+                control={control}
+                error={errors.description?.message}
+                placeholder="Write a comprehensive product description with specs, features, and warranty details..."
+                disabled={isSubmitting}
+                minHeight="220px"
+              />
             </div>
           </div>
         </FormSection>
