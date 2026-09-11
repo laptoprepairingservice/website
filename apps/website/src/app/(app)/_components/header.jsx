@@ -1,14 +1,12 @@
 "use client";
 
 import { useAppContext } from "@/app/_context";
-import { NAV_LINKS, STORE } from "@/lib/store-config";
 import { getUserShortName } from "@/lib/utils";
 import { Button } from "@ui/shadcn/components/button";
 import { Input } from "@ui/shadcn/components/input";
 import { Heart, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { AnnouncementBar } from "./announcement-bar";
-import { MobileMenuSheet } from "./mobile-menu-sheet";
 
 function SearchForm({ className }) {
   return (
@@ -40,8 +38,8 @@ export function Header() {
                 CV
               </div>
               <div className="hidden min-w-0 sm:block">
-                <span className="text-lg font-semibold tracking-tight">{STORE.name}</span>
-                <p className="text-muted-foreground text-xs">{STORE.location}</p>
+                <span className="text-lg font-semibold tracking-tight">Ranuja</span>
+                <p className="text-muted-foreground text-xs">Ahmedabad</p>
               </div>
             </Link>
           </div>
@@ -66,14 +64,6 @@ export function Header() {
               </Link>
             </Button>
 
-            <div className="md:hidden">
-              <MobileMenuSheet
-                accountHref={accountHref}
-                accountLabel={accountLabel}
-                isSignedIn={isSignedIn}
-              />
-            </div>
-
             <Button
               variant="outline"
               size="icon"
@@ -84,22 +74,6 @@ export function Header() {
             </Button>
           </div>
         </div>
-
-        {/* Desktop navigation */}
-        <nav className="border-border hidden border-t lg:block" aria-label="Main navigation">
-          <ul className="hide-scrollbar flex h-12 items-center gap-1 overflow-x-auto">
-            {NAV_LINKS.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="text-muted-foreground hover:text-foreground px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
       </div>
     </header>
   );

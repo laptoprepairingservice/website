@@ -61,21 +61,6 @@ export function Newsletter({ className = "" }) {
               <ArrowRight className="ml-1.5 size-4" />
             </Button>
           </form>
-
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-4 sm:gap-6 border-t border-border pt-4 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="size-3.5 text-foreground shrink-0" />
-              <span>Priority GPU Drop Alerts</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="size-3.5 text-foreground shrink-0" />
-              <span>Weekly Benchmark Reviews</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="size-3.5 text-foreground shrink-0" />
-              <span>No Spam Guarantee</span>
-            </div>
-          </div>
         </div>
       </div>
     </section>

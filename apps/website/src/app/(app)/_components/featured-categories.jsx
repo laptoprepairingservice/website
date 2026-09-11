@@ -1,9 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { SectionHeader } from "./section-header";
-import { CATEGORIES } from "@/lib/data/products";
 
-export function FeaturedCategories() {
+export function FeaturedCategories({ categories = [] }) {
+  if (!categories || categories.length === 0) {
+    return null;
+  }
+
   return (
     <section className="border-b border-border py-10 lg:py-14">
       <div className="container">
@@ -14,11 +17,11 @@ export function FeaturedCategories() {
           linkText="All Categories"
         />
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-4 sm:gap-4">
-          {CATEGORIES.map((cat) => (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 sm:gap-4">
+          {categories.map((cat) => (
             <Link
-              key={cat.id}
-              href={`/products?category=${cat.id}`}
+              key={cat.id || cat.slug}
+              href={`/products?category=${cat.slug}`}
               className="group rounded-xl border border-border bg-card p-4 hover:border-foreground/40 transition-colors"
             >
               <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-muted/20">
@@ -35,7 +38,7 @@ export function FeaturedCategories() {
                   {cat.name}
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {cat.count}+ Products
+                  {cat.count} Product{cat.count === 1 ? "" : "s"}
                 </p>
               </div>
             </Link>

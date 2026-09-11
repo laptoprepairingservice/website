@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "jsx": "preserve",
     "plugins": [
@@ -9,14 +8,31 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@ui/*": ["../../packages/ui/*"],
-      "@ui/shadcn/*": ["../../packages/ui/shadcn/src/*"],
-      "ui/components/*": ["../../packages/ui/shadcn/src/components/*"],
-      "utils": ["../../packages/utils/index.js"],
-      "utils/*": ["../../packages/utils/src/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@ui/*": [
+        "../../packages/ui/*"
+      ],
+      "@ui/shadcn/*": [
+        "../../packages/ui/shadcn/src/*"
+      ],
+      "ui/components/*": [
+        "../../packages/ui/shadcn/src/components/*"
+      ],
+      "utils": [
+        "../../packages/utils/index.js"
+      ],
+      "utils/*": [
+        "../../packages/utils/src/*"
+      ]
     }
   },
-  "include": ["**/*.js", "**/*.jsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "**/*.js",
+    "**/*.jsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

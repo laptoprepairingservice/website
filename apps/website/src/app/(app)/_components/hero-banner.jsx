@@ -4,13 +4,13 @@ import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@ui/shadcn/components/button";
 import { formatPrice } from "@/lib/format";
 
-export function HeroBanner() {
+export function HeroBanner({ featuredProduct }) {
   return (
     <section className="border-b border-border bg-background py-8 sm:py-12 lg:py-16">
       <div className="container">
-        <div className="grid items-center gap-8 lg:grid-cols-12 lg:gap-12">
+        <div className={`grid items-center gap-8 ${featuredProduct ? "lg:grid-cols-12 lg:gap-12" : "max-w-3xl"}`}>
           {/* Left Hero Content */}
-          <div className="flex flex-col justify-center space-y-5 lg:col-span-7">
+          <div className={`flex flex-col justify-center space-y-5 ${featuredProduct ? "lg:col-span-7" : ""}`}>
             <span className="inline-flex w-fit items-center gap-2 rounded border border-border bg-muted/40 px-3 py-1 text-xs font-medium text-muted-foreground">
               Ahmedabad&apos;s Premium Hardware Store
             </span>
@@ -20,7 +20,7 @@ export function HeroBanner() {
                 High-Performance PC Hardware &amp; Custom Builds
               </h1>
               <p className="max-w-xl text-sm sm:text-base text-muted-foreground leading-relaxed">
-                Shop 100% genuine processors, RTX 40-series graphics cards, motherboards, DDR5 RAM, and NVMe SSDs. Official manufacturer warranty and same-day Gujarat dispatch.
+                Shop 100% genuine components with official manufacturer warranty and same-day Gujarat dispatch.
               </p>
             </div>
 
@@ -54,49 +54,56 @@ export function HeroBanner() {
             </div>
           </div>
 
-          {/* Right Featured Hardware Card */}
-          <div className="lg:col-span-5">
-            <div className="rounded-xl border border-border bg-card p-6">
-              <div className="relative aspect-video sm:aspect-square w-full overflow-hidden rounded-lg bg-muted/20 flex items-center justify-center p-4">
-                <Image
-                  src="https://images.unsplash.com/photo-1591488320449-011701bb6704?w=800&h=800&fit=crop"
-                  alt="NVIDIA GeForce RTX 4090"
-                  fill
-                  priority
-                  sizes="(max-width: 768px) 100vw, 40vw"
-                  className="object-contain p-2"
-                />
-              </div>
-
-              <div className="mt-4 space-y-2">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span className="font-semibold uppercase tracking-wider">Flagship GPU</span>
-                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">In Stock</span>
+          {/* Right Featured Hardware Card (Loaded from Supabase) */}
+          {featuredProduct && (
+            <div className="lg:col-span-5">
+              <div className="rounded-xl border border-border bg-card p-6">
+                <div className="relative aspect-video sm:aspect-square w-full overflow-hidden rounded-lg bg-muted/20 flex items-center justify-center p-4">
+                  <Image
+                    src={featuredProduct.image}
+                    alt={featuredProduct.name}
+                    fill
+                    unoptimized
+                    priority
+                    sizes="(max-width: 768px) 100vw, 40vw"
+                    className="object-contain p-2"
+                  />
                 </div>
-                <h2 className="text-lg font-bold text-foreground">
-                  NVIDIA GeForce RTX 4090 24GB
-                </h2>
-                <p className="text-xs text-muted-foreground">
-                  24GB GDDR6X · 16,384 CUDA Cores · DLSS 3.5 Ready
-                </p>
-                <div className="flex items-baseline justify-between pt-2">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-xl font-bold text-foreground">
-                      {formatPrice(154999)}
-                    </span>
-                    <span className="text-xs text-muted-foreground line-through">
-                      {formatPrice(169999)}
+
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span className="font-semibold uppercase tracking-wider">{featuredProduct.brand}</span>
+                    <span className={featuredProduct.inStock ? "text-emerald-600 dark:text-emerald-400 font-medium" : "text-rose-500 font-medium"}>
+                      {featuredProduct.inStock ? "In Stock" : "Out of Stock"}
                     </span>
                   </div>
-                  <Button size="sm" variant="outline" asChild>
-                    <Link href="/products/nvidia-rtx-4090-fe">
-                      View Details
-                    </Link>
-                  </Button>
+                  <h2 className="text-lg font-bold text-foreground line-clamp-1">
+                    {featuredProduct.name}
+                  </h2>
+                  <p className="text-xs text-muted-foreground line-clamp-2">
+                    {featuredProduct.shortDescription || featuredProduct.categoryName}
+                  </p>
+                  <div className="flex items-baseline justify-between pt-2">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-xl font-bold text-foreground">
+                        {formatPrice(featuredProduct.price)}
+                      </span>
+                      {featuredProduct.originalPrice && featuredProduct.originalPrice > featuredProduct.price && (
+                        <span className="text-xs text-muted-foreground line-through">
+                          {formatPrice(featuredProduct.originalPrice)}
+                        </span>
+                      )}
+                    </div>
+                    <Button size="sm" variant="outline" asChild>
+                      <Link href={`/products/${featuredProduct.slug}`}>
+                        View Details
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </section>
