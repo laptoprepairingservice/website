@@ -1,20 +1,21 @@
 import { notFound } from "next/navigation";
-import { ProductDetail } from "@/components/store/product-detail";
-import { ProductJsonLd } from "@/components/store/structured-data";
-import { fetchProductBySlug, fetchRelatedProducts, fetchAllProductSlugs } from "@/lib/supabase/store-data";
+import { ProductDetail } from "./_components/product-detail";
+import { ProductJsonLd } from "./_components/structured-data";
+import {
+  fetchProductBySlug,
+  fetchRelatedProducts,
+  fetchAllProductSlugs,
+} from "@/lib/supabase/store-data";
 
 export const revalidate = 60;
 
 export default async function ProductDetailPage({ params }) {
   const { slug } = await params;
   const product = await fetchProductBySlug(slug);
-
   if (!product) {
     notFound();
   }
-
   const related = await fetchRelatedProducts(product, 4);
-
   return (
     <>
       <ProductJsonLd product={product} />

@@ -27,6 +27,17 @@ import {
   saveGuestCart,
   updateLocalCart,
 } from "./cart-utils";
+import {
+  addToWishlistAction,
+  clearUserWishlistAction,
+  getCurrentUserWishlistAction,
+  removeFromWishlistAction,
+  toggleWishlistAction,
+} from "./_components/wishlist-actions";
+import {
+  computeWishlistCount,
+  isProductInWishlist,
+} from "./wishlist-utils";
 
 const AppContext = createContext(null);
 
@@ -35,6 +46,7 @@ export function AppProvider({
   user: initialUser = null,
   initialCart = null,
   userCart: legacyUserCart = null,
+  initialWishlist = null,
 }) {
   const [user, setUser] = useState(initialUser);
 
@@ -44,42 +56,60 @@ export function AppProvider({
     items: cartProp?.items ?? [],
   });
 
+  const [userWishlist, setUserWishlist] = useState({
+    id: initialWishlist?.id ?? null,
+    items: initialWishlist?.items ?? [],
+  });
+
   const isAuthenticated = Boolean(user && !user.isGuest);
 
   /*
-   * Load guest cart / sync cart after authentication.
+   * Load guest cart / sync cart and load wishlist after authentication.
    */
   useEffect(() => {
-    async function initializeCart() {
+    async function initializeData() {
       const guestItems = getGuestCart();
 
       if (isAuthenticated) {
+        // Sync cart
         if (guestItems.length) {
           const result = await syncGuestCartAction(guestItems);
 
           if (result?.success && result.cart) {
             setUserCart(result.cart);
             clearGuestCart();
-            return;
+          }
+        } else {
+          const cart = await getCurrentUserCartAction();
+          if (cart) {
+            setUserCart(cart);
           }
         }
 
-        const cart = await getCurrentUserCartAction();
-        if (cart) {
-          setUserCart(cart);
+        // Initialize / sync wishlist
+        const wishlist = await getCurrentUserWishlistAction();
+        if (wishlist) {
+          setUserWishlist(wishlist);
         }
         return;
       }
 
+      // Guest mode
       if (guestItems.length) {
         setUserCart({
           id: null,
           items: guestItems,
         });
       }
+
+      // Wishlist requires login, reset in guest mode
+      setUserWishlist({
+        id: null,
+        items: [],
+      });
     }
 
-    initializeCart();
+    initializeData();
   }, [isAuthenticated]);
 
   const refreshUser = useCallback(async () => {
@@ -87,6 +117,10 @@ export function AppProvider({
     setUser(nextUser);
     return nextUser;
   }, []);
+
+  /* -------------------------------------------------------------------------- */
+  /* CART ACTIONS                                                               */
+  /* -------------------------------------------------------------------------- */
 
   const refreshCart = useCallback(async () => {
     if (!isAuthenticated) {
@@ -244,6 +278,120 @@ export function AppProvider({
     }
   }, [isAuthenticated]);
 
+  /* -------------------------------------------------------------------------- */
+  /* WISHLIST ACTIONS                                                           */
+  /* -------------------------------------------------------------------------- */
+
+  const refreshWishlist = useCallback(async () => {
+    if (!isAuthenticated) {
+      setUserWishlist({ id: null, items: [] });
+      return { id: null, items: [] };
+    }
+
+    const wishlist = await getCurrentUserWishlistAction();
+    if (wishlist) {
+      setUserWishlist(wishlist);
+    }
+    return wishlist;
+  }, [isAuthenticated]);
+
+  const isInWishlist = useCallback(
+    (productId) => {
+      if (!isAuthenticated) return false;
+      return isProductInWishlist(userWishlist.items, productId);
+    },
+    [isAuthenticated, userWishlist.items]
+  );
+
+  const addToWishlist = useCallback(
+    async (product) => {
+      if (!isAuthenticated) {
+        return { success: false, requiresAuth: true };
+      }
+
+      const productId = product?.id || product?.productId || product;
+      if (!productId) return { success: false };
+
+      try {
+        const result = await addToWishlistAction(productId);
+        if (result?.success && result.wishlist) {
+          setUserWishlist(result.wishlist);
+        }
+        return result;
+      } catch (error) {
+        console.error("Failed to add to wishlist:", error);
+        return { success: false, error: error.message };
+      }
+    },
+    [isAuthenticated]
+  );
+
+  const removeFromWishlist = useCallback(
+    async (productId) => {
+      if (!isAuthenticated) {
+        return { success: false, requiresAuth: true };
+      }
+
+      const targetId = productId?.id || productId?.productId || productId;
+      if (!targetId) return { success: false };
+
+      try {
+        const result = await removeFromWishlistAction(targetId);
+        if (result?.success && result.wishlist) {
+          setUserWishlist(result.wishlist);
+        }
+        return result;
+      } catch (error) {
+        console.error("Failed to remove from wishlist:", error);
+        return { success: false, error: error.message };
+      }
+    },
+    [isAuthenticated]
+  );
+
+  const toggleWishlist = useCallback(
+    async (product) => {
+      if (!isAuthenticated) {
+        return { success: false, requiresAuth: true };
+      }
+
+      const productId = product?.id || product?.productId || product;
+      if (!productId) return { success: false };
+
+      try {
+        const result = await toggleWishlistAction(productId);
+        if (result?.success && result.wishlist) {
+          setUserWishlist(result.wishlist);
+        }
+        return result;
+      } catch (error) {
+        console.error("Failed to toggle wishlist:", error);
+        return { success: false, error: error.message };
+      }
+    },
+    [isAuthenticated]
+  );
+
+  const clearWishlist = useCallback(async () => {
+    if (!isAuthenticated) {
+      setUserWishlist({ id: null, items: [] });
+      return;
+    }
+
+    try {
+      const result = await clearUserWishlistAction();
+      if (result?.success && result.wishlist) {
+        setUserWishlist(result.wishlist);
+      }
+    } catch (error) {
+      console.error("Failed to clear wishlist:", error);
+    }
+  }, [isAuthenticated]);
+
+  /* -------------------------------------------------------------------------- */
+  /* COMPUTED VALUES                                                            */
+  /* -------------------------------------------------------------------------- */
+
   const cartItems = userCart.items;
 
   const cartCount = useMemo(
@@ -256,34 +404,65 @@ export function AppProvider({
     [cartItems]
   );
 
+  const wishlistItems = userWishlist.items;
+
+  const wishlistCount = useMemo(
+    () => computeWishlistCount(wishlistItems),
+    [wishlistItems]
+  );
+
   const value = useMemo(
     () => ({
       user,
+      isAuthenticated,
+
+      // Cart
       userCart,
       cartItems,
       cartCount,
       cartSubtotal,
-
-      refreshUser,
       refreshCart,
-
       addToCart,
       updateQuantity,
       removeFromCart,
       clearCart,
+
+      // Wishlist
+      userWishlist,
+      wishlistItems,
+      wishlistCount,
+      isInWishlist,
+      addToWishlist,
+      removeFromWishlist,
+      toggleWishlist,
+      clearWishlist,
+      refreshWishlist,
+
+      // User
+      refreshUser,
     }),
     [
       user,
+      isAuthenticated,
       userCart,
       cartItems,
       cartCount,
       cartSubtotal,
-      refreshUser,
       refreshCart,
       addToCart,
       updateQuantity,
       removeFromCart,
       clearCart,
+      userWishlist,
+      wishlistItems,
+      wishlistCount,
+      isInWishlist,
+      addToWishlist,
+      removeFromWishlist,
+      toggleWishlist,
+      clearWishlist,
+      refreshWishlist,
+      refreshUser,
     ]
   );
 

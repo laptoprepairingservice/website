@@ -14,9 +14,11 @@ import { cn } from "@/lib/utils";
 import { useAppContext } from "@/app/_context";
 
 export function ProductCard({ product, className }) {
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isTogglingWishlist, setIsTogglingWishlist] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
-  const { addToCart } = useAppContext();
+  const { user, addToCart, isInWishlist, toggleWishlist } = useAppContext();
+
+  const isWishlisted = isInWishlist(product.id);
 
   const discount = formatDiscount(product.price, product.originalPrice);
   const hasDiscount =
@@ -26,16 +28,42 @@ export function ProductCard({ product, className }) {
     ? product.originalPrice - product.price
     : 0;
 
-  const handleWishlist = (e) => {
+  const handleWishlist = async (e) => {
     e.preventDefault();
     e.stopPropagation();
 
-    setIsWishlisted((value) => !value);
+    if (isTogglingWishlist) return;
 
-    toast.success(
-      isWishlisted ? "Removed from wishlist" : "Saved to wishlist",
-      { description: product.name }
-    );
+    if (!user || user.isGuest) {
+      toast.error("Please sign in to save items to your wishlist", {
+        action: {
+          label: "Sign In",
+          onClick: () => {
+            const currentPath =
+              typeof window !== "undefined" ? window.location.pathname : "/";
+            window.location.href = `/login?next=${encodeURIComponent(currentPath)}`;
+          },
+        },
+      });
+      return;
+    }
+
+    setIsTogglingWishlist(true);
+    try {
+      const result = await toggleWishlist(product);
+      if (result?.action === "added") {
+        toast.success("Saved to wishlist", { description: product.name });
+      } else if (result?.action === "removed") {
+        toast.success("Removed from wishlist", { description: product.name });
+      } else if (result?.requiresAuth) {
+        toast.error("Please sign in to save items to your wishlist");
+      }
+    } catch (err) {
+      console.error("Failed to toggle wishlist:", err);
+      toast.error("Failed to update wishlist");
+    } finally {
+      setIsTogglingWishlist(false);
+    }
   };
 
   const handleAddToCart = async () => {
@@ -111,20 +139,21 @@ export function ProductCard({ product, className }) {
           variant="secondary"
           size="icon-sm"
           onClick={handleWishlist}
+          disabled={isTogglingWishlist}
           aria-label={
             isWishlisted
               ? "Remove from wishlist"
               : "Add to wishlist"
           }
           className={cn(
-            "absolute right-2.5 top-2.5 z-10 size-8 rounded-full cursor-pointer",
-            isWishlisted && "text-destructive"
+            "absolute right-2.5 top-2.5 z-10 size-8 rounded-full cursor-pointer transition-colors shadow-xs",
+            isWishlisted && "text-destructive bg-card hover:bg-card/90"
           )}
         >
           <Heart
             className={cn(
-              "size-4",
-              isWishlisted && "fill-destructive"
+              "size-4 transition-transform duration-200",
+              isWishlisted && "fill-destructive text-destructive scale-110"
             )}
           />
         </Button>

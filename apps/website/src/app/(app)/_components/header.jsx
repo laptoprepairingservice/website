@@ -19,7 +19,7 @@ function SearchForm({ className }) {
 }
 
 export function Header() {
-  const { user, cartCount } = useAppContext();
+  const { user, cartCount, wishlistCount } = useAppContext();
 
   const isSignedIn = Boolean(user && !user.isGuest);
   const accountHref = isSignedIn ? "/account" : "/login";
@@ -49,9 +49,20 @@ export function Header() {
 
           {/* Right side */}
           <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-            <Button variant="ghost" size="icon-sm" asChild aria-label="Wishlist">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              asChild
+              aria-label="Wishlist"
+              className="relative"
+            >
               <Link href="/wishlist">
                 <Heart />
+                {wishlistCount > 0 && (
+                  <span className="bg-primary text-primary-foreground absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-medium leading-none">
+                    {wishlistCount > 99 ? "99+" : wishlistCount}
+                  </span>
+                )}
               </Link>
             </Button>
 
