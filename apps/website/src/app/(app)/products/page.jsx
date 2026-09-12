@@ -2,18 +2,32 @@ import { Breadcrumb } from "@ui/shadcn/components/breadcrumb";
 import { Pagination } from "@ui/shadcn/components/pagination";
 import { ProductFilters } from "@/components/store/product-filters";
 import { ProductGrid } from "@/components/store/product-card";
-import { CATEGORIES, PRODUCTS, getProductsByCategory } from "@/lib/data/products";
+import {
+  fetchStoreProducts,
+  fetchStoreCategories,
+  fetchStoreBrands,
+} from "@/lib/supabase/store-data";
 
 export const metadata = {
   title: "All Products",
   description: "Browse our complete catalog of computer hardware components.",
 };
 
+export const revalidate = 60;
+
 export default async function ProductsPage({ searchParams }) {
   const params = await searchParams;
   const category = params?.category;
-  const products = category ? getProductsByCategory(category) : PRODUCTS;
-  const categoryName = category ? CATEGORIES.find((c) => c.id === category)?.name : "All Products";
+
+  const [products, categories, brands] = await Promise.all([
+    fetchStoreProducts({ category: category || null }),
+    fetchStoreCategories(),
+    fetchStoreBrands(),
+  ]);
+
+  const categoryName = category
+    ? categories.find((c) => c.slug === category)?.name || "Products"
+    : "All Products";
 
   return (
     <div className="py-8 lg:py-12">
@@ -26,16 +40,27 @@ export default async function ProductsPage({ searchParams }) {
       </div>
 
       <div className="mt-4 lg:hidden">
-        <ProductFilters />
+        <ProductFilters categories={categories} brands={brands} />
       </div>
 
       <div className="mt-8 flex gap-8">
-        <ProductFilters />
+        <ProductFilters categories={categories} brands={brands} />
         <div className="min-w-0 flex-1">
-          <ProductGrid products={products} />
-          <div className="mt-12">
-            <Pagination currentPage={1} totalPages={3} baseHref="/products?" />
-          </div>
+          {products.length > 0 ? (
+            <ProductGrid products={products} />
+          ) : (
+            <div className="rounded-xl border border-dashed border-border py-16 text-center">
+              <p className="text-base font-medium">No products available</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Check back soon for new inventory in this category.
+              </p>
+            </div>
+          )}
+          {products.length > 12 && (
+            <div className="mt-12">
+              <Pagination currentPage={1} totalPages={Math.ceil(products.length / 12)} baseHref="/products?" />
+            </div>
+          )}
         </div>
       </div>
     </div>

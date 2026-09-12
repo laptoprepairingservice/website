@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { Heart, Minus, Plus, Share2, ShoppingCart, Truck } from "lucide-react";
+import { Heart, Minus, Package, Plus, Share2, ShoppingCart, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { Breadcrumb } from "@ui/shadcn/components/breadcrumb";
 import { Badge } from "@ui/shadcn/components/badge";
@@ -11,15 +10,23 @@ import { Button } from "@ui/shadcn/components/button";
 import { ProductGrid } from "@/components/store/product-card";
 import { StarRating } from "@/components/store/star-rating";
 import { formatDiscount, formatPrice } from "@/lib/format";
-import { getRelatedProducts, PRODUCTS } from "@/lib/data/products";
 import { cn } from "@/lib/utils";
+import { useAppContext } from "@/app/_context";
 
-export function ProductDetail({ product }) {
+export function ProductDetail({ product, relatedProducts = [] }) {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
   const [activeImage, setActiveImage] = useState(0);
+  const [isAdding, setIsAdding] = useState(false);
+  const { addToCart } = useAppContext();
+
   const discount = formatDiscount(product.price, product.originalPrice);
-  const related = getRelatedProducts(product);
+
+  const images = Array.isArray(product.images) && product.images.length > 0
+    ? product.images
+    : product.image
+    ? [product.image]
+    : [];
 
   const tabs = [
     { id: "description", label: "Description" },
@@ -27,13 +34,35 @@ export function ProductDetail({ product }) {
     { id: "reviews", label: "Reviews" },
   ];
 
+  const handleAddToCart = async () => {
+    if (isAdding) return;
+    setIsAdding(true);
+    try {
+      await addToCart(product, quantity);
+      toast.success("Added to cart", {
+        description: `${quantity} × ${product.name} added to your basket.`,
+        action: {
+          label: "View Cart",
+          onClick: () => {
+            window.location.href = "/cart";
+          },
+        },
+      });
+    } catch (err) {
+      console.error("Failed to add to cart:", err);
+      toast.error("Failed to add to cart");
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
   return (
     <div className="py-8 lg:py-12">
       <Breadcrumb
         items={[
           { label: "Products", href: "/products" },
           {
-            label: product.category.replace("-", " "),
+            label: (product.categoryName || product.category || "Hardware").replace("-", " "),
             href: `/products?category=${product.category}`,
           },
           { label: product.name },
@@ -42,29 +71,34 @@ export function ProductDetail({ product }) {
 
       <div className="mt-8 grid gap-12 lg:grid-cols-2">
         <div className="space-y-4">
-          <div className="border-border bg-muted/30 relative aspect-square overflow-hidden rounded-2xl border p-8">
-            <Image
-              src={product.images[activeImage] || product.image}
-              alt={product.name}
-              fill
-              className="object-contain"
-              priority
-              sizes="(max-width: 1024px) 100vw, 50vw"
-            />
+          <div className="border-border bg-muted/30 relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl border p-8">
+            {images[activeImage] ? (
+              <Image
+                src={images[activeImage]}
+                alt={product.name}
+                fill
+                unoptimized
+                className="object-contain p-6 transition-all"
+                priority
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
+            ) : (
+              <Package className="size-24 text-muted-foreground/30" />
+            )}
           </div>
-          {product.images.length > 1 && (
-            <div className="flex gap-3">
-              {product.images.map((img, i) => (
+          {images.length > 1 && (
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {images.map((img, i) => (
                 <button
                   key={i}
                   type="button"
                   onClick={() => setActiveImage(i)}
                   className={cn(
-                    "bg-muted/30 relative size-20 overflow-hidden rounded-xl border-2 p-2 transition-colors",
+                    "bg-muted/30 relative size-20 shrink-0 overflow-hidden rounded-xl border-2 p-2 transition-colors cursor-pointer",
                     activeImage === i ? "border-primary" : "border-border"
                   )}
                 >
-                  <Image src={img} alt="" fill className="object-contain" sizes="80px" />
+                  <Image src={img} alt="" fill unoptimized className="object-contain p-1" sizes="80px" />
                 </button>
               ))}
             </div>
@@ -95,22 +129,24 @@ export function ProductDetail({ product }) {
           </div>
 
           <div className="space-y-2 text-sm">
-            <p>
-              <span className="text-muted-foreground">SKU:</span> {product.sku}
-            </p>
+            {product.sku && (
+              <p>
+                <span className="text-muted-foreground">SKU:</span> {product.sku}
+              </p>
+            )}
             <p>
               <span className="text-muted-foreground">Availability:</span>{" "}
               {product.inStock ? (
-                <span className="text-success font-medium">
-                  In Stock ({product.stockCount} units)
-                </span>
+                <span className="text-success font-medium">In Stock</span>
               ) : (
                 <span className="text-destructive font-medium">Out of Stock</span>
               )}
             </p>
           </div>
 
-          <p className="text-muted-foreground">{product.shortDescription}</p>
+          {product.shortDescription && (
+            <p className="text-muted-foreground">{product.shortDescription}</p>
+          )}
 
           <div className="border-border bg-muted/30 flex items-center gap-2 rounded-xl border p-4 text-sm">
             <Truck className="text-primary size-5 shrink-0" />
@@ -139,22 +175,34 @@ export function ProductDetail({ product }) {
             </div>
             <Button
               size="lg"
-              className="flex-1"
-              disabled={!product.inStock}
-              onClick={() => toast.success("Added to cart", { description: product.name })}
+              className="flex-1 cursor-pointer"
+              disabled={!product.inStock || isAdding}
+              onClick={handleAddToCart}
             >
               <ShoppingCart />
-              Add to Cart
+              {isAdding ? "Adding..." : "Add to Cart"}
             </Button>
             <Button
               variant="outline"
               size="icon"
-              onClick={() => toast.success("Added to wishlist")}
+              onClick={() => toast.success("Saved to wishlist", { description: product.name })}
               aria-label="Add to wishlist"
+              className="cursor-pointer"
             >
               <Heart />
             </Button>
-            <Button variant="outline" size="icon" aria-label="Share">
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="Share"
+              className="cursor-pointer"
+              onClick={() => {
+                if (navigator?.clipboard) {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast.success("Product link copied to clipboard");
+                }
+              }}
+            >
               <Share2 />
             </Button>
           </div>
@@ -169,7 +217,7 @@ export function ProductDetail({ product }) {
               type="button"
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "px-6 py-3 text-sm font-medium transition-colors",
+                "px-6 py-3 text-sm font-medium transition-colors cursor-pointer",
                 activeTab === tab.id
                   ? "border-primary text-foreground border-b-2"
                   : "text-muted-foreground hover:text-foreground"
@@ -181,23 +229,27 @@ export function ProductDetail({ product }) {
         </div>
         <div className="py-8">
           {activeTab === "description" && (
-            <div className="text-muted-foreground max-w-none">
-              <p>{product.description}</p>
+            <div className="prose dark:prose-invert max-w-none text-muted-foreground leading-relaxed">
+              <p>{product.description || product.shortDescription || "No description provided."}</p>
             </div>
           )}
           {activeTab === "specifications" && (
             <dl className="grid gap-4 sm:grid-cols-2">
-              {Object.entries(product.specs).map(([key, value]) => (
-                <div
-                  key={key}
-                  className="border-border flex justify-between rounded-lg border px-4 py-3"
-                >
-                  <dt className="text-muted-foreground text-sm capitalize">
-                    {key.replace("-", " ")}
-                  </dt>
-                  <dd className="text-sm font-medium">{value}</dd>
-                </div>
-              ))}
+              {Object.entries(product.specs || {}).length > 0 ? (
+                Object.entries(product.specs).map(([key, value]) => (
+                  <div
+                    key={key}
+                    className="border-border flex justify-between rounded-lg border px-4 py-3"
+                  >
+                    <dt className="text-muted-foreground text-sm capitalize">
+                      {key.replace("-", " ")}
+                    </dt>
+                    <dd className="text-sm font-medium">{String(value)}</dd>
+                  </div>
+                ))
+              ) : (
+                <p className="text-muted-foreground text-sm">Specifications will be updated shortly.</p>
+              )}
             </dl>
           )}
           {activeTab === "reviews" && (
@@ -217,17 +269,12 @@ export function ProductDetail({ product }) {
         </div>
       </div>
 
-      {related.length > 0 && (
+      {relatedProducts.length > 0 && (
         <section className="border-border mt-16 border-t pt-16">
           <h2 className="mb-8 text-2xl font-semibold">Related Products</h2>
-          <ProductGrid products={related} />
+          <ProductGrid products={relatedProducts} />
         </section>
       )}
-
-      <section className="border-border mt-16 border-t pt-16">
-        <h2 className="mb-8 text-2xl font-semibold">Recently Viewed</h2>
-        <ProductGrid products={PRODUCTS.slice(0, 4)} />
-      </section>
     </div>
   );
 }

@@ -1,35 +1,71 @@
 import Link from "next/link";
-import Image from "next/image";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Package } from "lucide-react";
 import { Button } from "@ui/shadcn/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@ui/shadcn/components/card";
 import { Badge } from "@ui/shadcn/components/badge";
+import { EmptyState } from "@ui/shadcn/components/empty-state";
 import { OrderTimeline } from "@/components/store/order-timeline";
 import { formatPrice } from "@/lib/format";
-import { PRODUCTS } from "@/lib/data/products";
-import { STORE } from "@/lib/store-config";
+import { getOrderById } from "@/lib/orders";
+
+export const dynamic = "force-dynamic";
 
 export default async function OrderDetailPage({ params }) {
   const { id } = await params;
-  const items = [PRODUCTS[0], PRODUCTS[3]];
-  const subtotal = items.reduce((s, i) => s + i.price, 0);
-  const shipping = 0;
+  const order = await getOrderById(id);
+
+  if (!order) {
+    return (
+      <div className="space-y-6">
+        <Button variant="ghost" size="sm" asChild className="-ml-2">
+          <Link href="/account/orders">
+            <ArrowLeft className="size-4" />
+            Back to Orders
+          </Link>
+        </Button>
+        <EmptyState
+          icon={Package}
+          title="Order Not Found"
+          description={`We couldn't find order "${id}". Please check your order ID and try again.`}
+          action={
+            <Button asChild>
+              <Link href="/account/orders">View All Orders</Link>
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
+  const items = order.order_items || [];
+  const address = order.shipping_address || {};
 
   return (
     <div className="space-y-8">
       <div>
         <Button variant="ghost" size="sm" asChild className="mb-4 -ml-2">
           <Link href="/account/orders">
-            <ArrowLeft />
+            <ArrowLeft className="size-4" />
             Back to Orders
           </Link>
         </Button>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold md:text-3xl">Order {id}</h1>
-            <p className="mt-1 text-muted-foreground">Placed on Jan 18, 2026</p>
+            <h1 className="text-2xl font-semibold md:text-3xl">
+              {order.order_number || `Order #${order.id}`}
+            </h1>
+            <p className="mt-1 text-muted-foreground">
+              Placed on{" "}
+              {new Date(order.created_at).toLocaleDateString("en-IN", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </p>
           </div>
-          <Badge variant="success">Delivered</Badge>
+          <Badge variant={order.status === "delivered" ? "success" : "secondary"}>
+            {order.status}
+          </Badge>
         </div>
       </div>
 
@@ -40,7 +76,7 @@ export default async function OrderDetailPage({ params }) {
               <CardTitle>Order Timeline</CardTitle>
             </CardHeader>
             <CardContent>
-              <OrderTimeline currentStatus="delivered" />
+              <OrderTimeline currentStatus={order.status?.toLowerCase() || "processing"} />
             </CardContent>
           </Card>
 
@@ -50,17 +86,14 @@ export default async function OrderDetailPage({ params }) {
             </CardHeader>
             <CardContent className="space-y-4">
               {items.map((item) => (
-                <div key={item.id} className="flex gap-4">
-                  <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-muted/30">
-                    <Image src={item.image} alt={item.name} fill className="object-contain p-1" sizes="64px" />
+                <div key={item.id} className="flex items-center justify-between gap-4 border-b border-border/50 pb-4 last:border-0 last:pb-0">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground">{item.product_name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Qty: {item.quantity} · {formatPrice(item.unit_price)} each
+                    </p>
                   </div>
-                  <div className="flex-1">
-                    <Link href={`/products/${item.slug}`} className="font-medium hover:text-primary">
-                      {item.name}
-                    </Link>
-                    <p className="text-sm text-muted-foreground">Qty: 1</p>
-                  </div>
-                  <p className="font-semibold">{formatPrice(item.price)}</p>
+                  <p className="font-semibold shrink-0">{formatPrice(item.subtotal)}</p>
                 </div>
               ))}
             </CardContent>
@@ -75,30 +108,50 @@ export default async function OrderDetailPage({ params }) {
             <CardContent className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>{formatPrice(subtotal)}</span>
+                <span>{formatPrice(order.subtotal)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Shipping</span>
-                <span>Free</span>
+                <span>
+                  {Number(order.shipping_amount) === 0
+                    ? "Free"
+                    : formatPrice(order.shipping_amount)}
+                </span>
               </div>
+              {Number(order.discount_amount) > 0 && (
+                <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                  <span>Discount</span>
+                  <span>-{formatPrice(order.discount_amount)}</span>
+                </div>
+              )}
               <div className="flex justify-between border-t border-border pt-2 font-semibold">
                 <span>Total</span>
-                <span>{formatPrice(subtotal + shipping)}</span>
+                <span>{formatPrice(order.total_amount)}</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Shipping Address</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              <p className="font-medium text-foreground">Rahul Shah</p>
-              <p className="mt-1">123, SG Highway, Near Iscon Cross Road</p>
-              <p>Ahmedabad, Gujarat — 380054</p>
-              <p className="mt-2">+91 98765 43210</p>
-            </CardContent>
-          </Card>
+          {address && (address.full_name || address.address_line1) && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Shipping Address</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                {address.full_name && (
+                  <p className="font-medium text-foreground">{address.full_name}</p>
+                )}
+                {address.address_line1 && <p className="mt-1">{address.address_line1}</p>}
+                {address.address_line2 && <p>{address.address_line2}</p>}
+                {(address.city || address.state || address.postal_code) && (
+                  <p>
+                    {[address.city, address.state].filter(Boolean).join(", ")}
+                    {address.postal_code ? ` — ${address.postal_code}` : ""}
+                  </p>
+                )}
+                {address.phone && <p className="mt-2">{address.phone}</p>}
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>

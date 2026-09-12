@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { ShoppingBag } from "lucide-react";
 import { Breadcrumb } from "@ui/shadcn/components/breadcrumb";
 import { Button } from "@ui/shadcn/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@ui/shadcn/components/card";
@@ -10,28 +11,68 @@ import { FormField } from "@ui/shadcn/components/form-field";
 import { Input } from "@ui/shadcn/components/input";
 import { Textarea } from "@ui/shadcn/components/textarea";
 import { RadioGroup } from "@ui/shadcn/components/form-controls";
+import { EmptyState } from "@ui/shadcn/components/empty-state";
 import { formatPrice } from "@/lib/format";
-import { PRODUCTS } from "@/lib/data/products";
 import { STORE } from "@/lib/store-config";
-
-const ORDER_ITEMS = [PRODUCTS[0], PRODUCTS[3]];
-const subtotal = ORDER_ITEMS.reduce((s, i) => s + i.price, 0);
-const shipping = subtotal >= STORE.freeShippingThreshold ? 0 : STORE.standardShipping;
-const codFee = STORE.codFee;
-const total = subtotal + shipping;
+import { useAppContext } from "@/app/_context";
 
 export default function CheckoutPage() {
+  const { user, cartItems, cartSubtotal, clearCart } = useAppContext();
   const [deliveryMethod, setDeliveryMethod] = useState("standard");
   const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [submitted, setSubmitted] = useState(false);
 
+  const shipping = cartSubtotal >= STORE.freeShippingThreshold ? 0 : STORE.standardShipping;
+  const codFee = STORE.codFee;
+  const total = cartSubtotal + shipping;
   const finalTotal = paymentMethod === "cod" ? total + codFee : total;
 
-  const handlePlaceOrder = (e) => {
+  const handlePlaceOrder = async (e) => {
     e.preventDefault();
+    setSubmitted(true);
+    await clearCart();
     toast.success("Order placed successfully!", {
       description: "You will receive a confirmation email shortly.",
     });
   };
+
+  if (cartItems.length === 0 && !submitted) {
+    return (
+      <div className="py-8 lg:py-12">
+        <Breadcrumb items={[{ label: "Cart", href: "/cart" }, { label: "Checkout" }]} />
+        <EmptyState
+          icon={ShoppingBag}
+          title="Your cart is empty"
+          description="Add items to your cart before proceeding to checkout."
+          action={
+            <Button asChild>
+              <Link href="/products">Browse Products</Link>
+            </Button>
+          }
+          className="mt-8"
+        />
+      </div>
+    );
+  }
+
+  if (submitted) {
+    return (
+      <div className="py-12 text-center">
+        <h1 className="text-3xl font-bold">Order Received!</h1>
+        <p className="mt-3 text-muted-foreground">
+          Thank you for shopping with Ranuja Enterprise. We are preparing your order.
+        </p>
+        <div className="mt-8 flex justify-center gap-4">
+          <Button asChild>
+            <Link href="/products">Continue Shopping</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/account/orders">View Orders</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="py-8 lg:py-12">
@@ -46,16 +87,16 @@ export default function CheckoutPage() {
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <FormField label="First Name" id="firstName">
-                <Input id="firstName" required placeholder="Rahul" />
+                <Input id="firstName" required defaultValue={user?.first_name || ""} placeholder="Rahul" />
               </FormField>
               <FormField label="Last Name" id="lastName">
-                <Input id="lastName" required placeholder="Shah" />
+                <Input id="lastName" required defaultValue={user?.last_name || ""} placeholder="Shah" />
               </FormField>
               <FormField label="Email" id="email" className="sm:col-span-2">
-                <Input id="email" type="email" required placeholder="rahul@example.com" />
+                <Input id="email" type="email" required defaultValue={user?.email || ""} placeholder="rahul@example.com" />
               </FormField>
               <FormField label="Phone" id="phone" className="sm:col-span-2">
-                <Input id="phone" type="tel" required placeholder="+91 98765 43210" />
+                <Input id="phone" type="tel" required defaultValue={user?.phone || ""} placeholder="+91 98765 43210" />
               </FormField>
             </CardContent>
           </Card>
@@ -133,16 +174,18 @@ export default function CheckoutPage() {
             <CardTitle>Order Summary</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {ORDER_ITEMS.map((item) => (
-              <div key={item.id} className="flex justify-between gap-4 text-sm">
-                <span className="text-muted-foreground line-clamp-2">{item.name}</span>
-                <span className="shrink-0 font-medium">{formatPrice(item.price)}</span>
+            {cartItems.map((item) => (
+              <div key={item.variantId || item.id} className="flex justify-between gap-4 text-sm">
+                <span className="text-muted-foreground line-clamp-2">
+                  {item.name} {item.quantity > 1 ? `× ${item.quantity}` : ""}
+                </span>
+                <span className="shrink-0 font-medium">{formatPrice(item.price * item.quantity)}</span>
               </div>
             ))}
             <div className="border-border space-y-2 border-t pt-4 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>{formatPrice(subtotal)}</span>
+                <span>{formatPrice(cartSubtotal)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Shipping</span>

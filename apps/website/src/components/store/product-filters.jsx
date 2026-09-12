@@ -5,7 +5,6 @@ import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import { Button } from "@ui/shadcn/components/button";
 import { Checkbox, Select } from "@ui/shadcn/components/form-controls";
 import { Drawer } from "@ui/shadcn/components/modal";
-import { BRANDS, CATEGORIES } from "@/lib/data/products";
 import { cn } from "@/lib/utils";
 
 function FilterSection({ title, children, defaultOpen = true }) {
@@ -27,20 +26,24 @@ function FilterSection({ title, children, defaultOpen = true }) {
   );
 }
 
-function FilterContent({ className }) {
+function FilterContent({ categories = [], brands = [], className }) {
   return (
     <div className={cn("space-y-0", className)}>
-      <FilterSection title="Category">
-        {CATEGORIES.map((cat) => (
-          <Checkbox key={cat.id} id={`cat-${cat.id}`} label={`${cat.name} (${cat.count})`} />
-        ))}
-      </FilterSection>
+      {categories.length > 0 && (
+        <FilterSection title="Category">
+          {categories.map((cat) => (
+            <Checkbox key={cat.id || cat.slug} id={`cat-${cat.id || cat.slug}`} label={`${cat.name}${cat.count ? ` (${cat.count})` : ""}`} />
+          ))}
+        </FilterSection>
+      )}
 
-      <FilterSection title="Brand">
-        {BRANDS.map((brand) => (
-          <Checkbox key={brand.id} id={`brand-${brand.id}`} label={brand.name} />
-        ))}
-      </FilterSection>
+      {brands.length > 0 && (
+        <FilterSection title="Brand">
+          {brands.map((brand) => (
+            <Checkbox key={brand.id || brand.slug} id={`brand-${brand.id || brand.slug}`} label={brand.name} />
+          ))}
+        </FilterSection>
+      )}
 
       <FilterSection title="Price Range">
         <div className="space-y-3">
@@ -79,7 +82,7 @@ function FilterContent({ className }) {
   );
 }
 
-export function ProductFilters({ className }) {
+export function ProductFilters({ categories = [], brands = [], className }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
@@ -87,7 +90,7 @@ export function ProductFilters({ className }) {
       <aside className={cn("hidden w-64 shrink-0 lg:block", className)}>
         <div className="sticky top-28 rounded-xl border border-border bg-card p-4">
           <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Filters</h2>
-          <FilterContent />
+          <FilterContent categories={categories} brands={brands} />
         </div>
       </aside>
 
@@ -97,7 +100,7 @@ export function ProductFilters({ className }) {
           Filters & Sort
         </Button>
         <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Filters & Sort">
-          <FilterContent />
+          <FilterContent categories={categories} brands={brands} />
         </Drawer>
       </div>
     </>

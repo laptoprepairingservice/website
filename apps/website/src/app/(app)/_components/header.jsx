@@ -19,7 +19,7 @@ function SearchForm({ className }) {
 }
 
 export function Header() {
-  const { user } = useAppContext();
+  const { user, cartCount } = useAppContext();
 
   const isSignedIn = Boolean(user && !user.isGuest);
   const accountHref = isSignedIn ? "/account" : "/login";
@@ -58,9 +58,11 @@ export function Header() {
             <Button variant="ghost" size="icon-sm" asChild aria-label="Cart" className="relative">
               <Link href="/cart">
                 <ShoppingCart />
-                <span className="bg-primary text-primary-foreground absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full text-[10px] font-medium">
-                  2
-                </span>
+                {cartCount > 0 && (
+                  <span className="bg-primary text-primary-foreground absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-medium leading-none">
+                    {cartCount > 99 ? "99+" : cartCount}
+                  </span>
+                )}
               </Link>
             </Button>
 

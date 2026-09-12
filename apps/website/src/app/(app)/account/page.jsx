@@ -1,24 +1,31 @@
-"use client";
-
 import Link from "next/link";
-import { ArrowRight, Heart, Package, ShoppingBag } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight, Package } from "lucide-react";
 import { Button } from "@ui/shadcn/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@ui/shadcn/components/card";
 import { Badge } from "@ui/shadcn/components/badge";
-import { useAppContext } from "@/app/_context";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { formatPrice } from "@/lib/format";
-import { PRODUCTS } from "@/lib/data/products";
+import { getAccountDashboardData } from "@/lib/orders";
+import { createClient } from "@/lib/supabase/server";
+import { AccountDashboardStats } from "./_components/account-dashboard-stats";
 
-const RECENT_ORDERS = [
-  { id: "CV-2026-00142", date: "Jan 18, 2026", status: "Delivered", total: 55498, items: 2 },
-  { id: "CV-2026-00138", date: "Jan 10, 2026", status: "Shipped", total: 13999, items: 1 },
-  { id: "CV-2025-00987", date: "Dec 28, 2025", status: "Delivered", total: 18999, items: 1 },
-];
+export const dynamic = "force-dynamic";
 
-export default function AccountDashboardPage() {
-  const { user } = useAppContext();
-  const firstName = user?.first_name || user?.name || "there";
+export default async function AccountDashboardPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const firstName =
+    user?.user_metadata?.first_name ||
+    user?.user_metadata?.name ||
+    user?.email?.split("@")[0] ||
+    "there";
+
+  const { ordersCount, recentOrders, wishlistCount, wishlistProducts } =
+    await getAccountDashboardData();
 
   return (
     <div className="space-y-8">
@@ -30,71 +37,57 @@ export default function AccountDashboardPage() {
         <LogoutButton />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex size-12 items-center justify-center rounded-xl bg-primary/5">
-              <Package className="size-6 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-semibold">12</p>
-              <p className="text-sm text-muted-foreground">Total Orders</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex size-12 items-center justify-center rounded-xl bg-primary/5">
-              <Heart className="size-6 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-semibold">5</p>
-              <p className="text-sm text-muted-foreground">Wishlist Items</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex size-12 items-center justify-center rounded-xl bg-primary/5">
-              <ShoppingBag className="size-6 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-semibold">2</p>
-              <p className="text-sm text-muted-foreground">Cart Items</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <AccountDashboardStats ordersCount={ordersCount} wishlistCount={wishlistCount} />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Recent Orders</CardTitle>
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/account/orders">
-              View All
-              <ArrowRight />
-            </Link>
-          </Button>
+          {recentOrders.length > 0 && (
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/account/orders">
+                View All
+                <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {RECENT_ORDERS.map((order) => (
-              <Link
-                key={order.id}
-                href={`/account/orders/${order.id}`}
-                className="flex flex-col gap-2 rounded-lg border border-border p-4 transition-colors hover:bg-accent/50 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
-                  <p className="font-medium">{order.id}</p>
-                  <p className="text-sm text-muted-foreground">{order.date} · {order.items} items</p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <Badge variant={order.status === "Delivered" ? "success" : "secondary"}>{order.status}</Badge>
-                  <span className="font-semibold">{formatPrice(order.total)}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
+          {recentOrders.length > 0 ? (
+            <div className="space-y-4">
+              {recentOrders.map((order) => (
+                <Link
+                  key={order.id}
+                  href={`/account/orders/${order.order_number || order.id}`}
+                  className="flex flex-col gap-2 rounded-lg border border-border p-4 transition-colors hover:bg-accent/50 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <p className="font-medium">{order.order_number || `Order #${order.id}`}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(order.created_at).toLocaleDateString("en-IN", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}{" "}
+                      · {order.order_items?.length || 0} items
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Badge variant={order.status === "delivered" ? "success" : "secondary"}>
+                      {order.status}
+                    </Badge>
+                    <span className="font-semibold">{formatPrice(order.total_amount)}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="py-6 text-center text-sm text-muted-foreground">
+              <p>No orders placed yet.</p>
+              <Button variant="link" size="sm" asChild className="mt-2">
+                <Link href="/products">Start Shopping</Link>
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -106,17 +99,43 @@ export default function AccountDashboardPage() {
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {PRODUCTS.slice(0, 2).map((product) => (
-              <Link key={product.id} href={`/products/${product.slug}`} className="flex gap-4 rounded-lg border border-border p-3 hover:bg-accent/50">
-                <div className="size-16 shrink-0 rounded-lg bg-muted/30" style={{ backgroundImage: `url(${product.image})`, backgroundSize: "contain", backgroundPosition: "center", backgroundRepeat: "no-repeat" }} />
-                <div>
-                  <p className="line-clamp-2 text-sm font-medium">{product.name}</p>
-                  <p className="mt-1 text-sm font-semibold">{formatPrice(product.price)}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
+          {wishlistProducts.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {wishlistProducts.map((product) => (
+                <Link
+                  key={product.id}
+                  href={`/products/${product.slug}`}
+                  className="flex items-center gap-4 rounded-lg border border-border p-3 hover:bg-accent/50 transition-colors"
+                >
+                  <div className="relative size-16 shrink-0 rounded-lg bg-muted/30 flex items-center justify-center overflow-hidden border border-border/50">
+                    {product.image ? (
+                      <Image
+                        src={product.image}
+                        alt={product.name}
+                        fill
+                        unoptimized
+                        sizes="64px"
+                        className="object-contain p-1"
+                      />
+                    ) : (
+                      <Package className="size-6 text-muted-foreground/40" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="line-clamp-2 text-sm font-medium">{product.name}</p>
+                    <p className="mt-1 text-sm font-semibold">{formatPrice(product.price)}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="py-6 text-center text-sm text-muted-foreground">
+              <p>Your wishlist is empty.</p>
+              <Button variant="link" size="sm" asChild className="mt-2">
+                <Link href="/products">Discover Products</Link>
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 

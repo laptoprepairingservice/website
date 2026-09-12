@@ -1,17 +1,19 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { Laptop, Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const emptySubscribe = () => () => {};
+
 export function ThemeToggle({ className, variant = "segmented" }) {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
 
   if (!mounted) {
     return (
