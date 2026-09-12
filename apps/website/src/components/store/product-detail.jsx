@@ -18,6 +18,7 @@ export function ProductDetail({ product, relatedProducts = [] }) {
   const [activeTab, setActiveTab] = useState("description");
   const [activeImage, setActiveImage] = useState(0);
   const [isAdding, setIsAdding] = useState(false);
+  const [compatSearch, setCompatSearch] = useState("");
   const { addToCart } = useAppContext();
 
   const discount = formatDiscount(product.price, product.originalPrice);
@@ -28,9 +29,24 @@ export function ProductDetail({ product, relatedProducts = [] }) {
     ? [product.image]
     : [];
 
+  const hasCompatibility = Boolean(
+    product.compatibility || (product.compatibilityList && product.compatibilityList.length > 0)
+  );
+
+  const rawCompatList = product.compatibilityList && product.compatibilityList.length > 0
+    ? product.compatibilityList
+    : product.compatibility
+    ? product.compatibility.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean)
+    : [];
+
+  const filteredCompatModels = compatSearch.trim()
+    ? rawCompatList.filter((m) => m.toLowerCase().includes(compatSearch.toLowerCase().trim()))
+    : rawCompatList;
+
   const tabs = [
     { id: "description", label: "Description" },
     { id: "specifications", label: "Specifications" },
+    ...(hasCompatibility ? [{ id: "compatibility", label: "Compatibility" }] : []),
     { id: "reviews", label: "Reviews" },
   ];
 
@@ -107,9 +123,16 @@ export function ProductDetail({ product, relatedProducts = [] }) {
 
         <div className="space-y-6">
           <div>
-            <p className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
-              {product.brand}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
+                {product.brand}
+              </p>
+              {product.isBestSeller && (
+                <span className="rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 px-2 py-0.5 text-[11px] font-semibold tracking-wide uppercase">
+                  Bestseller
+                </span>
+              )}
+            </div>
             <h1 className="mt-2 text-2xl font-semibold md:text-3xl">{product.name}</h1>
             <div className="mt-4">
               <StarRating rating={product.rating} reviewCount={product.reviewCount} size="md" />
@@ -230,27 +253,84 @@ export function ProductDetail({ product, relatedProducts = [] }) {
         <div className="py-8">
           {activeTab === "description" && (
             <div className="prose dark:prose-invert max-w-none text-muted-foreground leading-relaxed">
-              <p>{product.description || product.shortDescription || "No description provided."}</p>
+              {product.description ? (
+                <div dangerouslySetInnerHTML={{ __html: product.description }} />
+              ) : (
+                <p>{product.shortDescription || "No description provided."}</p>
+              )}
             </div>
           )}
+
           {activeTab === "specifications" && (
-            <dl className="grid gap-4 sm:grid-cols-2">
-              {Object.entries(product.specs || {}).length > 0 ? (
-                Object.entries(product.specs).map(([key, value]) => (
-                  <div
-                    key={key}
-                    className="border-border flex justify-between rounded-lg border px-4 py-3"
-                  >
-                    <dt className="text-muted-foreground text-sm capitalize">
-                      {key.replace("-", " ")}
-                    </dt>
-                    <dd className="text-sm font-medium">{String(value)}</dd>
-                  </div>
-                ))
+            <div className="space-y-4">
+              {product.specifications ? (
+                <div
+                  className="prose dark:prose-invert max-w-none text-foreground [&_table]:w-full [&_table]:border-collapse [&_table]:border [&_table]:border-border [&_table]:rounded-xl [&_table]:overflow-hidden [&_th]:border [&_th]:border-border [&_th]:bg-muted/70 [&_th]:p-3 [&_th]:text-left [&_th]:font-semibold [&_th]:text-xs [&_th]:uppercase [&_td]:border [&_td]:border-border [&_td]:p-3 [&_td]:text-sm"
+                  dangerouslySetInnerHTML={{ __html: product.specifications }}
+                />
+              ) : Object.entries(product.specs || {}).length > 0 ? (
+                <dl className="grid gap-4 sm:grid-cols-2">
+                  {Object.entries(product.specs).map(([key, value]) => (
+                    <div
+                      key={key}
+                      className="border-border flex justify-between rounded-lg border px-4 py-3"
+                    >
+                      <dt className="text-muted-foreground text-sm capitalize">
+                        {key.replace("-", " ")}
+                      </dt>
+                      <dd className="text-sm font-medium">{String(value)}</dd>
+                    </div>
+                  ))}
+                </dl>
               ) : (
                 <p className="text-muted-foreground text-sm">Specifications will be updated shortly.</p>
               )}
-            </dl>
+            </div>
+          )}
+
+          {activeTab === "compatibility" && hasCompatibility && (
+            <div className="space-y-6 max-w-3xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-muted/40 p-4 rounded-xl border border-border">
+                <div>
+                  <h3 className="font-semibold text-foreground text-sm">Device & Model Compatibility</h3>
+                  <p className="text-muted-foreground text-xs mt-0.5">
+                    Search your laptop model or series below to verify fitment.
+                  </p>
+                </div>
+                <div className="relative w-full sm:w-64">
+                  <input
+                    type="text"
+                    value={compatSearch}
+                    onChange={(e) => setCompatSearch(e.target.value)}
+                    placeholder="Search model (e.g. 3521)..."
+                    className="h-8.5 w-full rounded-lg border border-input bg-background px-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+
+              {filteredCompatModels.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                  {filteredCompatModels.map((model, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-2 border border-border/70 bg-card rounded-lg px-3 py-2 text-xs font-medium text-foreground hover:border-primary/50 transition-colors"
+                    >
+                      <span className="size-1.5 rounded-full bg-emerald-500 shrink-0" />
+                      <span className="truncate">{model}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-6 text-center text-sm text-muted-foreground">
+                  {compatSearch ? `No compatible models matching "${compatSearch}".` : "No models listed."}
+                </div>
+              )}
+
+              <div className="text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg p-3">
+                <span className="font-medium text-primary">Need fitment help? </span>
+                Not sure if this part fits your laptop? Contact our hardware engineers with your laptop model or serial number for free verification before purchasing.
+              </div>
+            </div>
           )}
           {activeTab === "reviews" && (
             <div className="space-y-6">

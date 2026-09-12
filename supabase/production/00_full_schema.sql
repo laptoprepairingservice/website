@@ -168,6 +168,10 @@ create table if not exists public.products (
     check (status in ('draft', 'active', 'archived')),
 
   is_featured boolean not null default false,
+  is_bestseller boolean not null default false,
+
+  specifications text,
+  compatibility text,
 
   meta_title text,
   meta_description text,
@@ -184,6 +188,9 @@ create table if not exists public.products (
 
 comment on table public.products is 'Main product catalog';
 comment on column public.products.public_id is 'URL-safe identifier for storefront and admin routes';
+comment on column public.products.is_bestseller is 'Manually marks a product as a bestseller';
+comment on column public.products.specifications is 'Rich HTML specification table authored via TipTap';
+comment on column public.products.compatibility is 'Compatible models/devices list';
 
 drop trigger if exists set_products_updated_at on public.products;
 create trigger set_products_updated_at
@@ -195,6 +202,7 @@ create index if not exists idx_products_category_id on public.products(category_
 create index if not exists idx_products_brand_id on public.products(brand_id);
 create index if not exists idx_products_status on public.products(status);
 create index if not exists idx_products_status_category on public.products(status, category_id);
+create index if not exists idx_products_is_bestseller on public.products(is_bestseller);
 create index if not exists idx_products_search_vector on public.products using gin(search_vector);
 create unique index if not exists uq_products_public_id on public.products(public_id);
 

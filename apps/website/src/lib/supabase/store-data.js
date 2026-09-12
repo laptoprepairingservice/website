@@ -98,9 +98,18 @@ export function mapSupabaseProduct(product) {
     isNew: product.created_at
       ? Date.now() - new Date(product.created_at).getTime() < 30 * 24 * 60 * 60 * 1000
       : false,
-    isBestSeller: Boolean(product.is_featured),
+    isBestSeller: Boolean(product.is_bestseller),
+    isFeatured: Boolean(product.is_featured),
     shortDescription: product.short_description || "",
     description: product.description || "",
+    specifications: product.specifications || "",
+    compatibility: product.compatibility || "",
+    compatibilityList: product.compatibility
+      ? product.compatibility
+          .split(/[\n,]+/)
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [],
     specs: defaultVariant?.options || {},
     variants,
   };
@@ -136,7 +145,10 @@ export async function fetchStoreHomeData() {
           slug,
           short_description,
           description,
+          specifications,
+          compatibility,
           is_featured,
+          is_bestseller,
           created_at,
           status,
           categories (id, name, slug),
@@ -225,7 +237,10 @@ export async function fetchStoreProducts({ category = null, brand = null, search
         slug,
         short_description,
         description,
+        specifications,
+        compatibility,
         is_featured,
+        is_bestseller,
         created_at,
         status,
         categories (id, name, slug),
@@ -301,7 +316,10 @@ export async function fetchProductBySlug(slug) {
         slug,
         short_description,
         description,
+        specifications,
+        compatibility,
         is_featured,
+        is_bestseller,
         created_at,
         status,
         categories (id, name, slug),
@@ -355,7 +373,10 @@ export async function fetchRelatedProducts(product, limit = 4) {
         slug,
         short_description,
         description,
+        specifications,
+        compatibility,
         is_featured,
+        is_bestseller,
         created_at,
         status,
         categories (id, name, slug),
