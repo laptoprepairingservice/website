@@ -1,4 +1,5 @@
 import { getProductFormDefaults } from "./product-schema";
+import { getProductAssetUrl } from "@/lib/supabase/storage";
 
 function emptyToNull(value) {
   if (value === "" || value === undefined) {
@@ -65,8 +66,32 @@ export function toVariantUpdatePayload(values) {
 }
 
 export function toProductFormValues(product, defaultVariant) {
+  if (!product) {
+    return getProductFormDefaults();
+  }
+
+  const rawImages = Array.isArray(product.product_images) ? product.product_images : [];
+  const assets = rawImages.map((img) => ({
+    id: img.id,
+    public_id: img.public_id,
+    storage_path: img.storage_path,
+    alt_text: img.alt_text ?? "",
+    width: img.width ?? null,
+    height: img.height ?? null,
+    sort_order: img.sort_order ?? 0,
+    is_banner: Boolean(img.is_banner),
+    media_type: img.media_type || "image",
+    file_name: img.file_name || "",
+    file_size: img.file_size ?? null,
+    mime_type: img.mime_type || "",
+    url: getProductAssetUrl(img.storage_path),
+  }));
+
+  const variant = defaultVariant || {};
+
   return getProductFormDefaults({
-    public_id: product.public_id,
+    id: product.id,
+    public_id: product.public_id || "",
     name: product.name ?? "",
     slug: product.slug ?? "",
     category_id: product.category_id ?? "",
@@ -80,16 +105,17 @@ export function toProductFormValues(product, defaultVariant) {
     meta_title: product.meta_title ?? "",
     meta_description: product.meta_description ?? "",
     default_variant: {
-      public_id: defaultVariant.public_id,
-      sku: defaultVariant.sku ?? "",
-      barcode: defaultVariant.barcode ?? "",
-      variant_name: defaultVariant.variant_name ?? "",
-      condition: defaultVariant.condition ?? "new",
-      price: defaultVariant.price ?? "",
-      compare_at_price: defaultVariant.compare_at_price ?? "",
-      cost_price: defaultVariant.cost_price ?? "",
-      weight_grams: defaultVariant.weight_grams ?? "",
-      is_active: defaultVariant.is_active ?? true,
+      public_id: variant.public_id || "",
+      sku: variant.sku ?? "",
+      barcode: variant.barcode ?? "",
+      variant_name: variant.variant_name ?? "",
+      condition: variant.condition ?? "new",
+      price: variant.price ?? "",
+      compare_at_price: variant.compare_at_price ?? "",
+      cost_price: variant.cost_price ?? "",
+      weight_grams: variant.weight_grams ?? "",
+      is_active: variant.is_active ?? true,
     },
+    assets,
   });
 }

@@ -1,0 +1,15 @@
+export { AnnouncementBar } from "./announcement-bar";
+export { Footer } from "./footer";
+export { Header } from "./header";
+export { SectionHeader } from "./section-header";
+export { HeroBanner } from "./hero-banner";
+export { MobileCategoryPills } from "./mobile-category-pills";
+export { WhyChooseUs } from "./why-choose-us";
+export { FlashDealsSection } from "./flash-deals-section";
+export { InteractiveProductShowcase } from "./interactive-product-showcase";
+export { InteractivePCBuilderWidget } from "./interactive-pc-builder-widget";
+export { PromotionalBanner } from "./promotional-banner";
+export { PopularBrands } from "./popular-brands";
+export { CustomerReviews } from "./customer-reviews";
+export { HardwareFAQSection } from "./hardware-faq-section";
+export { ThemeToggle } from "./theme-toggle";

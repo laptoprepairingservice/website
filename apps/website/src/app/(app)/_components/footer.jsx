@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Facebook, Instagram, Mail, MapPin, Phone, Twitter, Youtube } from "lucide-react";
 import { STORE } from "@/lib/store-config";
+import { ThemeToggle } from "./theme-toggle";
 
 const FOOTER_LINKS = {
   shop: [
@@ -33,7 +34,7 @@ const SOCIAL = [
 export function Footer() {
   return (
     <footer className="border-border bg-muted/30 border-t">
-      <div className="">
+      <div className="container py-12 lg:py-16">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2">
@@ -60,7 +61,7 @@ export function Footer() {
                 {STORE.email}
               </p>
             </div>
-            <div className="mt-6 flex gap-3">
+            <div className="mt-6 flex items-center gap-3">
               {SOCIAL.map(({ icon: Icon, href, label }) => (
                 <a
                   key={label}
@@ -93,20 +94,29 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="border-border mt-12 flex flex-col items-center justify-between gap-4 border-t pt-8 sm:flex-row">
-          <p className="text-muted-foreground text-xs">
-            © {new Date().getFullYear()} {STORE.name}. All rights reserved. GSTIN: {STORE.gstin}
-          </p>
-          <div className="text-muted-foreground flex gap-4 text-xs">
-            <Link href="/privacy" className="hover:text-foreground">
-              Privacy
-            </Link>
-            <Link href="/terms" className="hover:text-foreground">
-              Terms
-            </Link>
-            <Link href="/returns" className="hover:text-foreground">
-              Returns
-            </Link>
+        {/* Footer Bottom Bar with Theme Switcher */}
+        <div className="border-border mt-12 flex flex-col items-center justify-between gap-6 border-t pt-8 sm:flex-row">
+          <div className="flex flex-col items-center gap-2 text-center sm:items-start sm:text-left">
+            <p className="text-muted-foreground text-xs">
+              © {new Date().getFullYear()} {STORE.name}. All rights reserved. GSTIN: {STORE.gstin}
+            </p>
+            <div className="text-muted-foreground flex gap-4 text-xs">
+              <Link href="/privacy" className="hover:text-foreground transition-colors">
+                Privacy
+              </Link>
+              <Link href="/terms" className="hover:text-foreground transition-colors">
+                Terms
+              </Link>
+              <Link href="/returns" className="hover:text-foreground transition-colors">
+                Returns
+              </Link>
+            </div>
+          </div>
+
+          {/* Theme Toggle Switcher */}
+          <div className="flex items-center gap-2.5">
+            <span className="text-muted-foreground text-xs font-medium">Theme:</span>
+            <ThemeToggle />
           </div>
         </div>
       </div>

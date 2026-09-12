@@ -12,6 +12,7 @@ import {
   formatSupabaseError,
   insertDefaultVariant,
   insertProduct,
+  insertProductImages,
 } from "../_lib/product-repository";
 
 export async function createProductAction(values) {
@@ -47,6 +48,21 @@ export async function createProductAction(values) {
     return {
       error: formatSupabaseError(variantError, "Product was created but the default variant failed."),
     };
+  }
+
+  if (Array.isArray(parsed.data.assets) && parsed.data.assets.length > 0) {
+    const assetPayloads = parsed.data.assets.map((asset, index) => ({
+      product_id: product.id,
+      storage_path: asset.storage_path,
+      alt_text: asset.alt_text?.trim() || null,
+      is_banner: Boolean(asset.is_banner),
+      media_type: asset.media_type || "image",
+      file_name: asset.file_name || null,
+      file_size: asset.file_size || null,
+      mime_type: asset.mime_type || null,
+      sort_order: index,
+    }));
+    await insertProductImages(supabase, assetPayloads);
   }
 
   return { productPublicId: product.public_id };
