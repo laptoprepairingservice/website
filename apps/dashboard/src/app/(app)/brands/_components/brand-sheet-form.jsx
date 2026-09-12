@@ -11,8 +11,8 @@ import { FormSheet } from "@/components/form-sheet";
 import { slugify } from "@/lib/slug";
 import {
   createBrandAction,
-  deleteBrandAction,
   updateBrandAction,
+  uploadBrandLogoAction,
 } from "../_actions/brand-actions";
 import {
   brandFormSchema,
@@ -21,9 +21,11 @@ import {
   updateBrandFormSchema,
 } from "../_lib/brand-schema";
 import { Button } from "@ui/shadcn/components/button";
+import { ImageUploader } from "@ui/shadcn/components/image-uploader";
 import { Input } from "@ui/shadcn/components/input";
 import { Label } from "@ui/shadcn/components/label";
 import { Textarea } from "@ui/shadcn/components/textarea";
+import { getProductAssetUrl } from "@/lib/supabase/storage";
 
 const formId = "brand-sheet-form";
 const inputClassName =
@@ -40,7 +42,9 @@ function FieldError({ message }) {
 export function BrandSheetForm({ open, onOpenChange, brand, onSuccess }) {
   const isEdit = Boolean(brand?.id);
   const [slugTouched, setSlugTouched] = useState(isEdit);
-  const [deleting, setDeleting] = useState(false);
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [imageDeleted, setImageDeleted] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const schema = isEdit ? updateBrandFormSchema : brandFormSchema;
 
   const {
@@ -60,10 +64,14 @@ export function BrandSheetForm({ open, onOpenChange, brand, onSuccess }) {
 
   useEffect(() => {
     if (!open) {
+      setSelectedImageFile(null);
+      setImageDeleted(false);
       return;
     }
 
     reset(brand ? toBrandFormValues(brand) : getBrandFormDefaults());
+    setSelectedImageFile(null);
+    setImageDeleted(false);
     setSlugTouched(isEdit);
   }, [open, brand, isEdit, reset]);
 
@@ -76,7 +84,30 @@ export function BrandSheetForm({ open, onOpenChange, brand, onSuccess }) {
   }, [brandName, isEdit, setValue, slugTouched]);
 
   const onSubmit = async (values) => {
-    const result = isEdit ? await updateBrandAction(values) : await createBrandAction(values);
+    let finalLogoPath = values.logo_path;
+
+    if (selectedImageFile) {
+      setUploadingImage(true);
+      const formData = new FormData();
+      formData.append("file", selectedImageFile);
+      const uploadRes = await uploadBrandLogoAction(formData);
+      setUploadingImage(false);
+
+      if (uploadRes.error) {
+        toast.error(uploadRes.error);
+        return;
+      }
+      finalLogoPath = uploadRes.storagePath;
+    } else if (imageDeleted) {
+      finalLogoPath = null;
+    }
+
+    const payload = {
+      ...values,
+      logo_path: finalLogoPath,
+    };
+
+    const result = isEdit ? await updateBrandAction(payload) : await createBrandAction(payload);
 
     if (result.error) {
       toast.error(result.error);
@@ -88,34 +119,7 @@ export function BrandSheetForm({ open, onOpenChange, brand, onSuccess }) {
     onOpenChange(false);
   };
 
-  const handleDelete = async () => {
-    if (!brand?.id) {
-      return;
-    }
-
-    const confirmed = window.confirm(
-      `Delete "${brand.name}"? This fails if products still reference this brand.`
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    setDeleting(true);
-    const result = await deleteBrandAction(brand.id);
-    setDeleting(false);
-
-    if (result.error) {
-      toast.error(result.error);
-      return;
-    }
-
-    toast.success("Brand deleted.");
-    onSuccess?.();
-    onOpenChange(false);
-  };
-
-  const loading = isSubmitting || deleting;
+  const loading = isSubmitting || uploadingImage;
 
   return (
     <FormSheet
@@ -127,19 +131,6 @@ export function BrandSheetForm({ open, onOpenChange, brand, onSuccess }) {
       }
       formId={formId}
       loading={loading}
-      footerStart={
-        isEdit ? (
-          <Button
-            type="button"
-            variant="destructive"
-            className="mr-auto"
-            onClick={handleDelete}
-            disabled={loading}
-          >
-            Delete
-          </Button>
-        ) : null
-      }
     >
       <form id={formId} onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
@@ -156,6 +147,17 @@ export function BrandSheetForm({ open, onOpenChange, brand, onSuccess }) {
             {...register("slug", { onChange: () => setSlugTouched(true) })}
           />
           <FieldError message={errors.slug?.message} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="brand-sort">Sort order</Label>
+          <Input
+            id="brand-sort"
+            type="number"
+            className={inputClassName}
+            {...register("sort_order")}
+          />
+          <FieldError message={errors.sort_order?.message} />
         </div>
 
         <div className="space-y-2">
@@ -177,14 +179,48 @@ export function BrandSheetForm({ open, onOpenChange, brand, onSuccess }) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="brand-logo">Logo path</Label>
-          <Input
-            id="brand-logo"
-            className={inputClassName}
-            placeholder="brands/dell.webp"
-            {...register("logo_path")}
+          <ImageUploader
+            key={open ? (brand?.id ? `brand-${brand.id}-${brand.logo_path}` : "brand-new") : "brand-closed"}
+            label="Brand logo"
+            helperText="Preview or upload a logo"
+            value={
+              imageDeleted
+                ? ""
+                : selectedImageFile
+                ? ""
+                : brand?.logo_path
+                ? getProductAssetUrl(brand.logo_path)
+                : watch("logo_path")
+                ? getProductAssetUrl(watch("logo_path"))
+                : ""
+            }
+            onFileSelect={(file) => {
+              setSelectedImageFile(file);
+              setImageDeleted(false);
+            }}
+            onUrlChange={(url) => {
+              setSelectedImageFile(null);
+              setImageDeleted(false);
+              setValue("logo_path", url, { shouldDirty: true });
+            }}
+            onDelete={() => {
+              setSelectedImageFile(null);
+              setImageDeleted(true);
+              setValue("logo_path", "", { shouldDirty: true });
+            }}
+            onReplace={(fileOrUrl) => {
+              if (typeof fileOrUrl === "string") {
+                setSelectedImageFile(null);
+                setImageDeleted(false);
+                setValue("logo_path", fileOrUrl, { shouldDirty: true });
+              } else {
+                setSelectedImageFile(fileOrUrl);
+                setImageDeleted(false);
+              }
+            }}
+            error={errors.logo_path?.message}
+            disabled={loading}
           />
-          <FieldError message={errors.logo_path?.message} />
         </div>
 
         <Controller

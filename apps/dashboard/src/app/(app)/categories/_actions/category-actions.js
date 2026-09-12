@@ -7,6 +7,10 @@ import {
   categoryFormSchema,
   updateCategoryFormSchema,
 } from "../_lib/category-schema";
+import {
+  deleteProductFiles,
+  uploadProductFile,
+} from "@/lib/supabase/storage";
 
 function emptyToNull(value) {
   if (value === "" || value === undefined) {
@@ -35,6 +39,55 @@ async function requireAdmin() {
     return { error: "You must be signed in as an admin." };
   }
   return { user };
+}
+
+export async function uploadCategoryImageAction(formData) {
+  const auth = await requireAdmin();
+  if (auth.error) {
+    return { error: auth.error };
+  }
+
+  const file = formData.get("file");
+  if (!file || typeof file === "string") {
+    return { error: "No image file provided for upload." };
+  }
+
+  const supabase = await createClient();
+
+  const { storagePath, publicUrl, error: uploadError } = await uploadProductFile(
+    supabase,
+    file,
+    {
+      productId: "categories",
+      fileName: file.name || "category-image",
+      mediaType: "image",
+    }
+  );
+
+  if (uploadError) {
+    return { error: formatSupabaseError(uploadError, "Failed to upload category image.") };
+  }
+
+  return { storagePath, publicUrl };
+}
+
+export async function deleteCategoryImageAction(storagePath) {
+  const auth = await requireAdmin();
+  if (auth.error) {
+    return { error: auth.error };
+  }
+
+  if (!storagePath) {
+    return { success: true };
+  }
+
+  const supabase = await createClient();
+  const { error } = await deleteProductFiles(supabase, storagePath);
+  if (error) {
+    return { error: formatSupabaseError(error, "Failed to delete category image from storage.") };
+  }
+
+  return { success: true };
 }
 
 export async function getCategoryParentOptionsAction(excludeId) {
@@ -128,10 +181,22 @@ export async function deleteCategoryAction(id) {
   }
 
   const supabase = await createClient();
+
+  // Retrieve existing category to clean up image if stored
+  const { data: existing } = await supabase
+    .from("categories")
+    .select("image_path")
+    .eq("id", categoryId)
+    .single();
+
   const { error } = await supabase.from("categories").delete().eq("id", categoryId);
 
   if (error) {
     return { error: formatSupabaseError(error, "Could not delete the category.") };
+  }
+
+  if (existing?.image_path && !existing.image_path.startsWith("http")) {
+    await deleteProductFiles(supabase, existing.image_path);
   }
 
   return { success: true };

@@ -28,7 +28,15 @@ const requestHandler =
 
       // Search
       if (search && searchColumn) {
-        query = query.ilike(searchColumn, `%${search}%`);
+        if (typeof searchColumn === "string" && searchColumn.includes(",")) {
+          const conditions = searchColumn
+            .split(",")
+            .map((col) => `${col.trim()}.ilike.%${search}%`)
+            .join(",");
+          query = query.or(conditions);
+        } else {
+          query = query.ilike(searchColumn, `%${search}%`);
+        }
       }
 
       // Filters

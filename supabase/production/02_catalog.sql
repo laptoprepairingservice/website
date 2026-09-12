@@ -69,6 +69,7 @@ create table if not exists public.brands (
   website_url text,
   description text,
 
+  sort_order integer not null default 0,
   is_active boolean not null default true,
 
   created_at timestamptz not null default now(),
@@ -84,6 +85,7 @@ create trigger set_brands_updated_at
   for each row
   execute function public.set_updated_at();
 
+create index if not exists idx_brands_sort_order on public.brands(sort_order);
 create unique index if not exists uq_brands_public_id on public.brands(public_id);
 
 -- ----------------------------------------------------------------------------
