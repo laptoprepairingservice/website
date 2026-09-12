@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
@@ -10,35 +9,26 @@ import { Button } from "@ui/shadcn/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@ui/shadcn/components/card";
 import { EmptyState } from "@ui/shadcn/components/empty-state";
 import { formatPrice } from "@/lib/format";
-import { PRODUCTS } from "@/lib/data/products";
 import { STORE } from "@/lib/store-config";
-
-const CART_ITEMS = [
-  { ...PRODUCTS[0], quantity: 1 },
-  { ...PRODUCTS[3], quantity: 2 },
-];
+import { useAppContext } from "@/app/_context";
 
 export default function CartPage() {
-  const [items, setItems] = useState(CART_ITEMS);
+  const { cartItems, cartCount, updateQuantity, removeFromCart, cartSubtotal } = useAppContext();
 
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = subtotal >= STORE.freeShippingThreshold ? 0 : STORE.standardShipping;
-  const total = subtotal + shipping;
+  const shipping =
+    cartSubtotal >= STORE.freeShippingThreshold
+      ? 0
+      : cartItems.length > 0
+      ? STORE.standardShipping
+      : 0;
+  const total = cartSubtotal + shipping;
 
-  const updateQuantity = (id, delta) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item
-      )
-    );
-  };
-
-  const removeItem = (id) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+  const handleRemove = (id) => {
+    removeFromCart(id);
     toast.success("Item removed from cart");
   };
 
-  if (items.length === 0) {
+  if (cartItems.length === 0) {
     return (
       <div className="py-12">
         <EmptyState
@@ -59,13 +49,15 @@ export default function CartPage() {
     <div className="py-8 lg:py-12">
       <Breadcrumb items={[{ label: "Shopping Cart" }]} />
       <h1 className="mt-6 text-3xl font-semibold">Shopping Cart</h1>
-      <p className="text-muted-foreground mt-1">{items.length} items</p>
+      <p className="text-muted-foreground mt-1">
+        {cartCount} {cartCount === 1 ? "item" : "items"}
+      </p>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
-          {items.map((item) => (
+          {cartItems.map((item) => (
             <div
-              key={item.id}
+              key={item.variantId}
               className="border-border bg-card flex gap-4 rounded-xl border p-4 sm:gap-6 sm:p-6"
             >
               <Link
@@ -73,9 +65,13 @@ export default function CartPage() {
                 className="bg-muted/30 relative size-24 shrink-0 overflow-hidden rounded-lg sm:size-28"
               >
                 <Image
-                  src={item.image}
+                  src={
+                    item.image ||
+                    "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=800&h=800&fit=crop"
+                  }
                   alt={item.name}
                   fill
+                  unoptimized
                   className="object-contain p-2"
                   sizes="112px"
                 />
@@ -98,7 +94,7 @@ export default function CartPage() {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      onClick={() => updateQuantity(item.id, -1)}
+                      onClick={() => updateQuantity(item.variantId, -1)}
                       aria-label="Decrease"
                     >
                       <Minus />
@@ -107,7 +103,7 @@ export default function CartPage() {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      onClick={() => updateQuantity(item.id, 1)}
+                      onClick={() => updateQuantity(item.variantId, 1)}
                       aria-label="Increase"
                     >
                       <Plus />
@@ -116,8 +112,8 @@ export default function CartPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => removeItem(item.id)}
-                    className="text-destructive hover:text-destructive"
+                    onClick={() => handleRemove(item.variantId)}
+                    className="text-destructive hover:text-destructive cursor-pointer"
                   >
                     <Trash2 className="size-4" />
                     Remove
@@ -138,7 +134,7 @@ export default function CartPage() {
           <CardContent className="space-y-4">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Subtotal</span>
-              <span>{formatPrice(subtotal)}</span>
+              <span>{formatPrice(cartSubtotal)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Shipping</span>
@@ -146,7 +142,7 @@ export default function CartPage() {
             </div>
             {shipping > 0 && (
               <p className="text-muted-foreground text-xs">
-                Add {formatPrice(STORE.freeShippingThreshold - subtotal)} more for free shipping
+                Add {formatPrice(STORE.freeShippingThreshold - cartSubtotal)} more for free shipping
               </p>
             )}
             <div className="border-border border-t pt-4">

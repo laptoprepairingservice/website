@@ -4,6 +4,7 @@ import "./globals.css";
 import { AppProvider } from "@/app/_context";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { getCurrentUser } from "@/lib/user";
+import { getCurrentUserCart } from "@/lib/cart";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -22,6 +23,7 @@ export const metadata = {
 
 export default async function RootLayout({ children }) {
   const user = await getCurrentUser();
+  const initialCart = user && !user.isGuest ? await getCurrentUserCart(user.id) : null;
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -32,7 +34,7 @@ export default async function RootLayout({ children }) {
           enableSystem
           disableTransitionOnChange
         >
-          <AppProvider user={user}>
+          <AppProvider user={user} initialCart={initialCart}>
             {children}
             <Toaster position="top-right" />
           </AppProvider>

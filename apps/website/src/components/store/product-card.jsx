@@ -11,12 +11,12 @@ import { Button } from "@ui/shadcn/components/button";
 import { StarRating } from "@/components/store/star-rating";
 import { formatDiscount, formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useAppContext } from "@/app/_context";
 
 export function ProductCard({ product, className }) {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
-
-  console.log(product.image)
+  const { addToCart } = useAppContext();
 
   const discount = formatDiscount(product.price, product.originalPrice);
   const hasDiscount =
@@ -38,164 +38,172 @@ export function ProductCard({ product, className }) {
     );
   };
 
-  const handleAddToCart = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleAddToCart = async () => {
+    if (isAdding) return;
 
     setIsAdding(true);
-
-    toast.success("Added to cart", {
-      description: `${product.name} has been added to your basket.`,
-      action: {
-        label: "View Cart",
-        onClick: () => {
-          window.location.href = "/cart";
+    try {
+      await addToCart(product, 1);
+      toast.success("Added to cart", {
+        description: `${product.name} has been added to your basket.`,
+        action: {
+          label: "View Cart",
+          onClick: () => {
+            window.location.href = "/cart";
+          },
         },
-      },
-    });
-
-    setTimeout(() => setIsAdding(false), 1200);
+      });
+    } catch (err) {
+      console.error("Failed to add to cart:", err);
+      toast.error("Failed to add to cart");
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   return (
     <article
       className={cn(
-        "group flex flex-col overflow-hidden rounded-2xl border bg-card shadow-xs transition hover:border-primary/40 hover:shadow-xl",
+        "group relative flex flex-col overflow-hidden rounded-2xl border bg-card shadow-xs transition hover:border-primary/40 hover:shadow-xl",
         className
       )}
     >
-      <Link
-        href={`/products/${product.slug}`}
-        className="flex flex-1 flex-col"
-      >
-        {/* Image */}
-        <div className="relative aspect-square overflow-hidden bg-muted/20 p-5">
+      {/* Top Media Section */}
+      <div className="relative aspect-square overflow-hidden bg-muted/20 p-5">
+        <Link
+          href={`/products/${product.slug}`}
+          className="relative block size-full"
+          tabIndex={-1}
+        >
           <Image
             src={product.image}
             alt={product.name}
             fill
             unoptimized
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-contain p-4 transition-transform duration-500"
+            className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
           />
+        </Link>
 
-          {/* Badges */}
-          <div className="absolute left-2.5 top-2.5 z-10 flex flex-col gap-1.5">
-            {discount > 0 && (
-              <Badge variant="destructive">
-                -{discount}% OFF
-              </Badge>
+        {/* Badges */}
+        <div className="pointer-events-none absolute left-2.5 top-2.5 z-10 flex flex-col gap-1.5">
+          {discount > 0 && (
+            <Badge variant="destructive">
+              -{discount}% OFF
+            </Badge>
+          )}
+
+          {product.isBestSeller && (
+            <Badge variant="secondary">
+              Best Seller
+            </Badge>
+          )}
+        </div>
+
+        {/* Wishlist Button (outside Link) */}
+        <Button
+          variant="secondary"
+          size="icon-sm"
+          onClick={handleWishlist}
+          aria-label={
+            isWishlisted
+              ? "Remove from wishlist"
+              : "Add to wishlist"
+          }
+          className={cn(
+            "absolute right-2.5 top-2.5 z-10 size-8 rounded-full cursor-pointer",
+            isWishlisted && "text-destructive"
+          )}
+        >
+          <Heart
+            className={cn(
+              "size-4",
+              isWishlisted && "fill-destructive"
             )}
+          />
+        </Button>
+      </div>
 
-            {product.isBestSeller && (
-              <Badge variant="secondary">
-                Best Seller
-              </Badge>
+      {/* Content Section */}
+      <div className="flex flex-1 flex-col justify-between p-4 sm:p-5">
+        <Link
+          href={`/products/${product.slug}`}
+          className="space-y-2 block"
+        >
+          {/* Brand / Stock */}
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-semibold uppercase tracking-wider text-muted-foreground">
+              {product.brand}
+            </span>
+
+            <span
+              className={cn(
+                "text-[11px] font-medium",
+                product.inStock
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-rose-500"
+              )}
+            >
+              {product.inStock ? "In Stock" : "Out of Stock"}
+            </span>
+          </div>
+
+          {/* Name */}
+          <h3 className="line-clamp-2 text-sm font-semibold leading-snug transition-colors group-hover:text-primary">
+            {product.name}
+          </h3>
+
+          {/* Rating */}
+          <StarRating
+            rating={product.rating}
+            reviewCount={product.reviewCount}
+          />
+        </Link>
+
+        {/* Price + Button (outside Link) */}
+        <div className="mt-4 flex flex-col gap-3 border-t pt-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-baseline gap-2">
+              <span className="text-lg font-bold sm:text-xl">
+                {formatPrice(product.price)}
+              </span>
+
+              {hasDiscount && (
+                <span className="text-xs text-muted-foreground line-through">
+                  {formatPrice(product.originalPrice)}
+                </span>
+              )}
+            </div>
+
+            {savings > 0 && (
+              <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                Save {formatPrice(savings)}
+              </span>
             )}
           </div>
 
-          {/* Wishlist */}
           <Button
-            variant="secondary"
-            size="icon-sm"
-            onClick={handleWishlist}
-            aria-label={
-              isWishlisted
-                ? "Remove from wishlist"
-                : "Add to wishlist"
-            }
-            className={cn(
-              "absolute right-2.5 top-2.5 z-10 size-8 rounded-full",
-              isWishlisted && "text-destructive"
-            )}
+            size="sm"
+            disabled={!product.inStock || isAdding}
+            onClick={handleAddToCart}
+            className="h-10 w-full rounded-xl cursor-pointer"
           >
-            <Heart
-              className={cn(
-                "size-4",
-                isWishlisted && "fill-destructive"
-              )}
-            />
+            {isAdding ? (
+              <>
+                <Check className="mr-1.5 size-4 animate-in zoom-in-50" />
+                Added!
+              </>
+            ) : product.inStock ? (
+              <>
+                <ShoppingCart className="mr-1.5 size-4" />
+                Add to Cart
+              </>
+            ) : (
+              "Notify When In Stock"
+            )}
           </Button>
         </div>
-
-        {/* Content */}
-        <div className="flex flex-1 flex-col justify-between p-4 sm:p-5">
-          <div className="space-y-2">
-            {/* Brand / Stock */}
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold uppercase tracking-wider text-muted-foreground">
-                {product.brand}
-              </span>
-
-              <span
-                className={cn(
-                  "text-[11px] font-medium",
-                  product.inStock
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-rose-500"
-                )}
-              >
-                {product.inStock ? "In Stock" : "Out of Stock"}
-              </span>
-            </div>
-
-            {/* Name */}
-            <h3 className="line-clamp-2 text-sm font-semibold leading-snug transition-colors group-hover:text-primary">
-              {product.name}
-            </h3>
-
-            {/* Rating */}
-            <StarRating
-              rating={product.rating}
-              reviewCount={product.reviewCount}
-            />
-          </div>
-
-          {/* Price + Button */}
-          <div className="mt-4 flex flex-col gap-3 border-t pt-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-baseline gap-2">
-                <span className="text-lg font-bold sm:text-xl">
-                  {formatPrice(product.price)}
-                </span>
-
-                {hasDiscount && (
-                  <span className="text-xs text-muted-foreground line-through">
-                    {formatPrice(product.originalPrice)}
-                  </span>
-                )}
-              </div>
-
-              {savings > 0 && (
-                <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-                  Save {formatPrice(savings)}
-                </span>
-              )}
-            </div>
-
-            <Button
-              size="sm"
-              disabled={!product.inStock || isAdding}
-              onClick={handleAddToCart}
-              className="h-10 w-full rounded-xl"
-            >
-              {isAdding ? (
-                <>
-                  <Check className="mr-1.5 size-4" />
-                  Added!
-                </>
-              ) : product.inStock ? (
-                <>
-                  <ShoppingCart className="mr-1.5 size-4" />
-                  Add to Cart
-                </>
-              ) : (
-                "Notify When In Stock"
-              )}
-            </Button>
-          </div>
-        </div>
-      </Link>
+      </div>
     </article>
   );
 }

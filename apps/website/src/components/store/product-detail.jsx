@@ -13,11 +13,13 @@ import { StarRating } from "@/components/store/star-rating";
 import { formatDiscount, formatPrice } from "@/lib/format";
 import { getRelatedProducts, PRODUCTS } from "@/lib/data/products";
 import { cn } from "@/lib/utils";
+import { useAppContext } from "@/app/_context";
 
 export function ProductDetail({ product }) {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
   const [activeImage, setActiveImage] = useState(0);
+  const { addToCart } = useAppContext();
   const discount = formatDiscount(product.price, product.originalPrice);
   const related = getRelatedProducts(product);
 
@@ -141,7 +143,18 @@ export function ProductDetail({ product }) {
               size="lg"
               className="flex-1"
               disabled={!product.inStock}
-              onClick={() => toast.success("Added to cart", { description: product.name })}
+              onClick={() => {
+                addToCart(product, quantity);
+                toast.success("Added to cart", {
+                  description: `${quantity} × ${product.name} added to your basket.`,
+                  action: {
+                    label: "View Cart",
+                    onClick: () => {
+                      window.location.href = "/cart";
+                    },
+                  },
+                });
+              }}
             >
               <ShoppingCart />
               Add to Cart

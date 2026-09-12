@@ -57,10 +57,11 @@ export function mapSupabaseProduct(product) {
   const originalPrice =
     defaultVariant?.compare_at_price != null ? Number(defaultVariant.compare_at_price) : null;
 
-  // 2. Select primary image
+  // 2. Select primary image (prioritizing banner image if present)
   const images = Array.isArray(product.product_images) ? product.product_images : [];
   const sortedImages = [...images].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
-  const primaryImg = sortedImages.find((img) => !img.is_banner) || sortedImages[0];
+  const bannerImg = sortedImages.find((img) => img.is_banner);
+  const primaryImg = bannerImg || sortedImages[0];
   const imageUrl = getProductAssetUrl(primaryImg?.storage_path);
 
   // 3. Category & Brand names
@@ -71,12 +72,15 @@ export function mapSupabaseProduct(product) {
   return {
     id: product.id,
     publicId: product.public_id,
+    variantId: defaultVariant?.id || null,
+    defaultVariantId: defaultVariant?.id || null,
     name: product.name,
     slug: product.slug,
     brand: brandName,
     category: categorySlug,
     categoryName,
     image: imageUrl,
+    bannerImage: bannerImg ? getProductAssetUrl(bannerImg.storage_path) : null,
     price,
     originalPrice,
     rating: 5,
@@ -89,6 +93,7 @@ export function mapSupabaseProduct(product) {
     shortDescription: product.short_description || "",
     description: product.description || "",
     specs: defaultVariant?.options || {},
+    variants,
   };
 }
 
