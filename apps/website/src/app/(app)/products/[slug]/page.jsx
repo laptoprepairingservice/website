@@ -1,27 +1,31 @@
 import { notFound } from "next/navigation";
 import { ProductDetail } from "@/components/store/product-detail";
 import { ProductJsonLd } from "@/components/store/structured-data";
-import { getProductBySlug, PRODUCTS } from "@/lib/data/products";
+import { fetchProductBySlug, fetchRelatedProducts, fetchAllProductSlugs } from "@/lib/supabase/store-data";
+
+export const revalidate = 60;
 
 export default async function ProductDetailPage({ params }) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await fetchProductBySlug(slug);
 
   if (!product) {
     notFound();
   }
 
+  const related = await fetchRelatedProducts(product, 4);
+
   return (
     <>
       <ProductJsonLd product={product} />
-      <ProductDetail product={product} />
+      <ProductDetail product={product} relatedProducts={related} />
     </>
   );
 }
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await fetchProductBySlug(slug);
   if (!product) return { title: "Product Not Found" };
 
   return {
@@ -30,11 +34,12 @@ export async function generateMetadata({ params }) {
     openGraph: {
       title: product.name,
       description: product.shortDescription,
-      images: [product.image],
+      images: product.image ? [product.image] : [],
     },
   };
 }
 
 export async function generateStaticParams() {
-  return PRODUCTS.map((p) => ({ slug: p.slug }));
+  const products = await fetchAllProductSlugs();
+  return products.map((p) => ({ slug: p.slug }));
 }

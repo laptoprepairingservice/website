@@ -64,17 +64,20 @@ export default function CartPage() {
                 href={`/products/${item.slug}`}
                 className="bg-muted/30 relative size-24 shrink-0 overflow-hidden rounded-lg sm:size-28"
               >
-                <Image
-                  src={
-                    item.image ||
-                    "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=800&h=800&fit=crop"
-                  }
-                  alt={item.name}
-                  fill
-                  unoptimized
-                  className="object-contain p-2"
-                  sizes="112px"
-                />
+                {item.image ? (
+                  <Image
+                    src={item.image}
+                    alt={item.name}
+                    fill
+                    unoptimized
+                    className="object-contain p-2"
+                    sizes="112px"
+                  />
+                ) : (
+                  <div className="flex size-full items-center justify-center bg-muted/40 text-muted-foreground">
+                    <ShoppingBag className="size-8 opacity-40" />
+                  </div>
+                )}
               </Link>
               <div className="flex min-w-0 flex-1 flex-col justify-between gap-4 sm:flex-row">
                 <div>

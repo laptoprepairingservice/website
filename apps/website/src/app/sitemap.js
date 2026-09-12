@@ -1,9 +1,8 @@
-import { PRODUCTS } from "@/lib/data/products";
-import { STORE } from "@/lib/store-config";
+import { fetchAllProductSlugs } from "@/lib/supabase/store-data";
 
 const BASE_URL = "https://Ranuja.in";
 
-export default function sitemap() {
+export default async function sitemap() {
   const staticPages = [
     "",
     "/products",
@@ -24,9 +23,10 @@ export default function sitemap() {
     priority: path === "" ? 1 : 0.8,
   }));
 
-  const productPages = PRODUCTS.map((product) => ({
+  const products = await fetchAllProductSlugs();
+  const productPages = products.map((product) => ({
     url: `${BASE_URL}/products/${product.slug}`,
-    lastModified: new Date(),
+    lastModified: product.updated_at ? new Date(product.updated_at) : new Date(),
     changeFrequency: "weekly",
     priority: 0.9,
   }));

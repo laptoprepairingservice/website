@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Package } from "lucide-react";
 import { Button } from "@ui/shadcn/components/button";
 import { formatPrice } from "@/lib/format";
 
@@ -19,33 +19,30 @@ export function HeroBanner({ featuredProduct }) {
               <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
                 High-Performance PC Hardware &amp; Custom Builds
               </h1>
-              <p className="max-w-xl text-sm sm:text-base text-muted-foreground leading-relaxed">
-                Shop 100% genuine components with official manufacturer warranty and same-day Gujarat dispatch.
+              <p className="max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+                Direct authorized retail of processors, GPUs, memory, and components in Gujarat.
+                Genuine stock, manufacturer warranty, and store pickup.
               </p>
             </div>
 
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <Button size="lg" asChild>
-                <Link href="/products">
-                  Shop All Components
-                  <ArrowRight className="ml-2 size-4" />
+                <Link href="/products" className="gap-2">
+                  Browse Catalog
+                  <ArrowRight className="size-4" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link href="/contact">Order Custom PC</Link>
+                <Link href="/contact">Store Location</Link>
               </Button>
             </div>
 
-            {/* Value Trust Strip */}
-            <div className="grid grid-cols-1 gap-2 pt-4 border-t border-border sm:grid-cols-3 text-xs text-muted-foreground">
+            {/* Value Checkpoints */}
+            <div className="grid grid-cols-2 gap-3 pt-3 text-xs text-muted-foreground sm:flex sm:items-center sm:gap-6">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="size-4 text-foreground shrink-0" />
-                <span>100% Genuine with GST</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="size-4 text-foreground shrink-0" />
-                <span>Same-Day Ahmedabad Pickup</span>
+                <span>100% Genuine Hardware</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="size-4 text-foreground shrink-0" />
@@ -59,15 +56,19 @@ export function HeroBanner({ featuredProduct }) {
             <div className="lg:col-span-5">
               <div className="rounded-xl border border-border bg-card p-6">
                 <div className="relative aspect-video sm:aspect-square w-full overflow-hidden rounded-lg bg-muted/20 flex items-center justify-center p-4">
-                  <Image
-                    src={featuredProduct.image}
-                    alt={featuredProduct.name}
-                    fill
-                    unoptimized
-                    priority
-                    sizes="(max-width: 768px) 100vw, 40vw"
-                    className="object-contain p-2"
-                  />
+                  {featuredProduct.image ? (
+                    <Image
+                      src={featuredProduct.image}
+                      alt={featuredProduct.name}
+                      fill
+                      unoptimized
+                      priority
+                      sizes="(max-width: 768px) 100vw, 40vw"
+                      className="object-contain p-2"
+                    />
+                  ) : (
+                    <Package className="size-16 text-muted-foreground/30" />
+                  )}
                 </div>
 
                 <div className="mt-4 space-y-2">

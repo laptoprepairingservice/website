@@ -4,9 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight, Clock } from "lucide-react";
 import { ProductCard } from "@/components/store/product-card";
-import { PRODUCTS } from "@/lib/data/products";
 
-export function FlashDealsSection() {
+export function FlashDealsSection({ products = [] }) {
   const [timeLeft, setTimeLeft] = useState({ hours: 14, minutes: 35, seconds: 20 });
 
   useEffect(() => {
@@ -21,8 +20,13 @@ export function FlashDealsSection() {
     return () => clearInterval(timer);
   }, []);
 
-  // Show top 4 deals in clean normalized grid
-  const dealProducts = PRODUCTS.slice(0, 4);
+  const dealProducts = (products || [])
+    .filter((p) => p.originalPrice && p.originalPrice > p.price)
+    .slice(0, 4);
+
+  if (dealProducts.length === 0) {
+    return null;
+  }
 
   return (
     <section className="border-b border-border py-10 lg:py-14">

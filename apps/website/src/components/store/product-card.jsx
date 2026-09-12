@@ -75,14 +75,20 @@ export function ProductCard({ product, className }) {
           className="relative block size-full"
           tabIndex={-1}
         >
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            unoptimized
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
-          />
+          {product.image ? (
+            <Image
+              src={product.image}
+              alt={product.name}
+              fill
+              unoptimized
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex size-full items-center justify-center text-muted-foreground/40">
+              <ShoppingCart className="size-12 opacity-30" />
+            </div>
+          )}
         </Link>
 
         {/* Badges */}
