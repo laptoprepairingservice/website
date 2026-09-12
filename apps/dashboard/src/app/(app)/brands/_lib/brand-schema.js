@@ -16,6 +16,7 @@ export const brandFormSchema = z.object({
       message: "Enter a valid URL starting with http:// or https://",
     }),
   description: z.string().trim().optional(),
+  sort_order: z.coerce.number().int().default(0),
   is_active: z.boolean().default(true),
 });
 
@@ -30,6 +31,7 @@ export function getBrandFormDefaults(overrides = {}) {
     logo_path: "",
     website_url: "",
     description: "",
+    sort_order: 0,
     is_active: true,
     ...overrides,
   };
@@ -43,6 +45,7 @@ export function toBrandFormValues(brand) {
     logo_path: brand.logo_path ?? "",
     website_url: brand.website_url ?? "",
     description: brand.description ?? "",
+    sort_order: brand.sort_order ?? 0,
     is_active: brand.is_active ?? true,
   });
 }

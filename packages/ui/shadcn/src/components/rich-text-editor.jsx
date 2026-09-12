@@ -1,37 +1,41 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
+import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table";
 import TextAlign from "@tiptap/extension-text-align";
+import Underline from "@tiptap/extension-underline";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 import {
+  AlignCenter,
+  AlignJustify,
+  AlignLeft,
+  AlignRight,
   Bold,
-  Italic,
-  Underline as UnderlineIcon,
-  Strikethrough,
+  Check,
   Code,
   Heading1,
   Heading2,
   Heading3,
+  Italic,
+  Link as LinkIcon,
   List,
   ListOrdered,
-  Quote,
   Minus,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignJustify,
-  Link as LinkIcon,
-  Unlink,
-  Undo,
+  Plus,
+  Quote,
   Redo,
   RemoveFormatting,
-  Check,
-  X,
+  Strikethrough,
+  Table as TableIcon,
+  Trash2,
+  Underline as UnderlineIcon,
+  Undo,
+  Unlink,
+  X
 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "../lib/utils";
 
 function ToolbarButton({
@@ -45,6 +49,10 @@ function ToolbarButton({
   return (
     <button
       type="button"
+      onMouseDown={(e) => {
+        // Prevent button clicks from stealing focus or collapsing editor selection
+        e.preventDefault();
+      }}
       onClick={onClick}
       disabled={disabled}
       title={title}
@@ -74,10 +82,14 @@ export function RichTextEditor({
   minHeight = "180px",
   className,
   id,
+  allowTables = true,
+  onInsertSpecTemplate,
 }) {
   const [isMounted, setIsMounted] = useState(false);
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+  const [linkText, setLinkText] = useState("");
+  const savedSelectionRef = useRef(null);
   const linkInputRef = useRef(null);
 
   useEffect(() => {
@@ -102,7 +114,7 @@ export function RichTextEditor({
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: "text-primary underline underline-offset-2 hover:opacity-80 transition-colors",
+          class: "text-primary underline underline-offset-2 hover:opacity-80 transition-colors font-medium",
           target: "_blank",
           rel: "noopener noreferrer",
         },
@@ -114,6 +126,27 @@ export function RichTextEditor({
         placeholder,
         emptyEditorClass: "is-editor-empty",
       }),
+      ...(allowTables
+        ? [
+            Table.configure({
+              resizable: true,
+              HTMLAttributes: {
+                class: "border-collapse table-auto w-full text-sm my-4 border border-border rounded-lg overflow-hidden",
+              },
+            }),
+            TableRow,
+            TableHeader.configure({
+              HTMLAttributes: {
+                class: "border border-border bg-muted/60 px-3 py-2 text-left font-semibold text-foreground text-xs uppercase tracking-wider",
+              },
+            }),
+            TableCell.configure({
+              HTMLAttributes: {
+                class: "border border-border px-3 py-2 text-foreground/90 align-top",
+              },
+            }),
+          ]
+        : []),
     ],
     content: value || "",
     editable: !disabled,
@@ -125,7 +158,22 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class: cn(
-          "prose dark:prose-invert max-w-none focus:outline-none px-4 py-3 text-sm leading-relaxed text-foreground [&_p.is-editor-empty:first-child]:before:content-[attr(data-placeholder)] [&_p.is-editor-empty:first-child]:before:text-muted-foreground [&_p.is-editor-empty:first-child]:before:float-left [&_p.is-editor-empty:first-child]:before:pointer-events-none [&_p.is-editor-empty:first-child]:before:h-0 [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mt-4 [&_h1]:mb-2 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-medium [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2 [&_li]:my-0.5 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/40 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:my-3 [&_blockquote]:text-muted-foreground [&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono [&_hr]:my-4 [&_hr]:border-border"
+          "prose dark:prose-invert max-w-none focus:outline-none px-4 py-3 text-sm leading-relaxed text-foreground",
+          "[&_p.is-editor-empty:first-child]:before:content-[attr(data-placeholder)] [&_p.is-editor-empty:first-child]:before:text-muted-foreground [&_p.is-editor-empty:first-child]:before:float-left [&_p.is-editor-empty:first-child]:before:pointer-events-none [&_p.is-editor-empty:first-child]:before:h-0",
+          "[&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mt-4 [&_h1]:mb-2",
+          "[&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-2",
+          "[&_h3]:text-base [&_h3]:font-medium [&_h3]:mt-2 [&_h3]:mb-1",
+          "[&_p]:mb-2",
+          "[&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2",
+          "[&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2",
+          "[&_li]:my-0.5",
+          "[&_blockquote]:border-l-4 [&_blockquote]:border-primary/40 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:my-3 [&_blockquote]:text-muted-foreground",
+          "[&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono",
+          "[&_hr]:my-4 [&_hr]:border-border",
+          "[&_table]:w-full [&_table]:border-collapse [&_table]:border [&_table]:border-border [&_table]:my-3 [&_table]:rounded-lg [&_table]:overflow-hidden",
+          "[&_th]:border [&_th]:border-border [&_th]:bg-muted/70 [&_th]:p-2.5 [&_th]:text-left [&_th]:font-semibold [&_th]:text-foreground [&_th]:text-xs",
+          "[&_td]:border [&_td]:border-border [&_td]:p-2.5 [&_td]:text-foreground/90 [&_td]:text-sm",
+          "[&_.selectedCell]:bg-primary/10"
         ),
       },
     },
@@ -154,42 +202,113 @@ export function RichTextEditor({
   useEffect(() => {
     if (showLinkInput && linkInputRef.current) {
       linkInputRef.current.focus();
+      linkInputRef.current.select();
     }
   }, [showLinkInput]);
 
   const handleOpenLinkModal = () => {
     if (!editor) return;
+
+    // Snapshot current selection before focus shifts
+    const { from, to } = editor.state.selection;
+    const isCollapsed = from === to;
+    const selectedText = isCollapsed
+      ? ""
+      : editor.state.doc.textBetween(from, to, " ");
     const previousUrl = editor.getAttributes("link").href || "";
+
+    savedSelectionRef.current = { from, to, isCollapsed, selectedText };
     setLinkUrl(previousUrl);
+    setLinkText(selectedText);
     setShowLinkInput(true);
   };
 
   const handleApplyLink = (e) => {
     e?.preventDefault();
+    e?.stopPropagation();
     if (!editor) return;
 
-    if (!linkUrl.trim()) {
-      editor.chain().focus().extendMarkRange("link").unsetLink().run();
-    } else {
-      let finalUrl = linkUrl.trim();
-      if (!/^https?:\/\//i.test(finalUrl) && !/^mailto:/i.test(finalUrl)) {
-        finalUrl = `https://${finalUrl}`;
+    const trimmedUrl = linkUrl.trim();
+    const saved = savedSelectionRef.current;
+
+    if (!trimmedUrl) {
+      // If URL is empty, remove link
+      if (saved && !saved.isCollapsed) {
+        editor
+          .chain()
+          .focus()
+          .setTextSelection({ from: saved.from, to: saved.to })
+          .unsetLink()
+          .run();
+      } else {
+        editor.chain().focus().extendMarkRange("link").unsetLink().run();
       }
+      setShowLinkInput(false);
+      setLinkUrl("");
+      setLinkText("");
+      return;
+    }
+
+    let finalUrl = trimmedUrl;
+    if (
+      !/^https?:\/\//i.test(finalUrl) &&
+      !/^mailto:/i.test(finalUrl) &&
+      !/^tel:/i.test(finalUrl)
+    ) {
+      finalUrl = `https://${finalUrl}`;
+    }
+
+    if (saved && !saved.isCollapsed) {
+      // Selected text exists -> apply link to the exact range
+      editor
+        .chain()
+        .focus()
+        .setTextSelection({ from: saved.from, to: saved.to })
+        .setLink({ href: finalUrl })
+        .run();
+    } else if (editor.isActive("link")) {
+      // Cursor inside an existing link
       editor
         .chain()
         .focus()
         .extendMarkRange("link")
         .setLink({ href: finalUrl })
         .run();
+    } else {
+      // No text selected -> insert text with link
+      const textToInsert = linkText.trim() || finalUrl;
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: "text",
+          text: textToInsert,
+          marks: [{ type: "link", attrs: { href: finalUrl } }],
+        })
+        .run();
     }
 
     setShowLinkInput(false);
     setLinkUrl("");
+    setLinkText("");
   };
 
   const handleCancelLink = () => {
     setShowLinkInput(false);
     setLinkUrl("");
+    setLinkText("");
+    if (editor) {
+      editor.commands.focus();
+    }
+  };
+
+  const handleInsertTable = () => {
+    if (!editor) return;
+    editor
+      .chain()
+      .focus()
+      .insertTable({ rows: 3, cols: 2, withHeaderRow: true })
+      .run();
   };
 
   if (!isMounted || !editor) {
@@ -213,6 +332,8 @@ export function RichTextEditor({
       </div>
     );
   }
+
+  const isTableActive = editor.isActive("table");
 
   return (
     <div
@@ -375,7 +496,7 @@ export function RichTextEditor({
         <ToolbarButton
           onClick={handleOpenLinkModal}
           isActive={editor.isActive("link")}
-          title="Insert / Edit Link"
+          title="Attach / Edit Link"
         >
           <LinkIcon className="size-4" />
         </ToolbarButton>
@@ -386,6 +507,74 @@ export function RichTextEditor({
           >
             <Unlink className="size-4" />
           </ToolbarButton>
+        ) : null}
+
+        {allowTables ? (
+          <>
+            <ToolbarSeparator />
+            {/* Tables */}
+            <ToolbarButton
+              onClick={handleInsertTable}
+              isActive={isTableActive}
+              title={isTableActive ? "Table selected" : "Insert Table (3x2)"}
+            >
+              <TableIcon className="size-4" />
+            </ToolbarButton>
+
+            {isTableActive ? (
+              <div className="flex items-center gap-0.5 rounded-lg border border-primary/30 bg-primary/5 px-1 py-0.5">
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => editor.chain().focus().addRowAfter().run()}
+                  title="Add Row Below"
+                  className="inline-flex h-7 items-center gap-0.5 rounded px-1.5 text-xs font-medium text-foreground hover:bg-muted"
+                >
+                  <Plus className="size-3" /> Row
+                </button>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => editor.chain().focus().deleteRow().run()}
+                  title="Delete Row"
+                  className="inline-flex h-7 items-center rounded px-1 text-xs text-destructive hover:bg-destructive/10"
+                >
+                  <Minus className="size-3" />
+                </button>
+                <div className="bg-border my-0.5 h-4 w-[1px]" />
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => editor.chain().focus().addColumnAfter().run()}
+                  title="Add Column Right"
+                  className="inline-flex h-7 items-center gap-0.5 rounded px-1.5 text-xs font-medium text-foreground hover:bg-muted"
+                >
+                  <Plus className="size-3" /> Col
+                </button>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => editor.chain().focus().deleteColumn().run()}
+                  title="Delete Column"
+                  className="inline-flex h-7 items-center rounded px-1 text-xs text-destructive hover:bg-destructive/10"
+                >
+                  <Minus className="size-3" />
+                </button>
+                <div className="bg-border my-0.5 h-4 w-[1px]" />
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => editor.chain().focus().deleteTable().run()}
+                  title="Delete Entire Table"
+                  className="inline-flex h-7 items-center gap-1 rounded px-1.5 text-xs font-medium text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="size-3" />
+                </button>
+              </div>
+            ) : (
+              <></>
+            )}
+          </>
         ) : null}
 
         <ToolbarSeparator />
@@ -401,44 +590,92 @@ export function RichTextEditor({
 
       {/* Inline Link Popover / Input Bar */}
       {showLinkInput ? (
-        <form
-          onSubmit={handleApplyLink}
-          className="flex items-center gap-2 border-b border-border bg-muted/40 px-3 py-2 text-sm transition-all"
+        <div
+          role="region"
+          aria-label="Link toolbar"
+          className="flex flex-wrap items-center gap-2 border-b border-border bg-muted/50 p-2.5 text-sm transition-all"
         >
-          <LinkIcon className="text-muted-foreground size-4 shrink-0" />
+          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <LinkIcon className="size-3.5" />
+            <span>Link URL:</span>
+          </div>
           <input
             ref={linkInputRef}
-            type="url"
+            type="text"
             value={linkUrl}
             onChange={(e) => setLinkUrl(e.target.value)}
-            placeholder="Enter URL (e.g. https://example.com)..."
-            className="text-foreground placeholder:text-muted-foreground flex-1 bg-transparent text-sm focus:outline-none"
+            placeholder="https://example.com or mailto:support@..."
+            className="h-8 flex-1 min-w-[200px] rounded-md border border-input bg-background px-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
             onKeyDown={(e) => {
-              if (e.key === "Escape") {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                e.stopPropagation();
+                handleApplyLink(e);
+              } else if (e.key === "Escape") {
+                e.preventDefault();
+                e.stopPropagation();
                 handleCancelLink();
               }
             }}
           />
-          <button
-            type="submit"
-            className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex size-7 items-center justify-center rounded-md text-xs font-medium shadow-xs"
-            title="Apply Link"
-          >
-            <Check className="size-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={handleCancelLink}
-            className="text-muted-foreground hover:bg-muted hover:text-foreground inline-flex size-7 items-center justify-center rounded-md text-xs"
-            title="Cancel"
-          >
-            <X className="size-3.5" />
-          </button>
-        </form>
+
+          {savedSelectionRef.current?.isCollapsed ? (
+            <input
+              type="text"
+              value={linkText}
+              onChange={(e) => setLinkText(e.target.value)}
+              placeholder="Display text (optional)"
+              className="h-8 w-44 rounded-md border border-input bg-background px-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleApplyLink(e);
+                } else if (e.key === "Escape") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleCancelLink();
+                }
+              }}
+            />
+          ) : (
+            <span className="max-w-[140px] truncate text-xs text-muted-foreground italic">
+              Target: &quot;{savedSelectionRef.current?.selectedText}&quot;
+            </span>
+          )}
+
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={handleApplyLink}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-8 items-center gap-1 rounded-md px-2.5 text-xs font-medium shadow-xs cursor-pointer"
+              title="Apply Link"
+            >
+              <Check className="size-3.5" />
+              Apply
+            </button>
+            <button
+              type="button"
+              onClick={handleCancelLink}
+              className="text-muted-foreground hover:bg-muted hover:text-foreground inline-flex size-8 items-center justify-center rounded-md text-xs cursor-pointer"
+              title="Cancel (Esc)"
+            >
+              <X className="size-3.5" />
+            </button>
+          </div>
+        </div>
       ) : null}
 
       {/* Editor Content Area */}
-      <div style={{ minHeight }} className="cursor-text" onClick={() => editor.commands.focus()}>
+      <div
+        style={{ minHeight }}
+        className="cursor-text"
+        onClick={() => {
+          if (!editor.isFocused) {
+            editor.commands.focus();
+          }
+        }}
+      >
         <EditorContent editor={editor} />
       </div>
     </div>

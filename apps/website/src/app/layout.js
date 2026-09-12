@@ -5,6 +5,7 @@ import { AppProvider } from "@/app/_context";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { getCurrentUser } from "@/lib/user";
 import { getCurrentUserCart } from "@/lib/cart";
+import { getCurrentUserWishlist } from "@/lib/wishlist";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -27,7 +28,10 @@ export const metadata = {
 
 export default async function RootLayout({ children }) {
   const user = await getCurrentUser();
-  const initialCart = user && !user.isGuest ? await getCurrentUserCart(user.id) : null;
+  const [initialCart, initialWishlist] = await Promise.all([
+    user && !user.isGuest ? getCurrentUserCart(user.id) : null,
+    user && !user.isGuest ? getCurrentUserWishlist(user.id) : null,
+  ]);
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -38,7 +42,7 @@ export default async function RootLayout({ children }) {
           enableSystem
           disableTransitionOnChange
         >
-          <AppProvider user={user} initialCart={initialCart}>
+          <AppProvider user={user} initialCart={initialCart} initialWishlist={initialWishlist}>
             {children}
             <Toaster position="top-right" />
           </AppProvider>

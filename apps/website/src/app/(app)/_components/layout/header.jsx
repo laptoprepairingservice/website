@@ -6,7 +6,9 @@ import { Button } from "@ui/shadcn/components/button";
 import { Input } from "@ui/shadcn/components/input";
 import { Heart, ShoppingCart } from "lucide-react";
 import Link from "next/link";
-import { AnnouncementBar } from "./announcement-bar";
+import { AnnouncementBar } from "../announcement-bar";
+
+import { MobileNavSheet } from "./mobile-nav-sheet";
 
 function SearchForm({ className }) {
   return (
@@ -18,8 +20,8 @@ function SearchForm({ className }) {
   );
 }
 
-export function Header() {
-  const { user, cartCount } = useAppContext();
+export function Header({ categories = [] }) {
+  const { user, cartCount, wishlistCount } = useAppContext();
 
   const isSignedIn = Boolean(user && !user.isGuest);
   const accountHref = isSignedIn ? "/account" : "/login";
@@ -27,14 +29,16 @@ export function Header() {
 
   return (
     <header className="border-border bg-background/95 sticky top-0 z-40 border-b backdrop-blur-md">
-      <AnnouncementBar />
+      {/* <AnnouncementBar /> */}
 
       <div className="container">
         <div className="flex h-14 items-center justify-between gap-3 sm:h-16 lg:h-20">
-          {/* Left side */}
-          <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+          {/* Left side: Mobile Menu Trigger + Store Logo */}
+          <div className="flex min-w-0 items-center gap-1.5 sm:gap-4">
+            <MobileNavSheet initialCategories={categories} />
+
             <Link href="/" className="flex min-w-0 items-center gap-2">
-              <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold sm:size-9">
+              <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold shadow-xs sm:size-9">
                 CV
               </div>
               <div className="hidden min-w-0 sm:block">
@@ -49,9 +53,20 @@ export function Header() {
 
           {/* Right side */}
           <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-            <Button variant="ghost" size="icon-sm" asChild aria-label="Wishlist">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              asChild
+              aria-label="Wishlist"
+              className="relative"
+            >
               <Link href="/wishlist">
                 <Heart />
+                {wishlistCount > 0 && (
+                  <span className="bg-primary text-primary-foreground absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-none font-medium">
+                    {wishlistCount > 99 ? "99+" : wishlistCount}
+                  </span>
+                )}
               </Link>
             </Button>
 
@@ -59,7 +74,7 @@ export function Header() {
               <Link href="/cart">
                 <ShoppingCart />
                 {cartCount > 0 && (
-                  <span className="bg-primary text-primary-foreground absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-medium leading-none">
+                  <span className="bg-primary text-primary-foreground absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-none font-medium">
                     {cartCount > 99 ? "99+" : cartCount}
                   </span>
                 )}

@@ -16,6 +16,9 @@ export function FormRichTextEditor({
   minHeight = "200px",
   className,
   description,
+  allowTables = true,
+  onInsertSpecTemplate,
+  ...rest
 }) {
   return (
     <Controller
@@ -40,6 +43,9 @@ export function FormRichTextEditor({
             disabled={disabled}
             minHeight={minHeight}
             className={className}
+            allowTables={allowTables}
+            onInsertSpecTemplate={onInsertSpecTemplate}
+            {...rest}
           />
           {error ? <p className="text-destructive text-sm">{error}</p> : null}
         </div>

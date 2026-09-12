@@ -12,9 +12,9 @@ import { FormSheet } from "@/components/form-sheet";
 import { slugify } from "@/lib/slug";
 import {
   createCategoryAction,
-  deleteCategoryAction,
   getCategoryParentOptionsAction,
   updateCategoryAction,
+  uploadCategoryImageAction,
 } from "../_actions/category-actions";
 import {
   categoryFormSchema,
@@ -23,9 +23,11 @@ import {
   updateCategoryFormSchema,
 } from "../_lib/category-schema";
 import { Button } from "@ui/shadcn/components/button";
+import { ImageUploader } from "@ui/shadcn/components/image-uploader";
 import { Input } from "@ui/shadcn/components/input";
 import { Label } from "@ui/shadcn/components/label";
 import { Textarea } from "@ui/shadcn/components/textarea";
+import { getProductAssetUrl } from "@/lib/supabase/storage";
 
 const formId = "category-sheet-form";
 const inputClassName =
@@ -43,7 +45,9 @@ export function CategorySheetForm({ open, onOpenChange, category, onSuccess }) {
   const isEdit = Boolean(category?.id);
   const [slugTouched, setSlugTouched] = useState(isEdit);
   const [parentOptions, setParentOptions] = useState([]);
-  const [deleting, setDeleting] = useState(false);
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [imageDeleted, setImageDeleted] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const schema = isEdit ? updateCategoryFormSchema : categoryFormSchema;
 
   const {
@@ -63,10 +67,14 @@ export function CategorySheetForm({ open, onOpenChange, category, onSuccess }) {
 
   useEffect(() => {
     if (!open) {
+      setSelectedImageFile(null);
+      setImageDeleted(false);
       return;
     }
 
     reset(category ? toCategoryFormValues(category) : getCategoryFormDefaults());
+    setSelectedImageFile(null);
+    setImageDeleted(false);
     setSlugTouched(isEdit);
 
     getCategoryParentOptionsAction(category?.id).then((result) => {
@@ -88,9 +96,32 @@ export function CategorySheetForm({ open, onOpenChange, category, onSuccess }) {
   }, [categoryName, isEdit, setValue, slugTouched]);
 
   const onSubmit = async (values) => {
+    let finalImagePath = values.image_path;
+
+    if (selectedImageFile) {
+      setUploadingImage(true);
+      const formData = new FormData();
+      formData.append("file", selectedImageFile);
+      const uploadRes = await uploadCategoryImageAction(formData);
+      setUploadingImage(false);
+
+      if (uploadRes.error) {
+        toast.error(uploadRes.error);
+        return;
+      }
+      finalImagePath = uploadRes.storagePath;
+    } else if (imageDeleted) {
+      finalImagePath = null;
+    }
+
+    const payload = {
+      ...values,
+      image_path: finalImagePath,
+    };
+
     const result = isEdit
-      ? await updateCategoryAction(values)
-      : await createCategoryAction(values);
+      ? await updateCategoryAction(payload)
+      : await createCategoryAction(payload);
 
     if (result.error) {
       toast.error(result.error);
@@ -102,34 +133,7 @@ export function CategorySheetForm({ open, onOpenChange, category, onSuccess }) {
     onOpenChange(false);
   };
 
-  const handleDelete = async () => {
-    if (!category?.id) {
-      return;
-    }
-
-    const confirmed = window.confirm(
-      `Delete "${category.name}"? This fails if products or child categories still reference it.`
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    setDeleting(true);
-    const result = await deleteCategoryAction(category.id);
-    setDeleting(false);
-
-    if (result.error) {
-      toast.error(result.error);
-      return;
-    }
-
-    toast.success("Category deleted.");
-    onSuccess?.();
-    onOpenChange(false);
-  };
-
-  const loading = isSubmitting || deleting;
+  const loading = isSubmitting || uploadingImage;
 
   return (
     <FormSheet
@@ -143,19 +147,6 @@ export function CategorySheetForm({ open, onOpenChange, category, onSuccess }) {
       }
       formId={formId}
       loading={loading}
-      footerStart={
-        isEdit ? (
-          <Button
-            type="button"
-            variant="destructive"
-            className="mr-auto"
-            onClick={handleDelete}
-            disabled={loading}
-          >
-            Delete
-          </Button>
-        ) : null
-      }
     >
       <form id={formId} onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
@@ -203,14 +194,48 @@ export function CategorySheetForm({ open, onOpenChange, category, onSuccess }) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="category-image">Image path</Label>
-          <Input
-            id="category-image"
-            className={inputClassName}
-            placeholder="categories/ram.webp"
-            {...register("image_path")}
+          <ImageUploader
+            key={open ? (category?.id ? `cat-${category.id}-${category.image_path}` : "cat-new") : "cat-closed"}
+            label="Category image"
+            helperText="Preview or upload an image"
+            value={
+              imageDeleted
+                ? ""
+                : selectedImageFile
+                ? ""
+                : category?.image_path
+                ? getProductAssetUrl(category.image_path)
+                : watch("image_path")
+                ? getProductAssetUrl(watch("image_path"))
+                : ""
+            }
+            onFileSelect={(file) => {
+              setSelectedImageFile(file);
+              setImageDeleted(false);
+            }}
+            onUrlChange={(url) => {
+              setSelectedImageFile(null);
+              setImageDeleted(false);
+              setValue("image_path", url, { shouldDirty: true });
+            }}
+            onDelete={() => {
+              setSelectedImageFile(null);
+              setImageDeleted(true);
+              setValue("image_path", "", { shouldDirty: true });
+            }}
+            onReplace={(fileOrUrl) => {
+              if (typeof fileOrUrl === "string") {
+                setSelectedImageFile(null);
+                setImageDeleted(false);
+                setValue("image_path", fileOrUrl, { shouldDirty: true });
+              } else {
+                setSelectedImageFile(fileOrUrl);
+                setImageDeleted(false);
+              }
+            }}
+            error={errors.image_path?.message}
+            disabled={loading}
           />
-          <FieldError message={errors.image_path?.message} />
         </div>
 
         <div className="space-y-2">

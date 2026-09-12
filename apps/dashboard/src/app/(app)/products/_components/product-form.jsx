@@ -204,11 +204,43 @@ export function ProductForm({ mode, catalogOptions, initialValues }) {
                 name="description"
                 control={control}
                 error={errors.description?.message}
-                placeholder="Write a comprehensive product description with specs, features, and warranty details..."
+                placeholder="Write a comprehensive product description with features, warranty, and overview..."
                 disabled={isSubmitting}
-                minHeight="220px"
+                minHeight="200px"
               />
             </div>
+          </div>
+        </FormSection>
+
+        <FormSection
+          title="Specifications (TipTap Table)"
+          description="Detailed hardware specifications table. Displayed under the Specifications tab on storefront product pages."
+        >
+          <div className="space-y-2">
+            <FormRichTextEditor
+              label="Specification Table"
+              name="specifications"
+              control={control}
+              error={errors.specifications?.message}
+              placeholder="Use the table tool or click 'Spec Template' above to format a hardware specification table..."
+              disabled={isSubmitting}
+              minHeight="200px"
+            />
+          </div>
+        </FormSection>
+
+        <FormSection
+          title="Compatibility"
+        >
+          <div className="space-y-2">
+            <Label htmlFor="compatibility">Compatible Models & Devices (Optional)</Label>
+            <Textarea
+              id="compatibility"
+              rows={4}
+              placeholder={"Enter compatible laptop models or part numbers (one per line or comma-separated)"}
+              {...register("compatibility")}
+            />
+            <FieldError message={errors.compatibility?.message} />
           </div>
         </FormSection>
 
@@ -233,13 +265,17 @@ export function ProductForm({ mode, catalogOptions, initialValues }) {
             />
 
             <div className="flex flex-col justify-end gap-3">
-              <label htmlFor="is_oem" className="flex items-center gap-2 text-sm">
+              <label htmlFor="is_oem" className="flex items-center gap-2 text-sm cursor-pointer">
                 <input id="is_oem" type="checkbox" {...register("is_oem")} />
                 Genuine OEM part
               </label>
-              <label htmlFor="is_featured" className="flex items-center gap-2 text-sm">
+              <label htmlFor="is_featured" className="flex items-center gap-2 text-sm cursor-pointer">
                 <input id="is_featured" type="checkbox" {...register("is_featured")} />
                 Featured product
+              </label>
+              <label htmlFor="is_bestseller" className="flex items-center gap-2 text-sm cursor-pointer">
+                <input id="is_bestseller" type="checkbox" {...register("is_bestseller")} />
+                <span className="font-medium text-amber-600 dark:text-amber-400">Bestseller product</span>
               </label>
             </div>
           </div>

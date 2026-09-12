@@ -98,9 +98,18 @@ export function mapSupabaseProduct(product) {
     isNew: product.created_at
       ? Date.now() - new Date(product.created_at).getTime() < 30 * 24 * 60 * 60 * 1000
       : false,
-    isBestSeller: Boolean(product.is_featured),
+    isBestSeller: Boolean(product.is_bestseller),
+    isFeatured: Boolean(product.is_featured),
     shortDescription: product.short_description || "",
     description: product.description || "",
+    specifications: product.specifications || "",
+    compatibility: product.compatibility || "",
+    compatibilityList: product.compatibility
+      ? product.compatibility
+          .split(/[\n,]+/)
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [],
     specs: defaultVariant?.options || {},
     variants,
   };
@@ -136,7 +145,10 @@ export async function fetchStoreHomeData() {
           slug,
           short_description,
           description,
+          specifications,
+          compatibility,
           is_featured,
+          is_bestseller,
           created_at,
           status,
           categories (id, name, slug),
@@ -225,7 +237,10 @@ export async function fetchStoreProducts({ category = null, brand = null, search
         slug,
         short_description,
         description,
+        specifications,
+        compatibility,
         is_featured,
+        is_bestseller,
         created_at,
         status,
         categories (id, name, slug),
@@ -301,7 +316,10 @@ export async function fetchProductBySlug(slug) {
         slug,
         short_description,
         description,
+        specifications,
+        compatibility,
         is_featured,
+        is_bestseller,
         created_at,
         status,
         categories (id, name, slug),
@@ -355,7 +373,10 @@ export async function fetchRelatedProducts(product, limit = 4) {
         slug,
         short_description,
         description,
+        specifications,
+        compatibility,
         is_featured,
+        is_bestseller,
         created_at,
         status,
         categories (id, name, slug),
@@ -393,23 +414,116 @@ export async function fetchRelatedProducts(product, limit = 4) {
  * Fetches all categories from Supabase
  */
 export async function fetchStoreCategories() {
+  return fetchStoreCategoriesWithCount();
+}
+
+/**
+ * Fetches all active categories with live product count from Supabase
+ */
+export async function fetchStoreCategoriesWithCount() {
   try {
     const supabase = getPublicSupabaseClient();
-    const { data: categories, error } = await supabase
-      .from("categories")
-      .select("id, public_id, name, slug, image_path, is_active, sort_order")
-      .eq("is_active", true)
-      .order("sort_order", { ascending: true });
+    const [categoriesRes, productsRes] = await Promise.all([
+      supabase
+        .from("categories")
+        .select("id, public_id, name, slug, image_path, is_active, sort_order")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true })
+        .order("name", { ascending: true }),
+      supabase
+        .from("products")
+        .select("id, category_id, categories(slug)")
+        .eq("status", "active"),
+    ]);
 
-    if (error) return [];
+    const counts = {};
+    (productsRes.data || []).forEach((p) => {
+      const slug = p.categories?.slug;
+      if (slug) {
+        counts[slug] = (counts[slug] || 0) + 1;
+      }
+    });
 
-    return (categories || []).map((cat) => ({
-      id: cat.slug,
+    return (categoriesRes.data || []).map((cat) => ({
+      id: cat.id,
       name: cat.name,
       slug: cat.slug,
       image: getProductAssetUrl(cat.image_path),
+      count: counts[cat.slug] || 0,
     }));
-  } catch {
+  } catch (err) {
+    console.error("Failed to fetch store categories with count:", err);
+    return [];
+  }
+}
+
+/**
+ * Fetches up to limit active products for a specific category
+ */
+export async function fetchCategoryProducts(categorySlug, limit = 20) {
+  if (!categorySlug) return [];
+  try {
+    const supabase = getPublicSupabaseClient();
+
+    const { data: catData } = await supabase
+      .from("categories")
+      .select("id, name, slug")
+      .eq("slug", categorySlug)
+      .maybeSingle();
+
+    let query = supabase
+      .from("products")
+      .select(`
+        id,
+        public_id,
+        name,
+        slug,
+        short_description,
+        description,
+        is_featured,
+        is_bestseller,
+        status,
+        created_at,
+        categories (id, name, slug),
+        brands (id, name, slug),
+        product_variants (
+          id,
+          sku,
+          price,
+          compare_at_price,
+          variant_name,
+          is_default,
+          is_active
+        ),
+        product_images (
+          id,
+          storage_path,
+          sort_order,
+          is_banner
+        )
+      `)
+      .eq("status", "active");
+
+    if (catData?.id) {
+      query = query.eq("category_id", catData.id);
+    }
+
+    query = query.order("created_at", { ascending: false }).limit(limit);
+
+    const { data, error } = await query;
+    if (error) {
+      console.error("Error fetching category products:", error);
+      return [];
+    }
+
+    let products = (data || []).map(mapSupabaseProduct).filter(Boolean);
+    if (!catData?.id) {
+      products = products.filter((p) => p.category === categorySlug);
+    }
+
+    return products;
+  } catch (err) {
+    console.error("Failed to fetch category products:", err);
     return [];
   }
 }

@@ -1,4 +1,4 @@
-import { OrganizationJsonLd } from "@/components/store/structured-data";
+import { OrganizationJsonLd } from "@/app/(app)/products/[slug]/_components/structured-data";
 import { Newsletter } from "@/components/store/newsletter";
 import { fetchStoreHomeData } from "@/lib/supabase/store-data";
 import {
