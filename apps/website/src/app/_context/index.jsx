@@ -8,9 +8,12 @@ const AppContext = createContext(undefined);
 export function AppProvider({ children, user: initUser = null }) {
   const [user, setUser] = useState(initUser);
 
-  useEffect(() => {
+  const [prevInitUser, setPrevInitUser] = useState(initUser);
+
+  if (initUser !== prevInitUser) {
+    setPrevInitUser(initUser);
     setUser(initUser);
-  }, [initUser]);
+  }
 
   const refreshUser = useCallback(async () => {
     const nextUser = await getCurrentUserAction();

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@ui/shadcn/components/button";
-import { FormField, Input } from "@ui/shadcn/components/input";
+import { FormField } from "@ui/shadcn/components/form-field";
+import { Input } from "@ui/shadcn/components/input";
 import { forgotPasswordAction } from "./_components/forgot-password-action";
 
 export default function ForgotPasswordPage() {
