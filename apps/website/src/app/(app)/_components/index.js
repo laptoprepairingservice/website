@@ -1,6 +1,6 @@
 export { AnnouncementBar } from "./announcement-bar";
-export { Footer } from "./footer";
-export { Header } from "./header";
+export { Footer } from "./layout/footer";
+export { Header } from "./layout/header";
 export { SectionHeader } from "./section-header";
 export { HeroBanner } from "./hero-banner";
 export { MobileCategoryPills } from "./mobile-category-pills";
