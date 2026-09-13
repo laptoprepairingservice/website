@@ -1,11 +1,7 @@
 import { notFound } from "next/navigation";
 import { ProductDetail } from "./_components/product-detail";
 import { ProductJsonLd } from "./_components/structured-data";
-import {
-  fetchProductBySlug,
-  fetchRelatedProducts,
-  fetchAllProductSlugs,
-} from "@/lib/supabase/store-data";
+import { fetchProductBySlug, fetchRelatedProducts, fetchAllProductSlugs } from "@/lib/store";
 
 export const revalidate = 60;
 

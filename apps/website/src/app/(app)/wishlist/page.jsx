@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default function WishlistPage() {
   return (
-    <div className="py-8 lg:py-12">
+    <div className="container py-8 lg:py-12">
       <WishlistClient />
     </div>
   );

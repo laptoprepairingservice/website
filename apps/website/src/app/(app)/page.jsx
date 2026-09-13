@@ -1,8 +1,7 @@
 import { OrganizationJsonLd } from "@/app/(app)/products/[slug]/_components/structured-data";
 import { Newsletter } from "@/components/store/newsletter";
-import { fetchStoreHomeData } from "@/lib/supabase/store-data";
+import { fetchStoreHomeData } from "@/lib/store";
 import {
-  FeaturedCategories,
   HardwareFAQSection,
   HeroBanner,
   InteractiveProductShowcase,
