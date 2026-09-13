@@ -1,4 +1,4 @@
-import { fetchAllProductSlugs } from "@/lib/supabase/store-data";
+import { fetchAllProductSlugs } from "@/lib/store";
 
 const BASE_URL = "https://Ranuja.in";
 

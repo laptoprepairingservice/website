@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  fetchStoreCategoriesWithCount,
-  fetchCategoryProducts,
-} from "@/lib/supabase/store-data";
+import { fetchCategoryProducts, fetchStoreCategoriesWithCount } from "@/lib/store";
 
 /**
  * Server Action: Fetches active categories with image and live product counts.

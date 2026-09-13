@@ -1,4 +1,4 @@
-import { fetchStoreCategoriesWithCount } from "@/lib/supabase/store-data";
+import { fetchStoreCategoriesWithCount } from "@/lib/store";
 import { Footer } from "./_components/layout/footer";
 import { Header } from "./_components/layout/header";
 

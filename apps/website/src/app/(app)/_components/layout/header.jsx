@@ -3,22 +3,12 @@
 import { useAppContext } from "@/app/_context";
 import { getUserShortName } from "@/lib/utils";
 import { Button } from "@ui/shadcn/components/button";
-import { Input } from "@ui/shadcn/components/input";
 import { Heart, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { AnnouncementBar } from "../announcement-bar";
 
 import { MobileNavSheet } from "./mobile-nav-sheet";
-
-function SearchForm({ className }) {
-  return (
-    <form action="/search" className={className}>
-      <div className="relative">
-        <Input name="q" placeholder="Search processors, GPUs, RAM, SSDs..." className="pl-10" />
-      </div>
-    </form>
-  );
-}
+import { SearchCombobox } from "./search-combobox";
 
 export function Header({ categories = [] }) {
   const { user, cartCount, wishlistCount } = useAppContext();
@@ -48,8 +38,8 @@ export function Header({ categories = [] }) {
             </Link>
           </div>
 
-          {/* Desktop search */}
-          <SearchForm className="hidden max-w-xl flex-1 px-4 md:block" />
+          {/* Desktop search combobox */}
+          <SearchCombobox className="hidden max-w-xl flex-1 px-4 md:block" />
 
           {/* Right side */}
           <div className="flex shrink-0 items-center gap-1 sm:gap-2">
