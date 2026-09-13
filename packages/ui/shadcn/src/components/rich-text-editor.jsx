@@ -1,5 +1,6 @@
 "use client";
 
+import TiptapImage from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table";
@@ -18,10 +19,12 @@ import {
   Heading1,
   Heading2,
   Heading3,
+  Image as ImageIcon,
   Italic,
   Link as LinkIcon,
   List,
   ListOrdered,
+  Loader2,
   Minus,
   Plus,
   Quote,
@@ -33,6 +36,7 @@ import {
   Underline as UnderlineIcon,
   Undo,
   Unlink,
+  UploadCloud,
   X
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -83,14 +87,24 @@ export function RichTextEditor({
   className,
   id,
   allowTables = true,
+  allowImages = true,
+  onUploadImage,
   onInsertSpecTemplate,
+  extraToolbarSlot,
+  editorRef,
 }) {
   const [isMounted, setIsMounted] = useState(false);
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [linkText, setLinkText] = useState("");
+  const [showImageInput, setShowImageInput] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageAlt, setImageAlt] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
   const savedSelectionRef = useRef(null);
   const linkInputRef = useRef(null);
+  const imageInputRef = useRef(null);
+  const imageFileInputRef = useRef(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -147,6 +161,17 @@ export function RichTextEditor({
             }),
           ]
         : []),
+      ...(allowImages
+        ? [
+            TiptapImage.configure({
+              inline: false,
+              allowBase64: true,
+              HTMLAttributes: {
+                class: "rounded-xl max-w-full my-4 border border-border shadow-xs object-cover",
+              },
+            }),
+          ]
+        : []),
     ],
     content: value || "",
     editable: !disabled,
@@ -176,6 +201,43 @@ export function RichTextEditor({
           "[&_.selectedCell]:bg-primary/10"
         ),
       },
+      handlePaste: (view, event) => {
+        if (!onUploadImage) return false;
+        const items = Array.from(event.clipboardData?.items || []);
+        const imageItem = items.find((item) => item.type.startsWith("image/"));
+        if (imageItem) {
+          const file = imageItem.getAsFile();
+          if (file) {
+            event.preventDefault();
+            onUploadImage(file)
+              .then((url) => {
+                if (url && editor) {
+                  editor.chain().focus().setImage({ src: url, alt: file.name }).run();
+                }
+              })
+              .catch(console.error);
+            return true;
+          }
+        }
+        return false;
+      },
+      handleDrop: (view, event) => {
+        if (!onUploadImage) return false;
+        const files = Array.from(event.dataTransfer?.files || []);
+        const imageFile = files.find((file) => file.type.startsWith("image/"));
+        if (imageFile) {
+          event.preventDefault();
+          onUploadImage(imageFile)
+            .then((url) => {
+              if (url && editor) {
+                editor.chain().focus().setImage({ src: url, alt: imageFile.name }).run();
+              }
+            })
+            .catch(console.error);
+          return true;
+        }
+        return false;
+      },
     },
   });
 
@@ -185,6 +247,17 @@ export function RichTextEditor({
       editor.setEditable(!disabled);
     }
   }, [editor, disabled]);
+
+  // Expose editor instance if editorRef is provided
+  useEffect(() => {
+    if (editorRef) {
+      if (typeof editorRef === "function") {
+        editorRef(editor);
+      } else {
+        editorRef.current = editor;
+      }
+    }
+  }, [editor, editorRef]);
 
   // Keep external value in sync when value changes from outside (e.g. form reset or async load)
   useEffect(() => {
@@ -206,9 +279,17 @@ export function RichTextEditor({
     }
   }, [showLinkInput]);
 
+  // Focus image input when opened
+  useEffect(() => {
+    if (showImageInput && imageInputRef.current) {
+      imageInputRef.current.focus();
+    }
+  }, [showImageInput]);
+
   const handleOpenLinkModal = () => {
     if (!editor) return;
 
+    setShowImageInput(false);
     // Snapshot current selection before focus shifts
     const { from, to } = editor.state.selection;
     const isCollapsed = from === to;
@@ -221,6 +302,80 @@ export function RichTextEditor({
     setLinkUrl(previousUrl);
     setLinkText(selectedText);
     setShowLinkInput(true);
+  };
+
+  const handleOpenImageModal = () => {
+    if (!editor) return;
+    setShowLinkInput(false);
+    setShowImageInput((prev) => !prev);
+  };
+
+  const handleImageFileSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !editor) return;
+
+    if (onUploadImage) {
+      setUploadingImage(true);
+      try {
+        const publicUrl = await onUploadImage(file);
+        if (publicUrl) {
+          editor.chain().focus().setImage({ src: publicUrl, alt: file.name }).run();
+          setShowImageInput(false);
+          setImageUrl("");
+          setImageAlt("");
+        }
+      } catch (err) {
+        console.error("Failed to upload image:", err);
+      } finally {
+        setUploadingImage(false);
+        if (imageFileInputRef.current) {
+          imageFileInputRef.current.value = "";
+        }
+      }
+    } else {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result;
+        if (base64 && editor) {
+          editor.chain().focus().setImage({ src: base64, alt: file.name }).run();
+          setShowImageInput(false);
+          setImageUrl("");
+          setImageAlt("");
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleApplyImage = (e) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    if (!editor) return;
+
+    const trimmed = imageUrl.trim();
+    if (!trimmed) {
+      setShowImageInput(false);
+      return;
+    }
+
+    let finalUrl = trimmed;
+    if (!/^https?:\/\//i.test(finalUrl) && !/^data:/i.test(finalUrl) && !/^\//i.test(finalUrl)) {
+      finalUrl = `https://${finalUrl}`;
+    }
+
+    editor.chain().focus().setImage({ src: finalUrl, alt: imageAlt.trim() || "" }).run();
+    setShowImageInput(false);
+    setImageUrl("");
+    setImageAlt("");
+  };
+
+  const handleCancelImage = () => {
+    setShowImageInput(false);
+    setImageUrl("");
+    setImageAlt("");
+    if (editor) {
+      editor.commands.focus();
+    }
   };
 
   const handleApplyLink = (e) => {
@@ -509,6 +664,17 @@ export function RichTextEditor({
           </ToolbarButton>
         ) : null}
 
+        {/* Images */}
+        {allowImages ? (
+          <ToolbarButton
+            onClick={handleOpenImageModal}
+            isActive={showImageInput || editor.isActive("image")}
+            title="Insert Image (Upload or URL)"
+          >
+            <ImageIcon className="size-4" />
+          </ToolbarButton>
+        ) : null}
+
         {allowTables ? (
           <>
             <ToolbarSeparator />
@@ -586,6 +752,13 @@ export function RichTextEditor({
         >
           <RemoveFormatting className="size-4" />
         </ToolbarButton>
+
+        {extraToolbarSlot ? (
+          <>
+            <ToolbarSeparator />
+            {extraToolbarSlot(editor)}
+          </>
+        ) : null}
       </div>
 
       {/* Inline Link Popover / Input Bar */}
@@ -657,6 +830,99 @@ export function RichTextEditor({
             <button
               type="button"
               onClick={handleCancelLink}
+              className="text-muted-foreground hover:bg-muted hover:text-foreground inline-flex size-8 items-center justify-center rounded-md text-xs cursor-pointer"
+              title="Cancel (Esc)"
+            >
+              <X className="size-3.5" />
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Inline Image Popover / Input Bar */}
+      {showImageInput ? (
+        <div
+          role="region"
+          aria-label="Image toolbar"
+          className="flex flex-wrap items-center gap-2 border-b border-border bg-muted/50 p-2.5 text-sm transition-all"
+        >
+          <input
+            ref={imageFileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleImageFileSelect}
+          />
+          <button
+            type="button"
+            disabled={uploadingImage}
+            onClick={() => imageFileInputRef.current?.click()}
+            className="bg-background hover:bg-muted text-foreground border border-input inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium shadow-xs cursor-pointer disabled:opacity-50"
+            title="Upload image from computer"
+          >
+            {uploadingImage ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <UploadCloud className="size-3.5 text-primary" />
+            )}
+            <span>{uploadingImage ? "Uploading..." : "Upload Image"}</span>
+          </button>
+
+          <span className="text-xs text-muted-foreground font-medium">or</span>
+
+          <input
+            ref={imageInputRef}
+            type="text"
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            placeholder="Paste image URL (https://...)"
+            className="h-8 flex-1 min-w-[180px] rounded-md border border-input bg-background px-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                e.stopPropagation();
+                handleApplyImage(e);
+              } else if (e.key === "Escape") {
+                e.preventDefault();
+                e.stopPropagation();
+                handleCancelImage();
+              }
+            }}
+          />
+
+          <input
+            type="text"
+            value={imageAlt}
+            onChange={(e) => setImageAlt(e.target.value)}
+            placeholder="Alt text (optional)"
+            className="h-8 w-36 rounded-md border border-input bg-background px-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                e.stopPropagation();
+                handleApplyImage(e);
+              } else if (e.key === "Escape") {
+                e.preventDefault();
+                e.stopPropagation();
+                handleCancelImage();
+              }
+            }}
+          />
+
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              disabled={!imageUrl.trim() || uploadingImage}
+              onClick={handleApplyImage}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-8 items-center gap-1 rounded-md px-2.5 text-xs font-medium shadow-xs cursor-pointer disabled:opacity-50"
+              title="Insert Image"
+            >
+              <Check className="size-3.5" />
+              Insert
+            </button>
+            <button
+              type="button"
+              onClick={handleCancelImage}
               className="text-muted-foreground hover:bg-muted hover:text-foreground inline-flex size-8 items-center justify-center rounded-md text-xs cursor-pointer"
               title="Cancel (Esc)"
             >

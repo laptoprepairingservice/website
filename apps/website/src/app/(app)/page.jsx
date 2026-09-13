@@ -1,5 +1,4 @@
 import { OrganizationJsonLd } from "@/app/(app)/products/[slug]/_components/structured-data";
-import { Newsletter } from "@/components/store/newsletter";
 import { fetchStoreHomeData } from "@/lib/store";
 import {
   HardwareFAQSection,
@@ -48,9 +47,6 @@ export default async function HomePage() {
 
       {/* 7. Hardware FAQ & Support */}
       <HardwareFAQSection />
-
-      {/* 8. Newsletter Subscription */}
-      <Newsletter />
     </div>
   );
 }

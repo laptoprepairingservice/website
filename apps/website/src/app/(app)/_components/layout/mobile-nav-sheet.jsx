@@ -221,7 +221,7 @@ export function MobileNavSheet({ initialCategories = [] }) {
                 </div>
 
                 {/* Categories List */}
-                <div className="divide-border/60 border-border bg-card mt-2 divide-y overflow-hidden rounded-xl border shadow-2xs">
+                <div className="border-border bg-card mt-2 overflow-hidden rounded-xl border shadow-2xs">
                   {categories.map((cat) => (
                     <button
                       key={cat.id || cat.slug}
