@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@ui/shadcn/components/
 import { EmptyState } from "@ui/shadcn/components/empty-state";
 import { formatPrice } from "@/lib/format";
 import { STORE } from "@/lib/store-config";
+import { getProductUrl } from "@/lib/url";
 import { useAppContext } from "@/app/_context";
 
 export default function CartPage() {
@@ -37,7 +38,7 @@ export default function CartPage() {
           description="Browse our products and add items to your cart."
           action={
             <Button asChild>
-              <Link href="/products">Continue Shopping</Link>
+              <Link href="/">Continue Shopping</Link>
             </Button>
           }
         />
@@ -61,7 +62,7 @@ export default function CartPage() {
               className="border-border bg-card flex gap-4 rounded-xl border p-4 sm:gap-6 sm:p-6"
             >
               <Link
-                href={`/products/${item.slug}`}
+                href={getProductUrl(item)}
                 className="bg-muted/30 relative size-24 shrink-0 overflow-hidden rounded-lg sm:size-28"
               >
                 {item.image ? (
@@ -85,7 +86,7 @@ export default function CartPage() {
                     {item.brand}
                   </p>
                   <Link
-                    href={`/products/${item.slug}`}
+                    href={getProductUrl(item)}
                     className="hover:text-primary mt-1 block font-medium"
                   >
                     {item.name}
@@ -126,7 +127,7 @@ export default function CartPage() {
             </div>
           ))}
           <Button variant="outline" asChild>
-            <Link href="/products">Continue Shopping</Link>
+            <Link href="/">Continue Shopping</Link>
           </Button>
         </div>
 

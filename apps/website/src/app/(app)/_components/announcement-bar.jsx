@@ -16,7 +16,7 @@ export function AnnouncementBar() {
           }).format(STORE.freeShippingThreshold)}{" "}
           across Ahmedabad
           <span className="mx-2 hidden sm:inline">·</span>
-          <Link href="/products" className="hidden underline-offset-2 hover:underline sm:inline">
+          <Link href="/charger" className="hidden underline-offset-2 hover:underline sm:inline">
             Shop Now
           </Link>
         </p>

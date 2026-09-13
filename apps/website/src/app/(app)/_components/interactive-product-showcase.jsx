@@ -34,7 +34,7 @@ export function InteractiveProductShowcase({ categories = [], products = [] }) {
         <SectionHeader
           title="Featured Hardware"
           description="Tested and verified components in stock with same-day dispatch."
-          href="/products"
+          href={categories[0]?.slug ? `/${categories[0].slug}` : "/charger"}
           linkText="View Catalog"
         />
 

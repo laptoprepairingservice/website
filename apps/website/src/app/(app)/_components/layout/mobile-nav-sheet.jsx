@@ -1,99 +1,92 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
-  ChevronLeft,
   ChevronRight,
   Heart,
   Home,
   Laptop,
   Layers,
   Menu,
-  Package,
+  NotepadText,
+  PackageOpen,
   Search,
   ShoppingCart,
-  Sparkles,
   User,
   X,
 } from "lucide-react";
-import { toast } from "sonner";
 
-import { Badge } from "@ui/shadcn/components/badge";
 import { Button } from "@ui/shadcn/components/button";
 import {
   Sheet,
   SheetClose,
   SheetContent,
   SheetDescription,
-  SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@ui/shadcn/components/sheet";
 import { useAppContext } from "@/app/_context";
-import { formatPrice } from "@/lib/format";
+import { buildCategoryTree } from "@/lib/store";
 import { getUserShortName } from "@/lib/utils";
-import {
-  getCategoryProductsAction,
-  getNavCategoriesAction,
-} from "../../_actions/mobile-nav-actions";
-import { NotepadText } from "lucide-react";
+import { getNavCategoriesAction } from "../../_actions/mobile-nav-actions";
 
 export function MobileNavSheet({ initialCategories = [] }) {
   const router = useRouter();
-  const { user, cartCount, wishlistCount, addToCart } = useAppContext();
+  const { user, cartCount, wishlistCount } = useAppContext();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [currentView, setCurrentView] = useState("categories"); // "categories" | "products"
-  const [categories, setCategories] = useState(initialCategories);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [productsCache, setProductsCache] = useState({});
-  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [rawCategories, setRawCategories] = useState(initialCategories);
   const [searchQuery, setSearchQuery] = useState("");
-  const [addingProductId, setAddingProductId] = useState(null);
+  const [activeCategoryId, setActiveCategoryId] = useState(null);
 
   const isSignedIn = Boolean(user && !user.isGuest);
   const accountHref = isSignedIn ? "/account" : "/login";
   const accountLabel = isSignedIn ? getUserShortName(user) : "Login";
 
+  // Organize categories into a 1-level deep tree (Main Category -> Sub-categories)
+  const categoryTree = useMemo(() => {
+    return buildCategoryTree(rawCategories);
+  }, [rawCategories]);
+
+  // Sync active category ID with first available category
+  useEffect(() => {
+    if (categoryTree.length > 0 && !activeCategoryId) {
+      setActiveCategoryId(categoryTree[0].id);
+    }
+  }, [categoryTree, activeCategoryId]);
+
   // Load categories if initial categories were empty
   useEffect(() => {
-    if (isOpen && categories.length === 0) {
+    if (isOpen && rawCategories.length === 0) {
       getNavCategoriesAction().then((data) => {
         if (Array.isArray(data)) {
-          setCategories(data);
+          setRawCategories(data);
+          if (data.length > 0 && !activeCategoryId) {
+            setActiveCategoryId(data[0].id);
+          }
         }
       });
     }
-  }, [isOpen, categories.length]);
+  }, [isOpen, rawCategories.length, activeCategoryId]);
 
-  // Handle category selection and drill-down
-  const handleSelectCategory = async (category) => {
-    setSelectedCategory(category);
-    setCurrentView("products");
-
-    if (!productsCache[category.slug]) {
-      setLoadingProducts(true);
-      try {
-        const products = await getCategoryProductsAction(category.slug);
-        setProductsCache((prev) => ({
-          ...prev,
-          [category.slug]: products || [],
-        }));
-      } catch (err) {
-        console.error("Failed to load category products:", err);
-      } finally {
-        setLoadingProducts(false);
+  // Sync if initialCategories updates
+  useEffect(() => {
+    if (initialCategories.length > 0 && rawCategories.length === 0) {
+      setRawCategories(initialCategories);
+      if (!activeCategoryId) {
+        setActiveCategoryId(initialCategories[0].id);
       }
     }
-  };
+  }, [initialCategories, rawCategories.length, activeCategoryId]);
 
-  const handleBackToCategories = () => {
-    setCurrentView("categories");
-  };
+  const activeCategory = useMemo(() => {
+    if (!categoryTree.length) return null;
+    return categoryTree.find((c) => String(c.id) === String(activeCategoryId)) || categoryTree[0];
+  }, [categoryTree, activeCategoryId]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -102,27 +95,14 @@ export function MobileNavSheet({ initialCategories = [] }) {
     router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
   };
 
-  const handleQuickAddToCart = async (e, product) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (addingProductId) return;
-    setAddingProductId(product.id);
-
-    try {
-      await addToCart(product, 1);
-      toast.success("Added to cart", {
-        description: `${product.name} added to your basket.`,
-      });
-    } catch (err) {
-      console.error("Failed to add to cart:", err);
-      toast.error("Failed to add to cart");
-    } finally {
-      setAddingProductId(null);
-    }
+  const handleNavigate = () => {
+    setIsOpen(false);
   };
 
-  const activeCategoryProducts = selectedCategory ? productsCache[selectedCategory.slug] || [] : [];
+  const activeSubcategories = useMemo(() => {
+    if (!activeCategory || !Array.isArray(activeCategory.subcategories)) return [];
+    return activeCategory.subcategories;
+  }, [activeCategory]);
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -140,17 +120,17 @@ export function MobileNavSheet({ initialCategories = [] }) {
       <SheetContent
         side="left"
         showCloseButton={false}
-        className="bg-background border-border flex h-full w-[88vw] max-w-sm flex-col gap-0 border-r p-0 shadow-2xl"
+        className="bg-background border-border flex h-full w-[95vw] max-w-md flex-col gap-0 border-r p-0 shadow-2xl sm:max-w-lg lg:max-w-xl"
       >
         <SheetTitle className="sr-only">Mobile Navigation</SheetTitle>
         <SheetDescription className="sr-only">
-          Browse laptop hardware categories and products
+          Browse hardware categories and sub-categories
         </SheetDescription>
 
         {/* 1. Sheet Header: Store Branding + Search + Close */}
-        <div className="border-border bg-card/80 border-b p-4 backdrop-blur-md">
+        <div className="border-border bg-card/80 border-b p-3.5 backdrop-blur-md sm:p-4">
           <div className="flex items-center justify-between gap-3">
-            <Link href="/" onClick={() => setIsOpen(false)} className="flex items-center gap-2.5">
+            <Link href="/" onClick={handleNavigate} className="flex items-center gap-2.5">
               <div className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-lg text-sm font-bold shadow-xs">
                 CV
               </div>
@@ -186,250 +166,209 @@ export function MobileNavSheet({ initialCategories = [] }) {
           </form>
         </div>
 
-        {/* 2. Scrollable Body: Drill-Down Categories vs Products */}
-        <div className="flex-1 overflow-y-auto overscroll-contain">
-          {currentView === "categories" ? (
-            /* VIEW 1: Categories List */
-            <div className="space-y-4 p-4">
-              {/* All Products Quick Link */}
-              <Link
-                href="/products"
-                onClick={() => setIsOpen(false)}
-                className="border-primary/20 bg-primary/5 hover:bg-primary/10 group flex items-center justify-between rounded-xl border p-3.5 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-lg shadow-xs">
-                    <Layers className="size-4.5" />
-                  </div>
-                  <div>
-                    <h3 className="text-foreground text-xs font-semibold">All Products</h3>
-                    <p className="text-muted-foreground text-[11px]">View full hardware catalog</p>
-                  </div>
-                </div>
-                <ArrowRight className="text-primary size-4 transition-transform group-hover:translate-x-1" />
-              </Link>
-
-              {/* Categories Section Heading */}
-              <div>
-                <div className="flex items-center justify-between pb-1">
-                  <h3 className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                    Shop By Category
-                  </h3>
-                  <span className="text-muted-foreground text-[11px]">
-                    {categories.length} categories
-                  </span>
-                </div>
-
-                {/* Categories List */}
-                <div className="border-border bg-card mt-2 overflow-hidden rounded-xl border shadow-2xs">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat.id || cat.slug}
-                      type="button"
-                      onClick={() => handleSelectCategory(cat)}
-                      className="hover:bg-muted/40 group flex w-full cursor-pointer items-center justify-between p-3 text-left transition-colors"
-                    >
-                      <div className="flex min-w-0 items-center gap-3">
-                        {/* Category Image with fallback */}
-                        <div className="border-border bg-muted/20 relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border">
-                          {cat.image ? (
-                            <Image
-                              src={cat.image}
-                              alt={cat.name}
-                              fill
-                              unoptimized
-                              sizes="44px"
-                              className="object-contain p-1 transition-transform group-hover:scale-105"
-                            />
-                          ) : (
-                            <Laptop className="text-muted-foreground/60 size-5" />
-                          )}
-                        </div>
-
-                        {/* Category Name & Count */}
-                        <div className="min-w-0 flex-1">
-                          <p className="text-foreground group-hover:text-primary truncate text-xs font-semibold transition-colors sm:text-sm">
-                            {cat.name}
-                          </p>
-                          <p className="text-muted-foreground mt-0.5 text-[11px]">
-                            {cat.count} {cat.count === 1 ? "product" : "products"}
-                          </p>
-                        </div>
-                      </div>
-
-                      <ChevronRight className="text-muted-foreground/70 group-hover:text-foreground size-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
-                    </button>
-                  ))}
-                </div>
-              </div>
+        {/* 2. Scrollable Body: Two-Section Split View (Main Categories on Left, Subcategories on Right) */}
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          {/* LEFT SECTION: Main Categories */}
+          <div className="border-border bg-muted/20 flex w-24 shrink-0 flex-col overflow-y-auto border-r sm:w-28">
+            {/* Main Categories Header */}
+            <div className="px-2 pt-2.5 pb-1 text-center">
+              <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+                Categories
+              </span>
             </div>
-          ) : (
-            /* VIEW 2: Category Products Drill-Down */
-            <div className="flex min-h-full flex-col">
-              {/* Category Products Top Bar */}
-              <div className="border-border bg-background/95 sticky top-0 z-10 flex items-center justify-between border-b p-3.5 backdrop-blur-md">
-                <button
-                  type="button"
-                  onClick={handleBackToCategories}
-                  className="hover:text-foreground hover:bg-muted/50 text-muted-foreground -ml-1 flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition"
-                >
-                  <ChevronLeft className="size-4" />
-                  <span>Categories</span>
-                </button>
 
-                <Link
-                  href={`/products?category=${selectedCategory?.slug}`}
-                  onClick={() => setIsOpen(false)}
-                  className="text-primary text-xs font-semibold hover:underline"
-                >
-                  See All &rarr;
-                </Link>
-              </div>
+            {/* Main Categories Navigation List */}
+            <div className="flex-1 space-y-1.5 p-1.5">
+              {categoryTree.map((cat) => {
+                const isSelected = activeCategory?.id === cat.id;
 
-              {/* Category Title Header */}
-              <div className="bg-muted/20 border-border/70 border-b p-4">
-                <div className="flex items-center gap-3">
-                  <div className="border-border bg-card relative size-12 shrink-0 overflow-hidden rounded-xl border p-1">
-                    {selectedCategory?.image ? (
-                      <Image
-                        src={selectedCategory.image}
-                        alt={selectedCategory.name}
-                        fill
-                        unoptimized
-                        sizes="48px"
-                        className="object-contain p-1"
-                      />
-                    ) : (
-                      <div className="flex size-full items-center justify-center">
-                        <Laptop className="text-muted-foreground size-5" />
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <h2 className="text-foreground text-sm font-bold sm:text-base">
-                      {selectedCategory?.name}
-                    </h2>
-                    <p className="text-muted-foreground text-xs">
-                      {loadingProducts
-                        ? "Loading products..."
-                        : `${activeCategoryProducts.length} items shown`}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Product Listing */}
-              <div className="flex-1 space-y-2.5 p-3">
-                {loadingProducts ? (
-                  /* Loading Skeletons */
-                  Array.from({ length: 5 }).map((_, idx) => (
+                return (
+                  <button
+                    key={cat.id || cat.slug}
+                    type="button"
+                    onMouseEnter={() => setActiveCategoryId(cat.id)}
+                    onFocus={() => setActiveCategoryId(cat.id)}
+                    onClick={() => setActiveCategoryId(cat.id)}
+                    className={`group relative flex w-full cursor-pointer flex-col items-center justify-center rounded-xl p-2 text-center transition-all ${
+                      isSelected
+                        ? "bg-card text-foreground border-border/80 border font-semibold shadow-xs"
+                        : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                    }`}
+                  >
+                    {/* Category Thumbnail / Icon (Rounded) */}
                     <div
-                      key={idx}
-                      className="border-border/60 bg-card flex animate-pulse gap-3 rounded-xl border p-2.5"
+                      className={`relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full border transition-all ${
+                        isSelected
+                          ? "border-primary ring-primary/25 bg-background shadow-xs ring-2"
+                          : "border-border/60 bg-background/80 group-hover:border-border"
+                      }`}
                     >
-                      <div className="bg-muted size-16 shrink-0 rounded-lg" />
-                      <div className="flex-1 space-y-2 py-1">
-                        <div className="bg-muted h-3.5 w-3/4 rounded" />
-                        <div className="bg-muted h-3 w-1/2 rounded" />
-                        <div className="bg-muted h-4 w-1/4 rounded" />
-                      </div>
+                      {cat.image ? (
+                        <Image
+                          src={cat.image}
+                          alt={cat.name}
+                          fill
+                          unoptimized
+                          sizes="44px"
+                          className="object-contain p-1 transition-transform group-hover:scale-105"
+                        />
+                      ) : (
+                        <Laptop
+                          className={`size-4.5 ${
+                            isSelected ? "text-primary" : "text-muted-foreground/70"
+                          }`}
+                        />
+                      )}
                     </div>
-                  ))
-                ) : activeCategoryProducts.length > 0 ? (
-                  /* Up to 20 Products */
-                  activeCategoryProducts.map((product) => (
-                    <div
-                      key={product.id}
-                      className="border-border/70 bg-card hover:border-primary/40 group flex items-center gap-3 rounded-xl border p-2.5 shadow-2xs transition-all"
+
+                    {/* Category Name below image */}
+                    <span
+                      className={`mt-1.5 line-clamp-2 text-[11px] leading-tight transition-colors ${
+                        isSelected
+                          ? "text-foreground font-semibold"
+                          : "text-muted-foreground group-hover:text-foreground"
+                      }`}
                     >
-                      {/* Product Thumbnail */}
-                      <Link
-                        href={`/products/${product.slug}`}
-                        onClick={() => setIsOpen(false)}
-                        className="bg-muted/30 border-border/50 relative size-16 shrink-0 overflow-hidden rounded-lg border"
-                      >
-                        {product.image ? (
+                      {cat.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* RIGHT SECTION: Sub-Categories of Hovered / Selected Category */}
+          <div className="bg-background flex min-w-0 flex-1 flex-col overflow-y-auto">
+            {activeCategory ? (
+              <div className="space-y-4 p-3.5 sm:p-4">
+                {/* Active Category Header Card */}
+                <div className="border-border/80 bg-card rounded-xl border p-3 shadow-2xs">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <div className="border-border bg-muted/20 relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border">
+                        {activeCategory.image ? (
                           <Image
-                            src={product.image}
-                            alt={product.name}
+                            src={activeCategory.image}
+                            alt={activeCategory.name}
                             fill
                             unoptimized
-                            sizes="64px"
-                            className="object-contain p-1 transition-transform group-hover:scale-105"
+                            sizes="36px"
+                            className="object-contain p-1"
                           />
                         ) : (
-                          <div className="flex size-full items-center justify-center">
-                            <Package className="text-muted-foreground/40 size-6" />
-                          </div>
+                          <Laptop className="text-muted-foreground/70 size-4.5" />
                         )}
-                      </Link>
-
-                      {/* Product Details */}
-                      <div className="min-w-0 flex-1">
-                        <p className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
-                          {product.brand}
-                        </p>
-                        <Link
-                          href={`/products/${product.slug}`}
-                          onClick={() => setIsOpen(false)}
-                          className="text-foreground hover:text-primary mt-0.5 line-clamp-2 text-xs leading-snug font-semibold transition-colors"
-                        >
-                          {product.name}
-                        </Link>
-
-                        <div className="mt-1 flex items-center gap-2">
-                          <span className="text-foreground text-xs font-bold">
-                            {formatPrice(product.price)}
-                          </span>
-                          {product.originalPrice > product.price && (
-                            <span className="text-muted-foreground text-[10px] line-through">
-                              {formatPrice(product.originalPrice)}
-                            </span>
-                          )}
-                        </div>
                       </div>
+                      <div className="min-w-0">
+                        <h3 className="text-foreground truncate text-xs font-bold sm:text-sm">
+                          {activeCategory.name}
+                        </h3>
+                        <p className="text-muted-foreground text-[11px]">
+                          {activeCategory.count > 0
+                            ? `${activeCategory.count} products total`
+                            : "Explore category"}
+                        </p>
+                      </div>
+                    </div>
 
-                      {/* Quick Add to Cart Button */}
+                    {/* View All Parent Category Products */}
+                    <Link
+                      href={`/${activeCategory.slug}`}
+                      onClick={handleNavigate}
+                      className="bg-primary/10 hover:bg-primary/20 text-primary flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition-colors"
+                    >
+                      <span>View All</span>
+                      <ArrowRight className="size-3" />
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Sub-categories Section */}
+                <div>
+                  <div className="flex items-center justify-between pb-2">
+                    <h4 className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
+                      Sub-Categories
+                    </h4>
+                    <span className="text-muted-foreground text-[11px]">
+                      {activeSubcategories.length}{" "}
+                      {activeSubcategories.length === 1 ? "item" : "items"}
+                    </span>
+                  </div>
+
+                  {activeSubcategories.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-1.5">
+                      {activeSubcategories.map((sub) => (
+                        <Link
+                          key={sub.id || sub.slug}
+                          href={`/${sub.slug}`}
+                          onClick={handleNavigate}
+                          className="border-border/60 bg-card/60 hover:bg-muted/50 hover:border-primary/40 group flex items-center justify-between rounded-xl border p-2.5 text-xs transition-all"
+                        >
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            {/* Subcategory Icon/Image */}
+                            <div className="border-border/50 bg-muted/20 relative flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-md border">
+                              {sub.image ? (
+                                <Image
+                                  src={sub.image}
+                                  alt={sub.name}
+                                  fill
+                                  unoptimized
+                                  sizes="28px"
+                                  className="object-contain p-0.5"
+                                />
+                              ) : (
+                                <span className="bg-primary/70 size-1.5 rounded-full" />
+                              )}
+                            </div>
+
+                            <span className="text-foreground group-hover:text-primary truncate font-medium transition-colors">
+                              {sub.name}
+                            </span>
+                          </div>
+
+                          <div className="text-muted-foreground flex shrink-0 items-center gap-1.5 text-[11px]">
+                            {sub.count > 0 && (
+                              <span className="text-muted-foreground/80 font-normal">
+                                {sub.count} {sub.count === 1 ? "item" : "items"}
+                              </span>
+                            )}
+                            <ChevronRight className="text-muted-foreground/60 group-hover:text-primary size-3.5 transition-all group-hover:translate-x-0.5" />
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    /* Empty Sub-categories State */
+                    <div className="border-border rounded-xl border border-dashed p-6 text-center">
+                      <PackageOpen className="text-muted-foreground/40 mx-auto mb-2 size-8" />
+                      <p className="text-foreground text-xs font-semibold">No sub-categories</p>
+                      <p className="text-muted-foreground mt-0.5 mb-3 text-[11px]">
+                        All products are listed directly under {activeCategory.name}.
+                      </p>
                       <Button
+                        size="sm"
                         variant="secondary"
-                        size="icon-xs"
-                        disabled={!product.inStock || addingProductId === product.id}
-                        onClick={(e) => handleQuickAddToCart(e, product)}
-                        aria-label={`Add ${product.name} to cart`}
-                        className="size-8 shrink-0 cursor-pointer rounded-lg"
+                        className="w-full cursor-pointer text-xs font-medium"
+                        asChild
                       >
-                        <ShoppingCart className="size-3.5" />
+                        <Link
+                          href={`/${activeCategory.slug}`}
+                          onClick={handleNavigate}
+                        >
+                          <span>Browse {activeCategory.name}</span>
+                          <ArrowRight className="ml-1 size-3.5" />
+                        </Link>
                       </Button>
                     </div>
-                  ))
-                ) : (
-                  /* No products in category */
-                  <div className="text-muted-foreground py-12 text-center text-xs">
-                    <Package className="text-muted-foreground/40 mx-auto mb-2 size-8" />
-                    <p className="text-foreground font-medium">No products found</p>
-                    <p className="mt-1">
-                      New stock for {selectedCategory?.name} will be added soon.
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Prominent "See All" Action at bottom of product list */}
-              {selectedCategory && (
-                <div className="border-border bg-card/60 mt-auto border-t p-4">
-                  <Button className="w-full cursor-pointer justify-between font-medium" asChild>
-                    <Link
-                      href={`/products?category=${selectedCategory.slug}`}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <span>See All {selectedCategory.name} Products</span>
-                      <ArrowRight className="size-4" />
-                    </Link>
-                  </Button>
+                  )}
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            ) : (
+              <div className="text-muted-foreground flex h-full items-center justify-center p-6 text-center text-xs">
+                Hover over a category on the left to view sub-categories.
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 3. Footer: Menu Links With Icons */}
@@ -441,7 +380,7 @@ export function MobileNavSheet({ initialCategories = [] }) {
             </span>
             <Link
               href={accountHref}
-              onClick={() => setIsOpen(false)}
+              onClick={handleNavigate}
               className="text-primary ml-2 shrink-0 font-semibold hover:underline"
             >
               {isSignedIn ? "Account" : "Sign In"}
@@ -453,17 +392,17 @@ export function MobileNavSheet({ initialCategories = [] }) {
             {/* Home */}
             <Link
               href="/"
-              onClick={() => setIsOpen(false)}
+              onClick={handleNavigate}
               className="hover:bg-muted/60 text-foreground flex flex-col items-center justify-center rounded-xl py-1.5 transition"
             >
               <Home className="size-4.5" />
               <span className="mt-1 text-[10px] font-medium">Home</span>
             </Link>
 
-            {/* Products */}
+            {/* Blogs */}
             <Link
               href="/blogs"
-              onClick={() => setIsOpen(false)}
+              onClick={handleNavigate}
               className="hover:bg-muted/60 text-foreground flex flex-col items-center justify-center rounded-xl py-1.5 transition"
             >
               <NotepadText className="size-4.5" />
@@ -473,7 +412,7 @@ export function MobileNavSheet({ initialCategories = [] }) {
             {/* Wishlist with badge */}
             <Link
               href="/wishlist"
-              onClick={() => setIsOpen(false)}
+              onClick={handleNavigate}
               className="hover:bg-muted/60 text-foreground relative flex flex-col items-center justify-center rounded-xl py-1.5 transition"
             >
               <div className="relative">
@@ -490,7 +429,7 @@ export function MobileNavSheet({ initialCategories = [] }) {
             {/* Cart with badge */}
             <Link
               href="/cart"
-              onClick={() => setIsOpen(false)}
+              onClick={handleNavigate}
               className="hover:bg-muted/60 text-foreground relative flex flex-col items-center justify-center rounded-xl py-1.5 transition"
             >
               <div className="relative">
@@ -507,7 +446,7 @@ export function MobileNavSheet({ initialCategories = [] }) {
             {/* Account */}
             <Link
               href={accountHref}
-              onClick={() => setIsOpen(false)}
+              onClick={handleNavigate}
               className="hover:bg-muted/60 text-foreground flex flex-col items-center justify-center rounded-xl py-1.5 transition"
             >
               <User className="size-4.5" />

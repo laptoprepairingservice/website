@@ -27,8 +27,11 @@ export {
 // Category Mappers & Queries
 export { mapSupabaseCategory } from "./categories/mapper";
 export {
+  buildCategoryTree,
+  fetchCategoryBySlug,
   fetchStoreCategories,
   fetchStoreCategoriesWithCount,
+  fetchStoreCategoryTree,
 } from "./categories/queries";
 
 // Brand Mappers & Queries

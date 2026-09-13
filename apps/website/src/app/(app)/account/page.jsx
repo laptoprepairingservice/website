@@ -8,6 +8,7 @@ import { LogoutButton } from "@/components/auth/logout-button";
 import { formatPrice } from "@/lib/format";
 import { getAccountDashboardData } from "@/lib/orders";
 import { createClient } from "@/lib/supabase/server";
+import { getProductUrl } from "@/lib/url";
 import { AccountDashboardStats } from "./_components/account-dashboard-stats";
 
 export const dynamic = "force-dynamic";
@@ -84,7 +85,7 @@ export default async function AccountDashboardPage() {
             <div className="py-6 text-center text-sm text-muted-foreground">
               <p>No orders placed yet.</p>
               <Button variant="link" size="sm" asChild className="mt-2">
-                <Link href="/products">Start Shopping</Link>
+                <Link href="/">Start Shopping</Link>
               </Button>
             </div>
           )}
@@ -104,7 +105,7 @@ export default async function AccountDashboardPage() {
               {wishlistProducts.map((product) => (
                 <Link
                   key={product.id}
-                  href={`/products/${product.slug}`}
+                  href={getProductUrl(product)}
                   className="flex items-center gap-4 rounded-lg border border-border p-3 hover:bg-accent/50 transition-colors"
                 >
                   <div className="relative size-16 shrink-0 rounded-lg bg-muted/30 flex items-center justify-center overflow-hidden border border-border/50">
@@ -132,7 +133,7 @@ export default async function AccountDashboardPage() {
             <div className="py-6 text-center text-sm text-muted-foreground">
               <p>Your wishlist is empty.</p>
               <Button variant="link" size="sm" asChild className="mt-2">
-                <Link href="/products">Discover Products</Link>
+                <Link href="/">Discover Products</Link>
               </Button>
             </div>
           )}
@@ -141,7 +142,7 @@ export default async function AccountDashboardPage() {
 
       <div className="flex flex-wrap gap-3">
         <Button asChild>
-          <Link href="/products">Browse Products</Link>
+          <Link href="/">Browse Store</Link>
         </Button>
         <Button variant="outline" asChild>
           <Link href="/account/tracking">Track an Order</Link>

@@ -1,4 +1,10 @@
-import Link from "next/link";
+import { ProductGrid } from "@/components/store/product-card";
+import {
+  fetchCategoryBySlug,
+  fetchStoreBrands,
+  fetchStoreCategoriesWithCount,
+  fetchStoreProducts,
+} from "@/lib/store";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,36 +15,46 @@ import {
 } from "@ui/shadcn/components/breadcrumb";
 import { Button } from "@ui/shadcn/components/button";
 import { Pagination } from "@ui/shadcn/components/pagination";
+import Link from "next/link";
+import { notFound } from "next/navigation";
 import {
   ActiveFilterChips,
-  CategoryPillsBar,
   DesktopProductFilters,
   MobileFilterHeader,
-} from "@/app/(app)/products/_components/product-filters";
-import { ProductGrid } from "@/components/store/product-card";
-import { fetchStoreBrands, fetchStoreCategoriesWithCount, fetchStoreProducts } from "@/lib/store";
-
-export const metadata = {
-  title: "All Products | Hardware & PC Components",
-  description: "Browse our complete catalog of computer hardware, components, and accessories.",
-};
+} from "./_components/product-filters";
 
 export const revalidate = 60;
 
-export default async function ProductsPage({ searchParams }) {
-  const params = await searchParams;
-  const category = params?.category || "";
-  const brand = params?.brand || "";
-  const minPrice = params?.minPrice || "";
-  const maxPrice = params?.maxPrice || "";
-  const inStock = params?.inStock || "";
-  const sort = params?.sort || "relevance";
-  const currentPage = Math.max(1, Number(params?.page) || 1);
+export async function generateMetadata({ params }) {
+  const { categorySlug } = await params;
+  const category = await fetchCategoryBySlug(categorySlug);
+  if (!category) return { title: "Category Not Found" };
+
+  return {
+    title: `${category.name} | Hardware & PC Components`,
+    description: category.description || `Browse ${category.name} and related laptop components.`,
+  };
+}
+
+export default async function CategoryPage({ params, searchParams }) {
+  const { categorySlug } = await params;
+  const categoryData = await fetchCategoryBySlug(categorySlug);
+  if (!categoryData) {
+    notFound();
+  }
+
+  const queryParams = await searchParams;
+  const brand = queryParams?.brand || "";
+  const minPrice = queryParams?.minPrice || "";
+  const maxPrice = queryParams?.maxPrice || "";
+  const inStock = queryParams?.inStock || "";
+  const sort = queryParams?.sort || "relevance";
+  const currentPage = Math.max(1, Number(queryParams?.page) || 1);
   const pageSize = 12;
 
   const [allProducts, categories, brands] = await Promise.all([
     fetchStoreProducts({
-      category: category || null,
+      category: categorySlug,
       brand: brand || null,
       minPrice: minPrice || null,
       maxPrice: maxPrice || null,
@@ -55,27 +71,16 @@ export default async function ProductsPage({ searchParams }) {
   const startIndex = (currentPage - 1) * pageSize;
   const displayedProducts = allProducts.slice(startIndex, startIndex + pageSize);
 
-  // Compute title based on active category
-  let categoryName = "All Hardware & Components";
-  if (category) {
-    const categorySlugs = category.split(",").map((s) => s.trim().toLowerCase());
-    if (categorySlugs.length === 1) {
-      const match = categories.find((c) => (c.slug || "").toLowerCase() === categorySlugs[0]);
-      if (match) categoryName = match.name;
-    } else {
-      categoryName = `${categorySlugs.length} Categories Selected`;
-    }
-  }
+  const categoryName = categoryData.name;
 
   // Construct base href for pagination preserving existing filter query params
   const paginationQuery = new URLSearchParams();
-  if (category) paginationQuery.set("category", category);
   if (brand) paginationQuery.set("brand", brand);
   if (minPrice) paginationQuery.set("minPrice", minPrice);
   if (maxPrice) paginationQuery.set("maxPrice", maxPrice);
   if (inStock) paginationQuery.set("inStock", inStock);
   if (sort && sort !== "relevance") paginationQuery.set("sort", sort);
-  const paginationPrefix = `/products?${paginationQuery.toString()}${paginationQuery.toString() ? "&" : ""}`;
+  const paginationPrefix = `/${categorySlug}?${paginationQuery.toString()}${paginationQuery.toString() ? "&" : ""}`;
 
   return (
     <div className="container py-5 sm:py-7 lg:py-10">
@@ -85,12 +90,6 @@ export default async function ProductsPage({ searchParams }) {
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
               <Link href="/">Home</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/products">Store</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
@@ -113,23 +112,26 @@ export default async function ProductsPage({ searchParams }) {
         </div>
 
         {/* Tiny filter icon button + sort on mobile header (strictly lg:hidden) */}
-        <MobileFilterHeader categories={categories} brands={brands} />
-      </div>
-
-      {/* Single Horizontal Category Pills Bar (rendered ONCE) */}
-      <div className="mt-3.5">
-        <CategoryPillsBar categories={categories} />
+        <MobileFilterHeader
+          categories={categories}
+          brands={brands}
+          activeCategorySlug={categorySlug}
+        />
       </div>
 
       {/* Main Layout: Desktop Sidebar (strictly lg:block) + Products Content */}
       <div className="mt-6 flex flex-col items-start gap-8 lg:flex-row">
         {/* Desktop Sticky Filter Sidebar (hidden on mobile, strictly lg:block) */}
-        <DesktopProductFilters categories={categories} brands={brands} />
+        <DesktopProductFilters
+          categories={categories}
+          brands={brands}
+          activeCategorySlug={categorySlug}
+        />
 
         {/* Main Products Grid Section (full width on mobile, flex-1 on desktop) */}
         <div className="w-full min-w-0 flex-1">
           {/* Active Filter Chips Bar */}
-          <ActiveFilterChips categories={categories} brands={brands} />
+          <ActiveFilterChips brands={brands} activeCategorySlug={categorySlug} />
 
           {displayedProducts.length > 0 ? (
             <>
@@ -153,15 +155,14 @@ export default async function ProductsPage({ searchParams }) {
                 <span className="text-xl font-bold">✕</span>
               </div>
               <h2 className="text-foreground mt-4 text-lg font-bold">
-                No products match the selected filters
+                No products match the selected filters in {categoryName}
               </h2>
               <p className="text-muted-foreground mx-auto mt-1 max-w-sm text-xs sm:text-sm">
-                Try widening your price range, clearing brand or category filters, or checking
-                availability.
+                Try widening your price range, clearing brand filters, or checking availability.
               </p>
               <div className="mt-5">
                 <Button asChild variant="outline" className="rounded-full">
-                  <Link href="/products">Clear All Filters</Link>
+                  <Link href={`/${categorySlug}`}>Clear Filters</Link>
                 </Button>
               </div>
             </div>

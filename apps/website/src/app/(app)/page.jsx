@@ -1,4 +1,4 @@
-import { OrganizationJsonLd } from "@/app/(app)/products/[slug]/_components/structured-data";
+import { OrganizationJsonLd } from "@/app/(app)/[categorySlug]/[productSlug]/_components/structured-data";
 import { fetchStoreHomeData } from "@/lib/store";
 import {
   HardwareFAQSection,

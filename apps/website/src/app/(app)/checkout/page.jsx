@@ -46,7 +46,7 @@ export default function CheckoutPage() {
           description="Add items to your cart before proceeding to checkout."
           action={
             <Button asChild>
-              <Link href="/products">Browse Products</Link>
+              <Link href="/">Browse Store</Link>
             </Button>
           }
           className="mt-8"
@@ -64,7 +64,7 @@ export default function CheckoutPage() {
         </p>
         <div className="mt-8 flex justify-center gap-4">
           <Button asChild>
-            <Link href="/products">Continue Shopping</Link>
+            <Link href="/">Continue Shopping</Link>
           </Button>
           <Button variant="outline" asChild>
             <Link href="/account/orders">View Orders</Link>

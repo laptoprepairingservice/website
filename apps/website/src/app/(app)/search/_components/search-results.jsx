@@ -102,12 +102,6 @@ export function SearchResults({
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/products">Store</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
             <BreadcrumbPage>{query ? `Search: "${query}"` : "Search Catalog"}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
@@ -277,7 +271,7 @@ export function SearchResults({
               </Button>
             )}
             <Button asChild className="rounded-full">
-              <Link href="/products">Browse All Catalog</Link>
+              <Link href="/">Back to Home</Link>
             </Button>
           </div>
         </div>
@@ -299,17 +293,6 @@ export function SearchResults({
                 Top-rated components and popular hardware in high demand
               </p>
             </div>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              asChild
-              className="text-primary hover:text-primary/80 self-start sm:self-auto"
-            >
-              <Link href="/products" className="flex items-center gap-1">
-                View catalog <ChevronRight className="size-4" />
-              </Link>
-            </Button>
           </div>
 
           <ProductGrid products={relatedProducts} columns={4} />
@@ -336,7 +319,7 @@ export function SearchResults({
             {categories.map((cat) => (
               <Link
                 key={cat.id || cat.slug}
-                href={`/products?category=${encodeURIComponent(cat.slug)}`}
+                href={`/${cat.slug}`}
                 className="group border-border/70 bg-card/60 hover:border-primary/50 hover:bg-card relative flex flex-col items-center rounded-2xl border p-4 text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
               >
                 <div className="bg-muted/80 relative mb-3 flex size-14 items-center justify-center overflow-hidden rounded-xl p-2 transition-transform duration-200 group-hover:scale-105 sm:size-16">

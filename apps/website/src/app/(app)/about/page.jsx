@@ -70,8 +70,8 @@ export default function AboutPage() {
 
       <div className="mt-16 text-center">
         <Button size="lg" asChild>
-          <Link href="/products">
-            Explore Products
+          <Link href="/">
+            Explore Store
             <ArrowRight />
           </Link>
         </Button>

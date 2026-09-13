@@ -11,6 +11,7 @@ import { Button } from "@ui/shadcn/components/button";
 import { StarRating } from "@/components/store/star-rating";
 import { formatDiscount, formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { getProductUrl } from "@/lib/url";
 import { useAppContext } from "@/app/_context";
 
 export function ProductCard({ product, className }) {
@@ -99,7 +100,7 @@ export function ProductCard({ product, className }) {
       {/* Top Media Section */}
       <div className="relative aspect-square overflow-hidden bg-muted/20 p-5">
         <Link
-          href={`/products/${product.slug}`}
+          href={getProductUrl(product)}
           className="relative block size-full"
           tabIndex={-1}
         >
@@ -162,7 +163,7 @@ export function ProductCard({ product, className }) {
       {/* Content Section */}
       <div className="flex flex-1 flex-col justify-between p-4 sm:p-5">
         <Link
-          href={`/products/${product.slug}`}
+          href={getProductUrl(product)}
           className="space-y-2 block"
         >
           {/* Brand / Stock */}

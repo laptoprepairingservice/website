@@ -22,7 +22,7 @@ export function PromotionalBanner() {
             </div>
             <div className="pt-5">
               <Button variant="outline" asChild>
-                <Link href="/products?category=monitors">
+                <Link href="/screens-displays">
                   Shop Gaming Displays
                   <ArrowRight className="ml-1.5 size-4" />
                 </Link>
@@ -45,7 +45,7 @@ export function PromotionalBanner() {
             </div>
             <div className="pt-5">
               <Button variant="outline" asChild>
-                <Link href="/products?category=storage">
+                <Link href="/ssds-storage">
                   Shop Fast Storage
                   <ArrowRight className="ml-1.5 size-4" />
                 </Link>

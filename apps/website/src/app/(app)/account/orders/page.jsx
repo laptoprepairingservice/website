@@ -82,7 +82,7 @@ export default async function OrdersPage() {
             description="When you place an order, you can view its status and receipt here."
             action={
               <Button asChild>
-                <Link href="/products">Browse Products</Link>
+                <Link href="/">Browse Store</Link>
               </Button>
             }
           />

@@ -16,10 +16,10 @@ export function ProductDetail({ product, relatedProducts = [] }) {
       {/* Breadcrumb Navigation */}
       <Breadcrumb
         items={[
-          { label: "Products", href: "/products" },
+          { label: "Home", href: "/" },
           {
             label: categoryLabel,
-            href: `/products?category=${product.category || ""}`,
+            href: `/${product.category || ""}`,
           },
           { label: product.name },
         ]}

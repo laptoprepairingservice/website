@@ -3,6 +3,7 @@ import Image from "next/image";
 import { ArrowRight, CheckCircle2, Package } from "lucide-react";
 import { Button } from "@ui/shadcn/components/button";
 import { formatPrice } from "@/lib/format";
+import { getProductUrl } from "@/lib/url";
 
 export function HeroBanner({ featuredProduct }) {
   return (
@@ -28,7 +29,10 @@ export function HeroBanner({ featuredProduct }) {
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <Button size="lg" asChild>
-                <Link href="/products" className="gap-2">
+                <Link
+                  href={featuredProduct?.category ? `/${featuredProduct.category}` : "/charger"}
+                  className="gap-2"
+                >
                   Browse Catalog
                   <ArrowRight className="size-4" />
                 </Link>
@@ -96,7 +100,7 @@ export function HeroBanner({ featuredProduct }) {
                       )}
                     </div>
                     <Button size="sm" variant="outline" asChild>
-                      <Link href={`/products/${featuredProduct.slug}`}>
+                      <Link href={getProductUrl(featuredProduct)}>
                         View Details
                       </Link>
                     </Button>
