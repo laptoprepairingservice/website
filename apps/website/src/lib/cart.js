@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getProductAssetUrl } from "@/lib/supabase/store-data";
+import { getProductAssetUrl } from "@/lib/store";
 
 /**
  * Server-side helper to fetch the authenticated user's cart from Supabase.
@@ -56,7 +56,8 @@ export async function getCurrentUserCart(userId = null) {
     // 2. Fetch cart items with nested variant, product, and image relations
     const { data: items, error: itemsError } = await supabase
       .from("cart_items")
-      .select(`
+      .select(
+        `
         id,
         cart_id,
         variant_id,
@@ -82,7 +83,8 @@ export async function getCurrentUserCart(userId = null) {
             )
           )
         )
-      `)
+      `
+      )
       .eq("cart_id", cart.id)
       .order("created_at", { ascending: true });
 
@@ -111,8 +113,7 @@ export async function getCurrentUserCart(userId = null) {
         slug: product?.slug || "",
         brand,
         price: variant?.price != null ? Number(variant.price) : 0,
-        originalPrice:
-          variant?.compare_at_price != null ? Number(variant.compare_at_price) : null,
+        originalPrice: variant?.compare_at_price != null ? Number(variant.compare_at_price) : null,
         quantity: ci.quantity || 1,
         image: imageUrl,
       };

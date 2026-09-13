@@ -79,12 +79,6 @@
   animation: pulse-glow 4s ease-in-out infinite;
 }
 
-/* Swiper custom styling for theme integration */
-.swiper {
-  width: 100%;
-  height: 100%;
-}
-
 .swiper-slide {
   height: auto !important;
 }

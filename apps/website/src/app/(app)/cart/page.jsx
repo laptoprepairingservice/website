@@ -19,8 +19,8 @@ export default function CartPage() {
     cartSubtotal >= STORE.freeShippingThreshold
       ? 0
       : cartItems.length > 0
-      ? STORE.standardShipping
-      : 0;
+        ? STORE.standardShipping
+        : 0;
   const total = cartSubtotal + shipping;
 
   const handleRemove = (id) => {
@@ -46,7 +46,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="py-8 lg:py-12">
+    <div className="container py-8 lg:py-12">
       <Breadcrumb items={[{ label: "Shopping Cart" }]} />
       <h1 className="mt-6 text-3xl font-semibold">Shopping Cart</h1>
       <p className="text-muted-foreground mt-1">
@@ -74,7 +74,7 @@ export default function CartPage() {
                     sizes="112px"
                   />
                 ) : (
-                  <div className="flex size-full items-center justify-center bg-muted/40 text-muted-foreground">
+                  <div className="bg-muted/40 text-muted-foreground flex size-full items-center justify-center">
                     <ShoppingBag className="size-8 opacity-40" />
                   </div>
                 )}

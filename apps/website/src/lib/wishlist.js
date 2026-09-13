@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { mapSupabaseProduct } from "@/lib/supabase/store-data";
+import { mapSupabaseProduct } from "@/lib/store";
 
 /**
  * Server-side helper to fetch the authenticated user's wishlist from Supabase.
@@ -72,7 +72,8 @@ export async function getCurrentUserWishlist(userId = null) {
     // 2. Fetch wishlist items with relations
     const { data: items, error: itemsError } = await supabase
       .from("wishlist_items")
-      .select(`
+      .select(
+        `
         id,
         wishlist_id,
         product_id,
@@ -108,7 +109,8 @@ export async function getCurrentUserWishlist(userId = null) {
             is_banner
           )
         )
-      `)
+      `
+      )
       .eq("wishlist_id", wishlist.id)
       .order("created_at", { ascending: false });
 
