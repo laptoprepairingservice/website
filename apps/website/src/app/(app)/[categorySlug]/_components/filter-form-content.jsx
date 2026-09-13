@@ -84,14 +84,12 @@ export function FilterFormContent({
                   className={cn(
                     "flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-colors",
                     isCurrent
-                      ? "bg-primary/10 text-primary font-semibold border-l-2 border-primary"
+                      ? "bg-primary/10 text-primary font-semibold"
                       : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                   )}
                 >
                   <span className="truncate">{cat.name}</span>
-                  {cat.count > 0 && (
-                    <span className="text-[11px] opacity-70">({cat.count})</span>
-                  )}
+                  {cat.count > 0 && <span className="text-[11px] opacity-70">({cat.count})</span>}
                 </Link>
               );
             })}
@@ -142,7 +140,7 @@ export function FilterFormContent({
                   type="button"
                   onClick={() => handlePresetPrice(p.min, p.max)}
                   className={cn(
-                    "rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors cursor-pointer",
+                    "cursor-pointer rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors",
                     isSelected
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border/80 bg-background text-muted-foreground hover:bg-muted/50 hover:text-foreground"
@@ -165,7 +163,7 @@ export function FilterFormContent({
                 placeholder="Min"
                 value={stagedMinPrice}
                 onChange={(e) => setStagedMinPrice(e.target.value)}
-                className="border-border bg-background text-foreground h-8 w-full rounded-md border pr-2 pl-5 text-xs focus:ring-1 focus:ring-primary focus:outline-none"
+                className="border-border bg-background text-foreground focus:ring-primary h-8 w-full rounded-md border pr-2 pl-5 text-xs focus:ring-1 focus:outline-none"
               />
             </div>
             <span className="text-muted-foreground text-xs">–</span>
@@ -178,7 +176,7 @@ export function FilterFormContent({
                 placeholder="Max"
                 value={stagedMaxPrice}
                 onChange={(e) => setStagedMaxPrice(e.target.value)}
-                className="border-border bg-background text-foreground h-8 w-full rounded-md border pr-2 pl-5 text-xs focus:ring-1 focus:ring-primary focus:outline-none"
+                className="border-border bg-background text-foreground focus:ring-primary h-8 w-full rounded-md border pr-2 pl-5 text-xs focus:ring-1 focus:outline-none"
               />
             </div>
           </div>

@@ -30,8 +30,8 @@ export default async function HomePage() {
     <div className="flex flex-col">
       <OrganizationJsonLd />
 
-      {/* 1. Hero Hardware Showcase */}
-      <HeroBanner featuredProduct={featuredProduct} />
+      {/* 1. Hero Category Slider */}
+      <HeroBanner categories={categories} />
 
       {/* 2. Mobile Category Quick Navigation */}
       <MobileCategoryPills categories={categories} />
