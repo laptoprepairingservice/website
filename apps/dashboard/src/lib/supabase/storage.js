@@ -131,3 +131,69 @@ export async function deleteProductFiles(supabase, storagePaths) {
 
   return { error };
 }
+
+export const BLOG_STORAGE_BUCKET = "blogs";
+
+/**
+ * Returns the full public URL for an asset stored in the blogs bucket.
+ *
+ * @param {string} storagePath
+ * @returns {string}
+ */
+export function getBlogAssetUrl(storagePath) {
+  if (!storagePath) {
+    return "";
+  }
+
+  if (
+    storagePath.startsWith("http://") ||
+    storagePath.startsWith("https://") ||
+    storagePath.startsWith("blob:") ||
+    storagePath.startsWith("data:")
+  ) {
+    return storagePath;
+  }
+
+  try {
+    const supabaseUrl = getSupabaseUrl().replace(/\/$/, "");
+    const cleanPath = storagePath.replace(/^\/+/, "").replace(/^blogs\/+/, "");
+    return `${supabaseUrl}/storage/v1/object/public/${BLOG_STORAGE_BUCKET}/${cleanPath}`;
+  } catch {
+    return storagePath;
+  }
+}
+
+/**
+ * Upload a file to the blogs Supabase storage bucket
+ *
+ * @param {import("@supabase/supabase-js").SupabaseClient} supabase
+ * @param {File|Blob|Buffer} file
+ * @param {Object} [options]
+ * @param {string|number} [options.postId]
+ * @param {string} [options.fileName]
+ * @returns {Promise<{ storagePath: string, publicUrl: string, error: any }>}
+ */
+export async function uploadBlogFile(supabase, file, options = {}) {
+  const fileName = options.fileName || (file instanceof File ? file.name : "featured");
+  const contentType = file instanceof File ? file.type : undefined;
+  const timestamp = Date.now();
+  const randomStr = Math.random().toString(36).slice(2, 7);
+  const cleanName = sanitizeFileName(fileName);
+  const postId = options.postId || "draft";
+  const storagePath = `${postId}/${timestamp}_${randomStr}_${cleanName}`;
+
+  const { data, error } = await supabase.storage
+    .from(BLOG_STORAGE_BUCKET)
+    .upload(storagePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType,
+    });
+
+  if (error) {
+    return { storagePath: null, publicUrl: null, error };
+  }
+
+  const publicUrl = getBlogAssetUrl(data.path);
+  return { storagePath: data.path, publicUrl, error: null };
+}

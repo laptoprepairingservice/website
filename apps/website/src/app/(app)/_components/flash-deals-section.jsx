@@ -56,7 +56,7 @@ export function FlashDealsSection({ products = [] }) {
           </div>
 
           <Link
-            href="/products?sort=popular"
+            href="/charger"
             className="inline-flex items-center gap-1 text-sm font-medium text-foreground hover:text-primary transition-colors self-start sm:self-auto"
           >
             View All Deals

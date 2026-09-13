@@ -1,27 +1,15 @@
 "use server";
 
-import { fetchCategoryProducts, fetchStoreCategoriesWithCount } from "@/lib/store";
+import { fetchStoreCategoryTree } from "@/lib/store";
 
 /**
- * Server Action: Fetches active categories with image and live product counts.
+ * Server Action: Fetches active categories organized in a 1-level deep hierarchy.
  */
 export async function getNavCategoriesAction() {
   try {
-    return await fetchStoreCategoriesWithCount();
+    return await fetchStoreCategoryTree();
   } catch (error) {
     console.error("getNavCategoriesAction error:", error);
-    return [];
-  }
-}
-
-/**
- * Server Action: Fetches up to 20 active products for a category.
- */
-export async function getCategoryProductsAction(categorySlug) {
-  try {
-    return await fetchCategoryProducts(categorySlug, 20);
-  } catch (error) {
-    console.error("getCategoryProductsAction error:", error);
     return [];
   }
 }

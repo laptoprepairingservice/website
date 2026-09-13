@@ -1,5 +1,4 @@
-import { OrganizationJsonLd } from "@/app/(app)/products/[slug]/_components/structured-data";
-import { Newsletter } from "@/components/store/newsletter";
+import { OrganizationJsonLd } from "@/app/(app)/[categorySlug]/[productSlug]/_components/structured-data";
 import { fetchStoreHomeData } from "@/lib/store";
 import {
   HardwareFAQSection,
@@ -31,8 +30,8 @@ export default async function HomePage() {
     <div className="flex flex-col">
       <OrganizationJsonLd />
 
-      {/* 1. Hero Hardware Showcase */}
-      <HeroBanner featuredProduct={featuredProduct} />
+      {/* 1. Hero Category Slider */}
+      <HeroBanner categories={categories} />
 
       {/* 2. Mobile Category Quick Navigation */}
       <MobileCategoryPills categories={categories} />
@@ -48,9 +47,6 @@ export default async function HomePage() {
 
       {/* 7. Hardware FAQ & Support */}
       <HardwareFAQSection />
-
-      {/* 8. Newsletter Subscription */}
-      <Newsletter />
     </div>
   );
 }

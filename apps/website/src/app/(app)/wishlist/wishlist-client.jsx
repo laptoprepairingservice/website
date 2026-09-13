@@ -100,7 +100,7 @@ export function WishlistClient({ isAccountView = false }) {
           description="Save hardware components you're interested in by clicking the heart icon on any product."
           action={
             <Button asChild>
-              <Link href="/products">Browse Products</Link>
+              <Link href="/">Browse Categories</Link>
             </Button>
           }
         />

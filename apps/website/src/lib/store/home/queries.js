@@ -18,7 +18,7 @@ export async function fetchStoreHomeData() {
     const [categoriesRes, brandsRes, productsRes] = await Promise.all([
       supabase
         .from("categories")
-        .select("id, public_id, name, slug, image_path, is_active, sort_order")
+        .select("id, public_id, parent_id, name, slug, description, image_path, is_active, sort_order")
         .eq("is_active", true)
         .order("sort_order", { ascending: true }),
       supabase

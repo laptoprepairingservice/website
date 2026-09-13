@@ -5,11 +5,11 @@ import { ThemeToggle } from "../theme-toggle";
 
 const FOOTER_LINKS = {
   shop: [
-    { label: "All Products", href: "/products" },
-    { label: "Processors", href: "/products?category=processors" },
-    { label: "Graphics Cards", href: "/products?category=graphics-cards" },
-    { label: "Monitors", href: "/products?category=monitors" },
-    { label: "Peripherals", href: "/products?category=peripherals" },
+    { label: "Charger", href: "/charger" },
+    { label: "Keyboards", href: "/keyboard" },
+    { label: "Cooling Pads", href: "/name-is-this" },
+    { label: "Screens & Displays", href: "/screens-displays" },
+    { label: "Batteries", href: "/batteries" },
   ],
   support: [
     { label: "Contact Us", href: "/contact" },

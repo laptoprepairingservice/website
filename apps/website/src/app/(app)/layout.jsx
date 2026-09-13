@@ -1,9 +1,9 @@
-import { fetchStoreCategoriesWithCount } from "@/lib/store";
+import { fetchStoreCategoryTree } from "@/lib/store";
 import { Footer } from "./_components/layout/footer";
 import { Header } from "./_components/layout/header";
 
 export default async function AppLayout({ children }) {
-  const categories = await fetchStoreCategoriesWithCount();
+  const categories = await fetchStoreCategoryTree();
 
   return (
     <div className="flex min-h-svh flex-col">

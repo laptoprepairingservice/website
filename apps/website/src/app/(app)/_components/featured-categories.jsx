@@ -13,7 +13,7 @@ export function FeaturedCategories({ categories = [] }) {
         <SectionHeader
           title="Shop by Category"
           description="Browse computer hardware components and build accessories."
-          href="/products"
+          href={categories[0]?.slug ? `/${categories[0].slug}` : "/"}
           linkText="All Categories"
         />
 
@@ -21,7 +21,7 @@ export function FeaturedCategories({ categories = [] }) {
           {categories.map((cat) => (
             <Link
               key={cat.id || cat.slug}
-              href={`/products?category=${cat.slug}`}
+              href={`/${cat.slug}`}
               className="group rounded-xl border border-border bg-card p-4 hover:border-foreground/40 transition-colors"
             >
               <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-muted/20 flex items-center justify-center">

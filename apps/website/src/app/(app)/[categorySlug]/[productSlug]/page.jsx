@@ -1,16 +1,24 @@
 import { notFound } from "next/navigation";
 import { ProductDetail } from "./_components/product-detail";
 import { ProductJsonLd } from "./_components/structured-data";
-import { fetchProductBySlug, fetchRelatedProducts, fetchAllProductSlugs } from "@/lib/store";
+import { fetchProductBySlug, fetchRelatedProducts } from "@/lib/store";
 
 export const revalidate = 60;
 
 export default async function ProductDetailPage({ params }) {
-  const { slug } = await params;
-  const product = await fetchProductBySlug(slug);
+  const { categorySlug, productSlug } = await params;
+  const product = await fetchProductBySlug(productSlug);
   if (!product) {
     notFound();
   }
+
+  // Validate category slug match (case-insensitive) if product has a category
+  if (product.category && categorySlug) {
+    if (product.category.toLowerCase() !== categorySlug.toLowerCase()) {
+      notFound();
+    }
+  }
+
   const related = await fetchRelatedProducts(product, 4);
   return (
     <>
@@ -21,12 +29,12 @@ export default async function ProductDetailPage({ params }) {
 }
 
 export async function generateMetadata({ params }) {
-  const { slug } = await params;
-  const product = await fetchProductBySlug(slug);
+  const { productSlug } = await params;
+  const product = await fetchProductBySlug(productSlug);
   if (!product) return { title: "Product Not Found" };
 
   return {
-    title: product.name,
+    title: `${product.name} | Ranuja`,
     description: product.shortDescription,
     openGraph: {
       title: product.name,
@@ -34,9 +42,4 @@ export async function generateMetadata({ params }) {
       images: product.image ? [product.image] : [],
     },
   };
-}
-
-export async function generateStaticParams() {
-  const products = await fetchAllProductSlugs();
-  return products.map((p) => ({ slug: p.slug }));
 }

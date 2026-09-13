@@ -297,7 +297,7 @@ export async function fetchAllProductSlugs() {
     const supabase = getPublicSupabaseClient();
     const { data } = await supabase
       .from("products")
-      .select("slug, updated_at")
+      .select("slug, updated_at, categories(slug)")
       .eq("status", "active");
     return data || [];
   } catch {

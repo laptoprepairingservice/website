@@ -13,7 +13,7 @@ export function MobileCategoryPills({ categories = [] }) {
           {categories.map((cat) => (
             <Link
               key={cat.id || cat.slug}
-              href={`/products?category=${cat.slug}`}
+              href={`/${cat.slug}`}
               className="flex shrink-0 items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors"
             >
               <Folder className="size-3.5 text-muted-foreground" />

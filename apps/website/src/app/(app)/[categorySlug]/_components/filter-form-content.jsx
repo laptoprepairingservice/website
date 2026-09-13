@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Checkbox } from "@ui/shadcn/components/checkbox";
 import {
   Select,
@@ -14,12 +15,12 @@ import { cn } from "@/lib/utils";
 
 /**
  * FilterFormContent - Reusable form sections for both Desktop Sidebar and Mobile Sheet
+ * Category section renders direct links to other category pages per user specifications.
  */
 export function FilterFormContent({
   categories = [],
   brands = [],
-  stagedCategories,
-  setStagedCategories,
+  activeCategorySlug = "",
   stagedBrands,
   setStagedBrands,
   stagedMinPrice,
@@ -31,14 +32,8 @@ export function FilterFormContent({
   stagedSort,
   setStagedSort,
   idPrefix = "f",
+  onNavigate,
 }) {
-  const toggleCategory = (slug) => {
-    const lower = slug.toLowerCase();
-    setStagedCategories((prev) =>
-      prev.includes(lower) ? prev.filter((c) => c !== lower) : [...prev, lower]
-    );
-  };
-
   const toggleBrand = (slug) => {
     const lower = slug.toLowerCase();
     setStagedBrands((prev) =>
@@ -74,29 +69,28 @@ export function FilterFormContent({
         </Select>
       </FilterAccordion>
 
-      {/* 2. Categories Section */}
+      {/* 2. Categories Section: Interactive direct links without checkboxes */}
       {categories.length > 0 && (
-        <FilterAccordion
-          title="Categories"
-          defaultOpen={true}
-          badge={stagedCategories.length > 0 ? stagedCategories.length : null}
-        >
-          <div className="max-h-52 space-y-2 overflow-y-auto pr-1">
+        <FilterAccordion title="Categories" defaultOpen={true}>
+          <div className="max-h-56 space-y-1 overflow-y-auto pr-1">
             {categories.map((cat) => {
               const slug = (cat.slug || "").toLowerCase();
-              const isChecked = stagedCategories.includes(slug);
+              const isCurrent = (activeCategorySlug || "").toLowerCase() === slug;
               return (
-                <div key={cat.id || cat.slug} className="flex items-center justify-between">
-                  <Checkbox
-                    id={`${idPrefix}-cat-${cat.id || cat.slug}`}
-                    label={cat.name}
-                    checked={isChecked}
-                    onChange={() => toggleCategory(slug)}
-                  />
-                  {cat.count > 0 && (
-                    <span className="text-muted-foreground text-[11px]">{cat.count}</span>
+                <Link
+                  key={cat.id || cat.slug}
+                  href={`/${cat.slug}`}
+                  onClick={() => onNavigate?.()}
+                  className={cn(
+                    "flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition-colors",
+                    isCurrent
+                      ? "bg-primary/10 text-primary font-semibold"
+                      : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                   )}
-                </div>
+                >
+                  <span className="truncate">{cat.name}</span>
+                  {cat.count > 0 && <span className="text-[11px] opacity-70">({cat.count})</span>}
+                </Link>
               );
             })}
           </div>
@@ -146,10 +140,10 @@ export function FilterFormContent({
                   type="button"
                   onClick={() => handlePresetPrice(p.min, p.max)}
                   className={cn(
-                    "rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors",
+                    "cursor-pointer rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors",
                     isSelected
                       ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border/70 bg-muted/50 text-muted-foreground hover:bg-accent hover:text-foreground"
+                      : "border-border/80 bg-background text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                   )}
                 >
                   {p.label}
@@ -158,10 +152,10 @@ export function FilterFormContent({
             })}
           </div>
 
-          {/* Min / Max Inputs */}
+          {/* Custom Min / Max Inputs */}
           <div className="flex items-center gap-2 pt-1">
             <div className="relative flex-1">
-              <span className="text-muted-foreground absolute top-1/2 left-2.5 -translate-y-1/2 text-xs">
+              <span className="text-muted-foreground absolute top-1/2 left-2 -translate-y-1/2 text-xs">
                 ₹
               </span>
               <input
@@ -169,12 +163,12 @@ export function FilterFormContent({
                 placeholder="Min"
                 value={stagedMinPrice}
                 onChange={(e) => setStagedMinPrice(e.target.value)}
-                className="border-input bg-background focus-visible:border-primary h-8 w-full rounded-md border pr-2 pl-6 text-xs outline-none focus-visible:ring-1"
+                className="border-border bg-background text-foreground focus:ring-primary h-8 w-full rounded-md border pr-2 pl-5 text-xs focus:ring-1 focus:outline-none"
               />
             </div>
             <span className="text-muted-foreground text-xs">–</span>
             <div className="relative flex-1">
-              <span className="text-muted-foreground absolute top-1/2 left-2.5 -translate-y-1/2 text-xs">
+              <span className="text-muted-foreground absolute top-1/2 left-2 -translate-y-1/2 text-xs">
                 ₹
               </span>
               <input
@@ -182,7 +176,7 @@ export function FilterFormContent({
                 placeholder="Max"
                 value={stagedMaxPrice}
                 onChange={(e) => setStagedMaxPrice(e.target.value)}
-                className="border-input bg-background focus-visible:border-primary h-8 w-full rounded-md border pr-2 pl-6 text-xs outline-none focus-visible:ring-1"
+                className="border-border bg-background text-foreground focus:ring-primary h-8 w-full rounded-md border pr-2 pl-5 text-xs focus:ring-1 focus:outline-none"
               />
             </div>
           </div>
@@ -191,14 +185,12 @@ export function FilterFormContent({
 
       {/* 5. Availability Section */}
       <FilterAccordion title="Availability" defaultOpen={true}>
-        <div className="pt-1">
-          <Checkbox
-            id={`${idPrefix}-in-stock`}
-            label="In Stock Only"
-            checked={stagedInStock}
-            onChange={(e) => setStagedInStock(e.target.checked)}
-          />
-        </div>
+        <Checkbox
+          id={`${idPrefix}-in-stock`}
+          label="In Stock Only"
+          checked={stagedInStock}
+          onChange={(checked) => setStagedInStock(Boolean(checked))}
+        />
       </FilterAccordion>
     </div>
   );

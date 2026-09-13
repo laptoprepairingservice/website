@@ -19,7 +19,7 @@ export function FilterAccordion({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="text-foreground hover:text-primary flex w-full items-center justify-between text-sm font-semibold transition-colors"
+        className="text-foreground hover:text-primary flex w-full items-center justify-between text-sm font-semibold transition-colors cursor-pointer"
         aria-expanded={open}
       >
         <span className="flex items-center gap-2">

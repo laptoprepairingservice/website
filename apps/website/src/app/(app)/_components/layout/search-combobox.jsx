@@ -9,6 +9,7 @@ import { ArrowRight, Loader2, Package, Search, Tag, TrendingUp, X } from "lucide
 import { liveSearchAction } from "@/app/(app)/_actions/search-actions";
 import { formatDiscount, formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { getProductUrl } from "@/lib/url";
 
 const TRENDING_SEARCHES = ["HP Laptop Battery", "Dell Laptop Battery", "Motherboard", "Charger"];
 
@@ -85,7 +86,7 @@ export function SearchCombobox({ className }) {
       actionableItems.push({
         type: "product",
         label: prod.name,
-        href: `/products/${prod.slug}`,
+        href: getProductUrl(prod),
       });
     });
     if (query.trim()) {
@@ -226,7 +227,7 @@ export function SearchCombobox({ className }) {
                   {POPULAR_CATEGORIES.map((cat) => (
                     <Link
                       key={cat.slug}
-                      href={`/products?category=${encodeURIComponent(cat.slug)}`}
+                      href={`/${cat.slug}`}
                       onClick={() => setIsOpen(false)}
                       className="hover:bg-accent hover:text-foreground text-muted-foreground border-border/50 flex items-center justify-between rounded-lg border px-3 py-2 text-xs transition-colors"
                     >
@@ -290,7 +291,7 @@ export function SearchCombobox({ className }) {
                 return (
                   <Link
                     key={product.id}
-                    href={`/products/${product.slug}`}
+                    href={getProductUrl(product)}
                     onClick={() => setIsOpen(false)}
                     className={cn(
                       "flex items-center gap-3 rounded-xl p-2 transition-all duration-150",
