@@ -11,6 +11,7 @@
     "clean": "rimraf .next"
   },
   "dependencies": {
+    "@7span/react-list": "^0.0.6",
     "@hookform/resolvers": "^5.2.2",
     "@iconify/react": "^6.0.2",
     "@supabase/ssr": "^0.12.4",
