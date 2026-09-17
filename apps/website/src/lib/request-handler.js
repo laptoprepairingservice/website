@@ -1,6 +1,6 @@
 "use client";
 
-import { createClient } from "./supabase/client";
+import { getPublicSupabaseClient } from "@/lib/store/client";
 
 const requestHandler =
   () =>
@@ -14,7 +14,7 @@ const requestHandler =
     filters = {},
     meta = {},
   }) => {
-    const supabase = createClient();
+    const supabase = getPublicSupabaseClient();
 
     try {
       const from = (page - 1) * perPage;

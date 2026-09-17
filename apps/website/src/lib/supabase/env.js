@@ -1,20 +1,13 @@
-function requiredEnv(name) {
-  const value = process.env[name];
+export function getSupabaseUrl() {
+  const value = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!value) {
-    throw new Error(`Missing ${name} environment variable`);
+    throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL environment variable");
   }
   return value;
 }
 
-export function getSupabaseUrl() {
-  return requiredEnv("NEXT_PUBLIC_SUPABASE_URL");
-}
-
 export function getSupabaseAnonKey() {
-  const value =
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
+  const value = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!value) {
     throw new Error("Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable");
   }
@@ -23,5 +16,5 @@ export function getSupabaseAnonKey() {
 }
 
 export function getAppUrl() {
-  return process.env.AUTH_URL || process.env.NEXTAUTH_URL || "http://localhost:3002";
+  return process.env.AUTH_URL || process.env.NEXTAUTH_URL;
 }
