@@ -32,7 +32,7 @@ const SOCIAL = [
 
 export function Footer() {
   return (
-    <footer className="border-border bg-muted/30 overflow-hidden border-t">
+    <footer className="border-border bg-muted/30 relative overflow-hidden border-t">
       <div className="container py-10 lg:py-14">
         {/* ── ROW 1: Brand (left) | Newsletter (right) ── */}
         <div className="border-border grid gap-10 border-b pb-10 md:grid-cols-2">
@@ -138,14 +138,13 @@ export function Footer() {
         </div>
       </div>
 
-      {/* ── Full-bleed bottom illustration ── */}
       <div className="w-full">
         <Image
           src="/footer-bottom.jpeg"
-          alt="Indian landmarks illustration"
+          alt="footer img"
           width={1440}
           height={260}
-          className="w-full object-cover object-top"
+          className="w-full object-cover"
           priority
           unoptimized
         />
