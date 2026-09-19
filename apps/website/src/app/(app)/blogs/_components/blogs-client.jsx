@@ -106,7 +106,9 @@ export function BlogsClient({ categories = [] }) {
       {/* Page Header */}
       <div className="mt-6 mb-8">
         <div className="mb-2 flex items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">Our Blog</h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
+            Laptop Accessories Thoughtful Insights
+          </h1>
         </div>
         <p className="text-muted-foreground max-w-xl text-sm sm:text-base">
           Tips, guides, and news on laptops, PC components, repairs, and tech upgrades.
@@ -154,6 +156,7 @@ export function BlogsClient({ categories = [] }) {
           },
         }}
         shimmer={<BlogGridSkeleton />}
+        className="p-0!"
       >
         {({ items }) => {
           const posts = items.map(mapSupabaseBlogPost).filter(Boolean);

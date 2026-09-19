@@ -57,7 +57,7 @@ export function HeroBanner({ categories = [] }) {
   }
 
   return (
-    <section className="relative w-full overflow-hidden bg-background">
+    <section className="bg-background relative w-full overflow-hidden">
       <Swiper
         modules={[Autoplay, EffectFade, Pagination]}
         effect="fade"
@@ -158,15 +158,21 @@ export function HeroBanner({ categories = [] }) {
                     <div className="border-border/50 text-muted-foreground mt-6 flex flex-wrap items-center gap-4 border-t pt-5 text-xs sm:mt-8 sm:gap-6">
                       <div className="flex items-center gap-2">
                         <CheckCircle2 className="text-primary size-4 shrink-0" />
-                        <span className="text-foreground/90 font-medium">100% Genuine Hardware</span>
+                        <span className="text-foreground/90 font-medium">
+                          100% Genuine Hardware
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <CheckCircle2 className="text-primary size-4 shrink-0" />
-                        <span className="text-foreground/90 font-medium">Official Brand Warranty</span>
+                        <span className="text-foreground/90 font-medium">
+                          Official Brand Warranty
+                        </span>
                       </div>
                       <div className="hidden items-center gap-2 sm:flex">
                         <CheckCircle2 className="text-primary size-4 shrink-0" />
-                        <span className="text-foreground/90 font-medium">Gujarat Express Dispatch</span>
+                        <span className="text-foreground/90 font-medium">
+                          Gujarat Express Dispatch
+                        </span>
                       </div>
                     </div>
                   </div>

@@ -4,6 +4,7 @@ export { Header } from "./layout/header";
 export { SectionHeader } from "./section-header";
 export { HeroBanner } from "./hero-banner";
 export { MobileCategoryPills } from "./mobile-category-pills";
+export { FeaturedCategories } from "./featured-categories";
 export { WhyChooseUs } from "./why-choose-us";
 export { FlashDealsSection } from "./flash-deals-section";
 export { InteractiveProductShowcase } from "./interactive-product-showcase";

@@ -5,6 +5,7 @@ import {
   HeroBanner,
   InteractiveProductShowcase,
   MobileCategoryPills,
+  FeaturedCategories,
   PopularBrands,
   WhyChooseUs,
 } from "./_components";
@@ -36,7 +37,10 @@ export default async function HomePage() {
       {/* 2. Mobile Category Quick Navigation */}
       <MobileCategoryPills categories={categories} />
 
-      {/* 3. Core Value & Trust Propositions */}
+      {/* 3. Bento Category Grid */}
+      <FeaturedCategories categories={categories} />
+
+      {/* 4. Core Value & Trust Propositions */}
       <WhyChooseUs />
 
       {/* 5. Featured Product Showcase (Live Supabase) */}

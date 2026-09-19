@@ -29,7 +29,7 @@ export function InteractiveProductShowcase({ categories = [], products = [] }) {
   }
 
   return (
-    <section className="border-b border-border py-10 lg:py-14">
+    <section className="border-border border-b py-10 lg:py-14">
       <div className="container">
         <SectionHeader
           title="Featured Hardware"
@@ -38,34 +38,12 @@ export function InteractiveProductShowcase({ categories = [], products = [] }) {
           linkText="View Catalog"
         />
 
-        {/* Minimalist Dynamic Tabs */}
-        {tabs.length > 1 && (
-          <div className="mb-6 flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "rounded-md px-3.5 py-1.5 text-xs font-medium transition-colors whitespace-nowrap border cursor-pointer",
-                  activeTab === tab.id
-                    ? "bg-foreground text-background border-foreground"
-                    : "bg-card text-muted-foreground border-border hover:text-foreground hover:bg-accent"
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        )}
-
         {/* Live Supabase Product Grid */}
         {filteredProducts.length > 0 ? (
           <ProductGrid products={filteredProducts} columns={4} />
         ) : (
-          <div className="rounded-xl border border-dashed border-border py-12 text-center">
-            <p className="text-sm text-muted-foreground">
-              No products found in this category.
-            </p>
+          <div className="border-border rounded-xl border border-dashed py-12 text-center">
+            <p className="text-muted-foreground text-sm">No products found in this category.</p>
           </div>
         )}
       </div>
