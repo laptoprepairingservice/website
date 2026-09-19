@@ -31,6 +31,11 @@ export function mapSupabaseBlogPost(raw) {
       }
     : null;
 
+  // FAQs from blog_post_faqs (sorted by sort_order)
+  const faqs = (raw.blog_post_faqs || [])
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map(({ question, answer }) => ({ question, answer }));
+
   return {
     id: raw.id,
     title: raw.title,
@@ -44,6 +49,10 @@ export function mapSupabaseBlogPost(raw) {
     metaTitle: raw.meta_title || raw.title,
     metaDescription: raw.meta_description || raw.excerpt || null,
     canonicalUrl: raw.canonical_url || null,
+    // Schema.org JSON-LD stored as JSONB — serialise to string for <script> injection
+    schemaOrgJsonld: raw.schema_org_jsonld
+      ? JSON.stringify(raw.schema_org_jsonld)
+      : null,
     readingTime: raw.reading_time_minutes || null,
     isFeatured: raw.is_featured || false,
     createdAt: raw.created_at,
@@ -51,6 +60,7 @@ export function mapSupabaseBlogPost(raw) {
     author,
     categories,
     tags,
+    faqs,
     // Convenience: primary category (first one)
     primaryCategory: categories[0] || null,
   };

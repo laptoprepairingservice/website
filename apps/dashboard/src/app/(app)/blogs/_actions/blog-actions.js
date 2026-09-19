@@ -86,6 +86,9 @@ export async function createBlogPostAction(values) {
     canonical_url: emptyToNull(data.canonical_url?.trim()),
     reading_time_minutes: readingTime,
     is_featured: data.is_featured,
+    schema_org_jsonld: data.schema_org_jsonld
+      ? (() => { try { return JSON.parse(data.schema_org_jsonld); } catch { return null; } })()
+      : null,
   };
 
   const { data: insertedPost, error: insertError } = await supabase
@@ -146,6 +149,18 @@ export async function createBlogPostAction(values) {
     }
   }
 
+  // 6. Insert blog_post_faqs
+  if (data.faqs && data.faqs.length > 0) {
+    const faqRows = data.faqs.map((faq, idx) => ({
+      post_id: postId,
+      question: faq.question.trim(),
+      answer: faq.answer.trim(),
+      sort_order: idx,
+    }));
+    const { error: faqError } = await supabase.from("blog_post_faqs").insert(faqRows);
+    if (faqError) console.error("Error inserting blog FAQs:", faqError);
+  }
+
   revalidatePath("/blogs");
   return { data: insertedPost };
 }
@@ -189,6 +204,9 @@ export async function updateBlogPostAction(values) {
     canonical_url: emptyToNull(data.canonical_url?.trim()),
     reading_time_minutes: readingTime,
     is_featured: data.is_featured,
+    schema_org_jsonld: data.schema_org_jsonld
+      ? (() => { try { return JSON.parse(data.schema_org_jsonld); } catch { return null; } })()
+      : null,
   };
 
   const { error: updateError } = await supabase
@@ -244,6 +262,18 @@ export async function updateBlogPostAction(values) {
     if (relatedRows.length > 0) {
       await supabase.from("blog_post_related_posts").insert(relatedRows);
     }
+  }
+
+  // Reconcile FAQs
+  await supabase.from("blog_post_faqs").delete().eq("post_id", postId);
+  if (data.faqs && data.faqs.length > 0) {
+    const faqRows = data.faqs.map((faq, idx) => ({
+      post_id: postId,
+      question: faq.question.trim(),
+      answer: faq.answer.trim(),
+      sort_order: idx,
+    }));
+    await supabase.from("blog_post_faqs").insert(faqRows);
   }
 
   revalidatePath("/blogs");

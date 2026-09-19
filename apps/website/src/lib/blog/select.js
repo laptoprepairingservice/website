@@ -52,6 +52,7 @@ export const BLOG_POST_DETAIL_SELECT = `
   meta_title,
   meta_description,
   canonical_url,
+  schema_org_jsonld,
   reading_time_minutes,
   is_featured,
   created_at,
@@ -75,5 +76,10 @@ export const BLOG_POST_DETAIL_SELECT = `
       name,
       slug
     )
+  ),
+  blog_post_faqs (
+    question,
+    answer,
+    sort_order
   )
 `;

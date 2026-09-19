@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import {
@@ -12,10 +12,12 @@ import {
   Calendar,
   Check,
   Clock,
+  Code2,
   Eye,
   Folder,
   Globe,
   Hash,
+  HelpCircle,
   Image as ImageIcon,
   Loader2,
   Lock,
@@ -86,6 +88,7 @@ export function BlogPostForm({
   const [relatedPickerOpen, setRelatedPickerOpen] = useState(false);
   const [attachedProducts, setAttachedProducts] = useState(referencedProducts);
   const [attachedRelatedPosts, setAttachedRelatedPosts] = useState(relatedPosts);
+  const [jsonldError, setJsonldError] = useState("");
 
   // Image upload
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -109,6 +112,14 @@ export function BlogPostForm({
       related_post_ids: initialValues?.related_post_ids ?? relatedPosts.map(p => p.id),
     }),
   });
+
+  // FAQ field array
+  const { fields: faqFields, append: appendFaq, remove: removeFaq } = useFieldArray({
+    control,
+    name: "faqs",
+  });
+
+  const watchFaqs = watch("faqs");
 
   const watchTitle = watch("title");
   const watchSlug = watch("slug");
@@ -602,6 +613,193 @@ export function BlogPostForm({
                     ))}
                   </div>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* ── FAQ Editor Card ── */}
+            <Card className="rounded-xl border shadow-xs">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <HelpCircle className="size-4 text-primary" />
+                      FAQs ({faqFields.length})
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      Saved to the database and used to auto-generate Schema.org FAQPage JSON-LD.
+                    </CardDescription>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1 text-xs"
+                    onClick={() => appendFaq({ question: "", answer: "" })}
+                  >
+                    <Plus className="size-3.5" />
+                    Add FAQ
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0 space-y-3">
+                {faqFields.length === 0 ? (
+                  <div className="rounded-lg border border-dashed p-6 text-center text-xs text-muted-foreground">
+                    No FAQs yet. Click &quot;Add FAQ&quot; to add a question &amp; answer pair.
+                  </div>
+                ) : (
+                  faqFields.map((field, index) => (
+                    <div key={field.id} className="rounded-lg border bg-muted/20 p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                          FAQ #{index + 1}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          className="size-6 text-muted-foreground hover:text-destructive"
+                          onClick={() => removeFaq(index)}
+                        >
+                          <X className="size-3.5" />
+                        </Button>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium">Question</label>
+                        <input
+                          placeholder="e.g. How long does laptop repair take?"
+                          className="w-full h-8 rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                          {...register(`faqs.${index}.question`)}
+                        />
+                        {errors?.faqs?.[index]?.question && (
+                          <p className="text-[11px] text-destructive">{errors.faqs[index].question.message}</p>
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium">Answer</label>
+                        <textarea
+                          rows={3}
+                          placeholder="Provide a clear, concise answer..."
+                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring resize-none"
+                          {...register(`faqs.${index}.answer`)}
+                        />
+                        {errors?.faqs?.[index]?.answer && (
+                          <p className="text-[11px] text-destructive">{errors.faqs[index].answer.message}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+
+            {/* ── Schema.org JSON-LD Card ── */}
+            <Card className="rounded-xl border shadow-xs">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Code2 className="size-4 text-primary" />
+                      Schema.org JSON-LD
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      Full article structured data (<code className="bg-muted px-0.5 rounded">BlogPosting</code>).
+                      FAQs are merged in automatically when present.
+                    </CardDescription>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5 text-xs"
+                    onClick={() => {
+                      if (!watchTitle) {
+                        toast.warning("Add a title first.");
+                        return;
+                      }
+                      const siteUrl = "https://ranuja.in";
+                      const faqs = watchFaqs?.filter(f => f.question && f.answer) ?? [];
+
+                      // Base BlogPosting schema
+                      const jsonld = {
+                        "@context": "https://schema.org",
+                        "@type": "BlogPosting",
+                        headline: watchTitle,
+                        description: watchMetaDesc || watchImageUrl || "",
+                        url: `${siteUrl}/blogs/${watchSlug || ""}`,
+                        ...(watchImageUrl ? {
+                          image: {
+                            "@type": "ImageObject",
+                            url: watchImageUrl,
+                          }
+                        } : {}),
+                        ...(watch("published_at") ? {
+                          datePublished: new Date(watch("published_at")).toISOString(),
+                          dateModified: new Date(watch("published_at")).toISOString(),
+                        } : {}),
+                        publisher: {
+                          "@type": "Organization",
+                          name: "Ranuja Enterprise",
+                          url: siteUrl,
+                        },
+                        mainEntityOfPage: {
+                          "@type": "WebPage",
+                          "@id": `${siteUrl}/blogs/${watchSlug || ""}`,
+                        },
+                        // Merge FAQPage when FAQs are present
+                        ...(faqs.length > 0 ? {
+                          "@type": ["BlogPosting", "FAQPage"],
+                          mainEntity: faqs.map(f => ({
+                            "@type": "Question",
+                            name: f.question,
+                            acceptedAnswer: { "@type": "Answer", text: f.answer },
+                          })),
+                        } : {}),
+                      };
+
+                      setValue("schema_org_jsonld", JSON.stringify(jsonld, null, 2));
+                      setJsonldError("");
+                      toast.success(faqs.length > 0
+                        ? "BlogPosting + FAQPage JSON-LD generated!"
+                        : "BlogPosting JSON-LD generated!");
+                    }}
+                  >
+                    <Sparkles className="size-3.5" />
+                    Generate Article Schema
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0 space-y-3">
+                <Controller
+                  name="schema_org_jsonld"
+                  control={control}
+                  render={({ field }) => (
+                    <textarea
+                      {...field}
+                      rows={12}
+                      spellCheck={false}
+                      placeholder={'{\n  "@context": "https://schema.org",\n  "@type": "BlogPosting",\n  "headline": "Your article title",\n  "description": "...",\n  "url": "https://ranuja.in/blogs/your-slug"\n}'}
+                      className="w-full rounded-md border border-input bg-muted/20 px-3 py-2.5 font-mono text-xs focus:outline-none focus:ring-1 focus:ring-ring resize-y"
+                      onChange={(e) => {
+                        field.onChange(e);
+                        try {
+                          if (e.target.value) JSON.parse(e.target.value);
+                          setJsonldError("");
+                        } catch {
+                          setJsonldError("Invalid JSON — fix syntax before saving.");
+                        }
+                      }}
+                    />
+                  )}
+                />
+                {jsonldError && (
+                  <p className="text-[11px] text-destructive font-medium">{jsonldError}</p>
+                )}
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Injected as{" "}
+                  <code className="bg-muted px-1 rounded text-[10px]">{'<script type="application/ld+json">'}</code>{" "}
+                  on the blog detail page. Click <strong>Generate Article Schema</strong> to auto-fill from the
+                  article fields above — FAQs are merged in when present. You can also paste any custom JSON-LD.
+                </p>
               </CardContent>
             </Card>
           </div>

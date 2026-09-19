@@ -39,12 +39,14 @@ export default async function EditBlogPostPage({ params }) {
     { data: authors },
     { data: prodRows },
     { data: relatedRows },
+    { data: faqRows },
   ] = await Promise.all([
     supabase.from("blog_categories").select("id, name, slug").order("name"),
     supabase.from("blog_tags").select("id, name, slug").order("name"),
     supabase.from("profiles").select("id, first_name, last_name, email").order("first_name"),
     supabase.from("blog_post_products").select("product_id, sort_order").eq("post_id", postId).order("sort_order"),
     supabase.from("blog_post_related_posts").select("related_post_id, sort_order").eq("post_id", postId).order("sort_order"),
+    supabase.from("blog_post_faqs").select("question, answer, sort_order").eq("post_id", postId).order("sort_order"),
   ]);
 
   // Fetch referenced products details
@@ -79,6 +81,7 @@ export default async function EditBlogPostPage({ params }) {
           tag_ids: post.blog_post_tags?.map((t) => t.tag_id) || [],
           product_ids: productIds,
           related_post_ids: relatedPostIds,
+          faqs: (faqRows || []).map(({ question, answer }) => ({ question, answer })),
         }}
         categories={categories || []}
         tags={tags || []}

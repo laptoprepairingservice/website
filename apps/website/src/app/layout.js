@@ -1,4 +1,4 @@
-import { Inter } from "next/font/google";
+import { Inter, Outfit } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 import { AppProvider } from "@/app/_context";
@@ -9,6 +9,12 @@ import { getCurrentUserWishlist } from "@/lib/wishlist";
 
 const inter = Inter({
   variable: "--font-inter",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
   display: "swap",
 });
@@ -35,7 +41,7 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${outfit.variable} font-outfit antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

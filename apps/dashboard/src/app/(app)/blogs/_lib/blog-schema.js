@@ -38,6 +38,11 @@ export const blogTagSchema = z.object({
   slug: z.string().min(1, "Tag slug is required"),
 });
 
+export const faqItemSchema = z.object({
+  question: z.string().min(1, "Question is required"),
+  answer: z.string().min(1, "Answer is required"),
+});
+
 export const blogPostFormSchema = z.object({
   id: z.coerce.number().optional(),
   title: z.string().min(2, "Title must be at least 2 characters"),
@@ -58,6 +63,10 @@ export const blogPostFormSchema = z.object({
   tag_ids: z.array(z.coerce.number()).default([]),
   product_ids: z.array(z.coerce.number()).default([]),
   related_post_ids: z.array(z.coerce.number()).default([]),
+  // FAQ items (stored in blog_post_faqs table)
+  faqs: z.array(faqItemSchema).default([]),
+  // Custom Schema.org JSON-LD override (stored in blog_posts.schema_org_jsonld)
+  schema_org_jsonld: z.string().optional().nullable(),
 });
 
 export function getBlogPostFormDefaults(initialData = null) {
@@ -81,5 +90,11 @@ export function getBlogPostFormDefaults(initialData = null) {
     tag_ids: initialData?.tag_ids ?? [],
     product_ids: initialData?.product_ids ?? [],
     related_post_ids: initialData?.related_post_ids ?? [],
+    faqs: initialData?.faqs ?? [],
+    schema_org_jsonld: initialData?.schema_org_jsonld
+      ? (typeof initialData.schema_org_jsonld === "string"
+          ? initialData.schema_org_jsonld
+          : JSON.stringify(initialData.schema_org_jsonld, null, 2))
+      : "",
   };
 }
