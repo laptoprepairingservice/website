@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, Newspaper, Package } from "lucide-react";
+import { LayoutDashboard, Newspaper, Package, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
@@ -59,6 +59,12 @@ export function AppSidebar({ ...props }) {
             { title: "Categories", url: "/blogs/categories" },
             { title: "Tags", url: "/blogs/tags" },
           ],
+        },
+        {
+          title: "Users",
+          url: "/users",
+          icon: Users,
+          isActive: pathname.startsWith("/users"),
         },
       ],
     }),

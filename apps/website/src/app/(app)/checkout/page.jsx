@@ -1,216 +1,318 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ShoppingBag } from "lucide-react";
-import { Breadcrumb } from "@ui/shadcn/components/breadcrumb";
+import { ArrowLeft, Lock } from "lucide-react";
 import { Button } from "@ui/shadcn/components/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@ui/shadcn/components/card";
-import { FormField } from "@ui/shadcn/components/form-field";
-import { Input } from "@ui/shadcn/components/input";
-import { Textarea } from "@ui/shadcn/components/textarea";
-import { RadioGroup } from "@ui/shadcn/components/form-controls";
-import { EmptyState } from "@ui/shadcn/components/empty-state";
+import { Breadcrumb } from "@ui/shadcn/components/breadcrumb";
+import { useAppContext } from "@/app/_context";
 import { formatPrice } from "@/lib/format";
 import { STORE } from "@/lib/store-config";
-import { useAppContext } from "@/app/_context";
+import { placeCODOrderAction } from "./_actions/place-cod-order";
+import { getAddressesAction } from "@/app/(app)/account/addresses/_actions/get-addresses-action";
+
+import { AddressList } from "@/components/address/address-list";
+import { CheckoutOrderSummary } from "./_components/checkout-order-summary";
+import { CheckoutPaymentSection } from "./_components/checkout-payment-section";
+import { CheckoutEmpty, CheckoutSuccess } from "./_components/checkout-states";
+
+// ─── Cashfree SDK loader ──────────────────────────────────────────────────────
+
+function loadCashfreeSDK() {
+  return new Promise((resolve) => {
+    if (typeof window !== "undefined" && window.Cashfree) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    // Use production SDK — swap to sandbox for testing:
+    // https://sdk.cashfree.com/js/ui/2.0.0/cashfree.sandbox.js
+    script.src = "https://sdk.cashfree.com/js/ui/2.0.0/cashfree.prod.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
+// ─── Section wrapper ──────────────────────────────────────────────────────────
+
+function SectionCard({ step, title, children }) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="flex items-center gap-3 border-b border-border px-5 py-4">
+        <div className="flex size-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+          {step}
+        </div>
+        <h2 className="font-semibold text-foreground">{title}</h2>
+      </div>
+      <div className="p-5">{children}</div>
+    </div>
+  );
+}
+
+// ─── CheckoutPage ─────────────────────────────────────────────────────────────
 
 export default function CheckoutPage() {
   const { user, cartItems, cartSubtotal, clearCart } = useAppContext();
+
+  // Address state
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddress, setSelectedAddress] = useState(null);
+
+  // Fetch addresses via server action on mount (avoids server-only import in client)
+  useEffect(() => {
+    getAddressesAction().then((addrs) => {
+      setAddresses(addrs);
+      const defaultAddr = addrs.find((a) => a.is_default) || addrs[0] || null;
+      setSelectedAddress(defaultAddr);
+    });
+  }, []);
+
+  const [paymentMethod, setPaymentMethod] = useState("online");
   const [deliveryMethod, setDeliveryMethod] = useState("standard");
-  const [paymentMethod, setPaymentMethod] = useState("cod");
   const [submitted, setSubmitted] = useState(false);
+  const [placing, setPlacing] = useState(false);
 
-  const shipping = cartSubtotal >= STORE.freeShippingThreshold ? 0 : STORE.standardShipping;
-  const codFee = STORE.codFee;
-  const total = cartSubtotal + shipping;
-  const finalTotal = paymentMethod === "cod" ? total + codFee : total;
+  // Computed totals
+  const standardShipping = cartSubtotal >= STORE.freeShippingThreshold ? 0 : STORE.standardShipping;
+  const shipping = deliveryMethod === "express" ? 199 : standardShipping;
+  const codFee = paymentMethod === "cod" ? STORE.codFee : 0;
+  const finalTotal = cartSubtotal + shipping + codFee;
 
-  const handlePlaceOrder = async (e) => {
-    e.preventDefault();
-    setSubmitted(true);
-    await clearCart();
-    toast.success("Order placed successfully!", {
-      description: "You will receive a confirmation email shortly.",
+  // ── COD flow ──────────────────────────────────────────────────────────────
+
+  const handleCODOrder = async () => {
+    const result = await placeCODOrderAction({
+      address: selectedAddress,
+      cartItems,
+      subtotal: cartSubtotal,
+      shipping,
+      codFee: STORE.codFee,
+    });
+
+    if (result?.error) {
+      toast.error(result.error);
+      return false;
+    }
+
+    return true;
+  };
+
+  // ── Cashfree flow ─────────────────────────────────────────────────────────
+
+  const handleCashfreeOrder = async () => {
+    const loaded = await loadCashfreeSDK();
+    if (!loaded) {
+      toast.error("Could not load payment gateway. Check your connection.");
+      return false;
+    }
+
+    // 1. Create Cashfree order server-side
+    const createRes = await fetch("/api/payment/create-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        amount: finalTotal,
+        customer: {
+          id: user?.id || "guest",
+          name: user?.name || selectedAddress?.full_name || "",
+          email: user?.email || "",
+          phone: user?.phone || selectedAddress?.phone || "",
+        },
+      }),
+    });
+
+    if (!createRes.ok) {
+      const err = await createRes.json();
+      toast.error(err.error || "Failed to initiate payment.");
+      return false;
+    }
+
+    const { payment_session_id, order_id } = await createRes.json();
+
+    // 2. Open Cashfree checkout
+    return new Promise((resolve) => {
+      const cashfree = new window.Cashfree({ mode: "production" });
+      // For testing, use mode: "sandbox"
+
+      cashfree.checkout({
+        paymentSessionId: payment_session_id,
+        redirectTarget: "_modal",
+        returnUrl: `${window.location.origin}/api/payment/verify?order_id=${order_id}`,
+      }).then(async (result) => {
+        if (result.error) {
+          toast.error(result.error.message || "Payment failed.");
+          resolve(false);
+          return;
+        }
+
+        if (result.paymentDetails) {
+          // Verify server-side and create DB order
+          const verifyRes = await fetch("/api/payment/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              cf_order_id: order_id,
+              orderPayload: {
+                address: selectedAddress,
+                cartItems,
+                shipping,
+                subtotal: cartSubtotal,
+              },
+            }),
+          });
+
+          if (!verifyRes.ok) {
+            const err = await verifyRes.json();
+            toast.error(err.error || "Payment verification failed. Contact support.");
+            resolve(false);
+            return;
+          }
+
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      }).catch(() => resolve(false));
     });
   };
 
+  // ── Main submit handler ────────────────────────────────────────────────────
+
+  const handlePlaceOrder = async () => {
+    if (!selectedAddress) {
+      toast.error("Please select or add a delivery address.");
+      return;
+    }
+
+    setPlacing(true);
+
+    try {
+      let success = false;
+
+      if (paymentMethod === "cod") {
+        success = await handleCODOrder();
+      } else {
+        success = await handleCashfreeOrder();
+      }
+
+      if (success) {
+        await clearCart();
+        setSubmitted(true);
+      }
+    } catch (err) {
+      console.error("Order placement error:", err);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setPlacing(false);
+    }
+  };
+
+  // ── Render states ─────────────────────────────────────────────────────────
+
   if (cartItems.length === 0 && !submitted) {
     return (
-      <div className="py-8 lg:py-12">
-        <Breadcrumb items={[{ label: "Cart", href: "/cart" }, { label: "Checkout" }]} />
-        <EmptyState
-          icon={ShoppingBag}
-          title="Your cart is empty"
-          description="Add items to your cart before proceeding to checkout."
-          action={
-            <Button asChild>
-              <Link href="/">Browse Store</Link>
-            </Button>
-          }
-          className="mt-8"
-        />
+      <div className="container mx-auto px-4 py-8 lg:py-12">
+        <CheckoutEmpty />
       </div>
     );
   }
 
   if (submitted) {
     return (
-      <div className="py-12 text-center">
-        <h1 className="text-3xl font-bold">Order Received!</h1>
-        <p className="mt-3 text-muted-foreground">
-          Thank you for shopping with Ranuja Enterprise. We are preparing your order.
-        </p>
-        <div className="mt-8 flex justify-center gap-4">
-          <Button asChild>
-            <Link href="/">Continue Shopping</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href="/account/orders">View Orders</Link>
-          </Button>
-        </div>
+      <div className="container mx-auto px-4 py-8 lg:py-12">
+        <CheckoutSuccess />
       </div>
     );
   }
 
+  // ── Main checkout layout ───────────────────────────────────────────────────
+
   return (
-    <div className="py-8 lg:py-12">
-      <Breadcrumb items={[{ label: "Cart", href: "/cart" }, { label: "Checkout" }]} />
-      <h1 className="mt-6 text-3xl font-semibold">Checkout</h1>
+    <div className="container mx-auto px-4 py-8 lg:py-12">
+      <Breadcrumb
+        items={[{ label: "Cart", href: "/cart" }, { label: "Checkout" }]}
+      />
 
-      <form onSubmit={handlePlaceOrder} className="mt-8 grid gap-8 lg:grid-cols-3">
-        <div className="space-y-8 lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Billing Information</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              <FormField label="First Name" id="firstName">
-                <Input id="firstName" required defaultValue={user?.first_name || ""} placeholder="Rahul" />
-              </FormField>
-              <FormField label="Last Name" id="lastName">
-                <Input id="lastName" required defaultValue={user?.last_name || ""} placeholder="Shah" />
-              </FormField>
-              <FormField label="Email" id="email" className="sm:col-span-2">
-                <Input id="email" type="email" required defaultValue={user?.email || ""} placeholder="rahul@example.com" />
-              </FormField>
-              <FormField label="Phone" id="phone" className="sm:col-span-2">
-                <Input id="phone" type="tel" required defaultValue={user?.phone || ""} placeholder="+91 98765 43210" />
-              </FormField>
-            </CardContent>
-          </Card>
+      <div className="mt-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Checkout</h1>
+        <Button asChild variant="ghost" size="sm" className="text-muted-foreground gap-1.5">
+          <Link href="/cart">
+            <ArrowLeft className="size-4" />
+            Back to Cart
+          </Link>
+        </Button>
+      </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Shipping Address</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              <FormField label="Address Line 1" id="address1" className="sm:col-span-2">
-                <Input id="address1" required placeholder="123, SG Highway" />
-              </FormField>
-              <FormField label="Address Line 2" id="address2" className="sm:col-span-2">
-                <Input id="address2" placeholder="Near Iscon Cross Road" />
-              </FormField>
-              <FormField label="City" id="city">
-                <Input id="city" required defaultValue="Ahmedabad" />
-              </FormField>
-              <FormField label="State" id="state">
-                <Input id="state" required defaultValue="Gujarat" />
-              </FormField>
-              <FormField label="PIN Code" id="pincode">
-                <Input id="pincode" required placeholder="380054" />
-              </FormField>
-              <FormField label="Landmark" id="landmark">
-                <Input id="landmark" placeholder="Optional" />
-              </FormField>
-              <FormField label="Delivery Instructions" id="instructions" className="sm:col-span-2">
-                <Textarea id="instructions" placeholder="Any special instructions for delivery" />
-              </FormField>
-            </CardContent>
-          </Card>
+      <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_380px]">
+        {/* ── Left: Steps ── */}
+        <div className="space-y-5">
+          {/* Step 1: Delivery Address */}
+          <SectionCard step={1} title="Delivery Address">
+            <AddressList
+              addresses={addresses}
+              selectable
+              selectedId={selectedAddress?.public_id}
+              onSelect={setSelectedAddress}
+              showActions={false}
+              onMutated={() =>
+                getAddressesAction().then((addrs) => {
+                  setAddresses(addrs);
+                  if (!selectedAddress) {
+                    setSelectedAddress(addrs.find((a) => a.is_default) || addrs[0] || null);
+                  }
+                })
+              }
+            />
+            {!selectedAddress && addresses.length > 0 && (
+              <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                Please select a delivery address to continue.
+              </p>
+            )}
+          </SectionCard>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Delivery Method</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <RadioGroup
-                name="delivery"
-                value={deliveryMethod}
-                onChange={setDeliveryMethod}
-                options={[
-                  {
-                    value: "standard",
-                    label: `Standard Delivery (3-5 business days) — ${shipping === 0 ? "Free" : formatPrice(shipping)}`,
-                  },
-                  { value: "express", label: "Express Delivery (1-2 business days) — ₹199" },
-                ]}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Payment Method</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <RadioGroup
-                name="payment"
-                value={paymentMethod}
-                onChange={setPaymentMethod}
-                options={[
-                  { value: "cod", label: `Cash on Delivery (+${formatPrice(codFee)} fee)` },
-                  { value: "upi", label: "UPI / Net Banking (Coming Soon)" },
-                  { value: "card", label: "Credit / Debit Card (Coming Soon)" },
-                ]}
-              />
-            </CardContent>
-          </Card>
+          {/* Step 2: Payment & Delivery */}
+          <SectionCard step={2} title="Delivery & Payment">
+            <CheckoutPaymentSection
+              paymentMethod={paymentMethod}
+              onPaymentChange={setPaymentMethod}
+              deliveryMethod={deliveryMethod}
+              onDeliveryChange={setDeliveryMethod}
+              cartSubtotal={cartSubtotal}
+            />
+          </SectionCard>
         </div>
 
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle>Order Summary</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {cartItems.map((item) => (
-              <div key={item.variantId || item.id} className="flex justify-between gap-4 text-sm">
-                <span className="text-muted-foreground line-clamp-2">
-                  {item.name} {item.quantity > 1 ? `× ${item.quantity}` : ""}
-                </span>
-                <span className="shrink-0 font-medium">{formatPrice(item.price * item.quantity)}</span>
-              </div>
-            ))}
-            <div className="border-border space-y-2 border-t pt-4 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span>{formatPrice(cartSubtotal)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Shipping</span>
-                <span>{shipping === 0 ? "Free" : formatPrice(shipping)}</span>
-              </div>
-              {paymentMethod === "cod" && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">COD Fee</span>
-                  <span>{formatPrice(codFee)}</span>
-                </div>
-              )}
-              <div className="border-border flex justify-between border-t pt-2 font-semibold">
-                <span>Total</span>
-                <span>{formatPrice(finalTotal)}</span>
-              </div>
-            </div>
-            <Button type="submit" size="lg" className="w-full">
-              Place Order
-            </Button>
-            <Button variant="outline" className="w-full" asChild>
-              <Link href="/cart">Back to Cart</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </form>
+        {/* ── Right: Summary + CTA ── */}
+        <div className="flex flex-col gap-4">
+          <CheckoutOrderSummary
+            cartItems={cartItems}
+            cartSubtotal={cartSubtotal}
+            paymentMethod={paymentMethod}
+            deliveryMethod={deliveryMethod}
+          />
+
+          {/* Place order button */}
+          <Button
+            size="lg"
+            className="w-full gap-2 text-base font-semibold"
+            onClick={handlePlaceOrder}
+            disabled={placing || !selectedAddress}
+          >
+            <Lock className="size-4" />
+            {placing
+              ? "Processing..."
+              : paymentMethod === "cod"
+              ? `Place Order — ${formatPrice(finalTotal)}`
+              : `Pay ${formatPrice(finalTotal - codFee)}`}
+          </Button>
+
+          <p className="text-center text-xs text-muted-foreground">
+            Secure payments powered by Cashfree
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
