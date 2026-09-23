@@ -9,6 +9,7 @@ import { AnnouncementBar } from "../announcement-bar";
 
 import { MobileNavSheet } from "./mobile-nav-sheet";
 import { SearchCombobox } from "./search-combobox";
+import Image from "next/image";
 
 export function Header({ categories = [] }) {
   const { user, cartCount, wishlistCount } = useAppContext();
@@ -27,14 +28,14 @@ export function Header({ categories = [] }) {
           <div className="flex min-w-0 items-center gap-1.5 sm:gap-4">
             <MobileNavSheet initialCategories={categories} />
 
-            <Link href="/" className="flex min-w-0 items-center gap-2">
-              <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold shadow-xs sm:size-9">
-                CV
-              </div>
-              <div className="hidden min-w-0 sm:block">
-                <span className="text-lg font-semibold tracking-tight">Ranuja</span>
-                <p className="text-muted-foreground text-xs">Ahmedabad</p>
-              </div>
+            <Link href="/" className="flex aspect-video min-w-0 items-center gap-2">
+              <Image
+                src="/logo.png"
+                alt="logo"
+                width={100}
+                height={100}
+                className="object-contain"
+              />
             </Link>
           </div>
 

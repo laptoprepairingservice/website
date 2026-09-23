@@ -26,6 +26,9 @@ export async function getCurrentUserOrders() {
         total_amount,
         shipping_address,
         customer_note,
+        payment_method,
+        payment_id,
+        payment_status,
         created_at,
         order_items (
           id,
@@ -77,6 +80,9 @@ export async function getOrderById(idOrNumber) {
         total_amount,
         shipping_address,
         customer_note,
+        payment_method,
+        payment_id,
+        payment_status,
         created_at,
         order_items (
           id,

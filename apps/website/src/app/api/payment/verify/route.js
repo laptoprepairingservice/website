@@ -1,20 +1,15 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 import { createClient } from "@/lib/supabase/server";
 
-const CASHFREE_APP_ID = process.env.CASHFREE_APP_ID;
-const CASHFREE_SECRET_KEY = process.env.CASHFREE_SECRET_KEY;
-const CASHFREE_BASE_URL = process.env.CASHFREE_ENV === "production"
-  ? "https://api.cashfree.com/pg"
-  : "https://sandbox.cashfree.com/pg";
+const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
 
 /**
  * POST /api/payment/verify
  *
- * Fetches the Cashfree order status server-side to verify the payment,
- * then creates the DB order record.
- *
+ * Verifies Razorpay HMAC signature, then creates the DB order.
  * Body: {
- *   cf_order_id: string,
+ *   razorpay_order_id, razorpay_payment_id, razorpay_signature,
  *   orderPayload: { address, cartItems, shipping, subtotal }
  * }
  */
@@ -30,44 +25,31 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { cf_order_id, orderPayload } = body;
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      orderPayload,
+    } = body;
 
-    if (!cf_order_id) {
-      return NextResponse.json({ error: "Missing order ID" }, { status: 400 });
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return NextResponse.json({ error: "Missing payment fields" }, { status: 400 });
     }
 
-    if (!CASHFREE_APP_ID || !CASHFREE_SECRET_KEY) {
+    if (!RAZORPAY_KEY_SECRET) {
+      console.error("RAZORPAY_KEY_SECRET is not set");
       return NextResponse.json({ error: "Payment gateway not configured" }, { status: 500 });
     }
 
-    // ── Verify payment status with Cashfree ───────────────────────────────────
-    const cfRes = await fetch(`${CASHFREE_BASE_URL}/orders/${cf_order_id}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-version": "2023-08-01",
-        "x-client-id": CASHFREE_APP_ID,
-        "x-client-secret": CASHFREE_SECRET_KEY,
-      },
-    });
+    // ── Verify HMAC signature ─────────────────────────────────────────────────
+    const expectedSignature = crypto
+      .createHmac("sha256", RAZORPAY_KEY_SECRET)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest("hex");
 
-    if (!cfRes.ok) {
-      const err = await cfRes.json();
-      console.error("Cashfree order fetch error:", err);
-      return NextResponse.json(
-        { error: "Could not verify payment. Contact support." },
-        { status: 502 }
-      );
-    }
-
-    const cfOrder = await cfRes.json();
-
-    // Cashfree order statuses: PAID, ACTIVE, EXPIRED, CANCELLED
-    if (cfOrder.order_status !== "PAID") {
-      return NextResponse.json(
-        { error: `Payment not completed. Status: ${cfOrder.order_status}` },
-        { status: 400 }
-      );
+    if (expectedSignature !== razorpay_signature) {
+      console.error("Razorpay signature mismatch");
+      return NextResponse.json({ error: "Invalid payment signature" }, { status: 400 });
     }
 
     // ── Create order in database ──────────────────────────────────────────────
@@ -97,8 +79,9 @@ export async function POST(request) {
               country: address.country || "India",
             }
           : null,
-        payment_method: "cashfree",
-        payment_id: cfOrder.cf_order_id || cf_order_id,
+        payment_method: "razorpay",
+        payment_id: razorpay_payment_id,
+        payment_status: "paid",
       })
       .select("id, order_number")
       .single();
@@ -107,8 +90,8 @@ export async function POST(request) {
       console.error("Failed to create order in DB:", orderError);
       return NextResponse.json(
         {
-          error: "Payment received but order creation failed. Contact support with your payment ID.",
-          cf_order_id,
+          error: "Payment received but order creation failed. Contact support.",
+          payment_id: razorpay_payment_id,
         },
         { status: 500 }
       );

@@ -46,6 +46,10 @@ create table if not exists public.orders (
   shipping_address jsonb not null,
   -- Snapshot at order time: immutable JSON object containing address fields
 
+  payment_method text not null default 'cod' check (payment_method in ('razorpay', 'cod')),
+  payment_id text,
+  payment_status text not null default 'pending' check (payment_status in ('pending', 'paid', 'failed', 'refunded')),
+
   customer_note text,
   cancellation_reason text,
   cancelled_at timestamptz,
@@ -416,6 +420,9 @@ create policy "orders_select_admin" on public.orders
 create policy "orders_insert_admin" on public.orders
   for insert with check ((select public.is_admin()));
 
+create policy "orders_insert_own" on public.orders
+  for insert with check (user_id = (select auth.uid()));
+
 create policy "orders_update_own_or_admin" on public.orders
   for update
   using (user_id = (select auth.uid()) or (select public.is_admin()))
@@ -424,6 +431,14 @@ create policy "orders_update_own_or_admin" on public.orders
 -- order_items
 create policy "order_items_select_own" on public.order_items
   for select using (
+    exists (
+      select 1 from public.orders o
+      where o.id = order_items.order_id and o.user_id = (select auth.uid())
+    )
+  );
+
+create policy "order_items_insert_own" on public.order_items
+  for insert with check (
     exists (
       select 1 from public.orders o
       where o.id = order_items.order_id and o.user_id = (select auth.uid())

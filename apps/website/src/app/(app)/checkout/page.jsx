@@ -9,26 +9,23 @@ import { Breadcrumb } from "@ui/shadcn/components/breadcrumb";
 import { useAppContext } from "@/app/_context";
 import { formatPrice } from "@/lib/format";
 import { STORE } from "@/lib/store-config";
-import { placeCODOrderAction } from "./_actions/place-cod-order";
 import { getAddressesAction } from "@/app/(app)/account/addresses/_actions/get-addresses-action";
 
 import { AddressList } from "@/components/address/address-list";
 import { CheckoutOrderSummary } from "./_components/checkout-order-summary";
-import { CheckoutPaymentSection } from "./_components/checkout-payment-section";
+import { CheckoutDeliverySection } from "./_components/checkout-payment-section";
 import { CheckoutEmpty, CheckoutSuccess } from "./_components/checkout-states";
 
-// ─── Cashfree SDK loader ──────────────────────────────────────────────────────
+// ─── Razorpay SDK loader ──────────────────────────────────────────────────────
 
-function loadCashfreeSDK() {
+function loadRazorpayScript() {
   return new Promise((resolve) => {
-    if (typeof window !== "undefined" && window.Cashfree) {
+    if (typeof window !== "undefined" && window.Razorpay) {
       resolve(true);
       return;
     }
     const script = document.createElement("script");
-    // Use production SDK — swap to sandbox for testing:
-    // https://sdk.cashfree.com/js/ui/2.0.0/cashfree.sandbox.js
-    script.src = "https://sdk.cashfree.com/js/ui/2.0.0/cashfree.prod.js";
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.onload = () => resolve(true);
     script.onerror = () => resolve(false);
     document.body.appendChild(script);
@@ -60,7 +57,7 @@ export default function CheckoutPage() {
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
 
-  // Fetch addresses via server action on mount (avoids server-only import in client)
+  // Fetch addresses via server action on mount
   useEffect(() => {
     getAddressesAction().then((addrs) => {
       setAddresses(addrs);
@@ -69,57 +66,31 @@ export default function CheckoutPage() {
     });
   }, []);
 
-  const [paymentMethod, setPaymentMethod] = useState("online");
   const [deliveryMethod, setDeliveryMethod] = useState("standard");
   const [submitted, setSubmitted] = useState(false);
   const [placing, setPlacing] = useState(false);
 
-  // Computed totals
+  // Computed totals — no COD fee
   const standardShipping = cartSubtotal >= STORE.freeShippingThreshold ? 0 : STORE.standardShipping;
   const shipping = deliveryMethod === "express" ? 199 : standardShipping;
-  const codFee = paymentMethod === "cod" ? STORE.codFee : 0;
-  const finalTotal = cartSubtotal + shipping + codFee;
+  const finalTotal = cartSubtotal + shipping;
 
-  // ── COD flow ──────────────────────────────────────────────────────────────
+  // ── Razorpay flow ─────────────────────────────────────────────────────────
 
-  const handleCODOrder = async () => {
-    const result = await placeCODOrderAction({
-      address: selectedAddress,
-      cartItems,
-      subtotal: cartSubtotal,
-      shipping,
-      codFee: STORE.codFee,
-    });
-
-    if (result?.error) {
-      toast.error(result.error);
-      return false;
-    }
-
-    return true;
-  };
-
-  // ── Cashfree flow ─────────────────────────────────────────────────────────
-
-  const handleCashfreeOrder = async () => {
-    const loaded = await loadCashfreeSDK();
+  const handleRazorpayOrder = async () => {
+    const loaded = await loadRazorpayScript();
     if (!loaded) {
       toast.error("Could not load payment gateway. Check your connection.");
       return false;
     }
 
-    // 1. Create Cashfree order server-side
+    // 1. Create Razorpay order server-side
     const createRes = await fetch("/api/payment/create-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        amount: finalTotal,
-        customer: {
-          id: user?.id || "guest",
-          name: user?.name || selectedAddress?.full_name || "",
-          email: user?.email || "",
-          phone: user?.phone || selectedAddress?.phone || "",
-        },
+        amount_paise: Math.round(finalTotal * 100),
+        receipt: `rcpt_${Date.now()}`,
       }),
     });
 
@@ -129,31 +100,32 @@ export default function CheckoutPage() {
       return false;
     }
 
-    const { payment_session_id, order_id } = await createRes.json();
+    const { order_id, amount, currency, key } = await createRes.json();
 
-    // 2. Open Cashfree checkout
+    // 2. Open Razorpay checkout popup
     return new Promise((resolve) => {
-      const cashfree = new window.Cashfree({ mode: "production" });
-      // For testing, use mode: "sandbox"
-
-      cashfree.checkout({
-        paymentSessionId: payment_session_id,
-        redirectTarget: "_modal",
-        returnUrl: `${window.location.origin}/api/payment/verify?order_id=${order_id}`,
-      }).then(async (result) => {
-        if (result.error) {
-          toast.error(result.error.message || "Payment failed.");
-          resolve(false);
-          return;
-        }
-
-        if (result.paymentDetails) {
-          // Verify server-side and create DB order
+      const options = {
+        key,
+        amount,
+        currency,
+        order_id,
+        name: STORE.name,
+        description: `Order from ${STORE.name}`,
+        prefill: {
+          name: user?.name || selectedAddress?.full_name || "",
+          email: user?.email || "",
+          contact: user?.phone || selectedAddress?.phone || "",
+        },
+        theme: { color: "#4f46e5" },
+        handler: async (response) => {
+          // 3. Verify signature + create DB order
           const verifyRes = await fetch("/api/payment/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              cf_order_id: order_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
               orderPayload: {
                 address: selectedAddress,
                 cartItems,
@@ -171,10 +143,13 @@ export default function CheckoutPage() {
           }
 
           resolve(true);
-        } else {
-          resolve(false);
-        }
-      }).catch(() => resolve(false));
+        },
+        modal: {
+          ondismiss: () => resolve(false),
+        },
+      };
+
+      new window.Razorpay(options).open();
     });
   };
 
@@ -189,13 +164,7 @@ export default function CheckoutPage() {
     setPlacing(true);
 
     try {
-      let success = false;
-
-      if (paymentMethod === "cod") {
-        success = await handleCODOrder();
-      } else {
-        success = await handleCashfreeOrder();
-      }
+      const success = await handleRazorpayOrder();
 
       if (success) {
         await clearCart();
@@ -237,7 +206,7 @@ export default function CheckoutPage() {
 
       <div className="mt-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Checkout</h1>
-        <Button asChild variant="ghost" size="sm" className="text-muted-foreground gap-1.5">
+        <Button asChild variant="ghost" size="sm" className="gap-1.5 text-muted-foreground">
           <Link href="/cart">
             <ArrowLeft className="size-4" />
             Back to Cart
@@ -272,11 +241,9 @@ export default function CheckoutPage() {
             )}
           </SectionCard>
 
-          {/* Step 2: Payment & Delivery */}
-          <SectionCard step={2} title="Delivery & Payment">
-            <CheckoutPaymentSection
-              paymentMethod={paymentMethod}
-              onPaymentChange={setPaymentMethod}
+          {/* Step 2: Delivery Method */}
+          <SectionCard step={2} title="Delivery Method">
+            <CheckoutDeliverySection
               deliveryMethod={deliveryMethod}
               onDeliveryChange={setDeliveryMethod}
               cartSubtotal={cartSubtotal}
@@ -289,11 +256,10 @@ export default function CheckoutPage() {
           <CheckoutOrderSummary
             cartItems={cartItems}
             cartSubtotal={cartSubtotal}
-            paymentMethod={paymentMethod}
             deliveryMethod={deliveryMethod}
           />
 
-          {/* Place order button */}
+          {/* Pay button */}
           <Button
             size="lg"
             className="w-full gap-2 text-base font-semibold"
@@ -301,15 +267,11 @@ export default function CheckoutPage() {
             disabled={placing || !selectedAddress}
           >
             <Lock className="size-4" />
-            {placing
-              ? "Processing..."
-              : paymentMethod === "cod"
-              ? `Place Order — ${formatPrice(finalTotal)}`
-              : `Pay ${formatPrice(finalTotal - codFee)}`}
+            {placing ? "Processing..." : `Pay ${formatPrice(finalTotal)}`}
           </Button>
 
           <p className="text-center text-xs text-muted-foreground">
-            Secure payments powered by Cashfree
+            Secure payments powered by Razorpay
           </p>
         </div>
       </div>

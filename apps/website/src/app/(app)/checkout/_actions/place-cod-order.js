@@ -47,6 +47,7 @@ export async function placeCODOrderAction({
             }
           : null,
         payment_method: "cod",
+        payment_status: "pending",
       })
       .select("id, order_number")
       .single();

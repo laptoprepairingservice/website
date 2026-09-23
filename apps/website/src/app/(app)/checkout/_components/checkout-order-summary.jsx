@@ -89,20 +89,17 @@ function QuantityStepper({ item }) {
  *
  * @param {Array}   cartItems     - Normalized cart items from context
  * @param {number}  cartSubtotal  - Subtotal (sum of item prices)
- * @param {string}  paymentMethod - 'cod' | 'online'
  * @param {string}  deliveryMethod- 'standard' | 'express'
  */
 export function CheckoutOrderSummary({
   cartItems = [],
   cartSubtotal = 0,
-  paymentMethod = "online",
   deliveryMethod = "standard",
 }) {
   const expressFee = 199;
   const standardShipping = cartSubtotal >= STORE.freeShippingThreshold ? 0 : STORE.standardShipping;
   const shipping = deliveryMethod === "express" ? expressFee : standardShipping;
-  const codFee = paymentMethod === "cod" ? STORE.codFee : 0;
-  const total = cartSubtotal + shipping + codFee;
+  const total = cartSubtotal + shipping;
 
   return (
     <div className="border-border bg-card rounded-2xl border">
@@ -162,12 +159,7 @@ export function CheckoutOrderSummary({
             {shipping === 0 ? "Free" : formatPrice(shipping)}
           </span>
         </div>
-        {codFee > 0 && (
-          <div className="text-muted-foreground flex justify-between">
-            <span>COD Fee</span>
-            <span className="text-foreground">{formatPrice(codFee)}</span>
-          </div>
-        )}
+
         <div className="border-border text-foreground flex justify-between border-t pt-3 text-base font-bold">
           <span>Total</span>
           <span>{formatPrice(total)}</span>
