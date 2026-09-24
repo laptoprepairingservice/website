@@ -37,6 +37,28 @@ export function OrganizationJsonLd() {
 }
 
 export function ProductJsonLd({ product }) {
+  if (product.schema_org_jsonld) {
+    const customData =
+      typeof product.schema_org_jsonld === "string"
+        ? (() => {
+            try {
+              return JSON.parse(product.schema_org_jsonld);
+            } catch {
+              return null;
+            }
+          })()
+        : product.schema_org_jsonld;
+
+    if (customData) {
+      return (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(customData) }}
+        />
+      );
+    }
+  }
+
   const data = {
     "@context": "https://schema.org",
     "@type": "Product",

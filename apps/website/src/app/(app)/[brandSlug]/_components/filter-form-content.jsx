@@ -49,10 +49,7 @@ export function FilterFormContent({
     <div className="space-y-0.5">
       {/* 1. Sort By Section */}
       <FilterAccordion title="Sort By" defaultOpen={true}>
-        <Select
-          value={sort || "relevance"}
-          onValueChange={(val) => onFilterChange({ sort: val })}
-        >
+        <Select value={sort || "relevance"} onValueChange={(val) => onFilterChange({ sort: val })}>
           <SelectTrigger className="w-full text-xs">
             <SelectValue placeholder="Sort products" />
           </SelectTrigger>
@@ -68,12 +65,8 @@ export function FilterFormContent({
 
       {/* 2. Brands Section */}
       {brands.length > 0 && (
-        <FilterAccordion
-          title="Brands"
-          defaultOpen={true}
-          badge={activeBrandSlug ? "1" : null}
-        >
-          <div className="max-h-56 space-y-1 overflow-y-auto pr-1">
+        <FilterAccordion title="Brands" defaultOpen={true}>
+          <div className="space-y-1 overflow-y-auto pr-1">
             {brands.map((brand) => {
               const bSlug = (brand.slug || "").toLowerCase();
               const isCurrent = (activeBrandSlug || "").toLowerCase() === bSlug;
@@ -92,9 +85,7 @@ export function FilterFormContent({
                   )}
                 >
                   <span className="truncate">{brand.name}</span>
-                  {isCurrent && (
-                    <span className="bg-primary size-1.5 rounded-full shrink-0" />
-                  )}
+                  {isCurrent && <span className="bg-primary size-1.5 shrink-0 rounded-full" />}
                 </Link>
               );
             })}
@@ -109,7 +100,7 @@ export function FilterFormContent({
           defaultOpen={true}
           badge={activeCategorySlug ? "1" : null}
         >
-          <div className="max-h-56 space-y-1 overflow-y-auto pr-1">
+          <div className="space-y-1 overflow-y-auto pr-1">
             {categories.map((cat) => {
               const cSlug = (cat.slug || "").toLowerCase();
               const isCurrent = (activeCategorySlug || "").toLowerCase() === cSlug;
@@ -134,12 +125,8 @@ export function FilterFormContent({
                 >
                   <span className="truncate">{cat.name}</span>
                   <div className="flex items-center gap-1.5">
-                    {cat.count > 0 && (
-                      <span className="text-[11px] opacity-70">({cat.count})</span>
-                    )}
-                    {isCurrent && (
-                      <span className="bg-primary size-1.5 rounded-full shrink-0" />
-                    )}
+                    {/* {cat.count > 0 && <span className="text-[11px] opacity-70">({cat.count})</span>} */}
+                    {isCurrent && <span className="bg-primary size-1.5 shrink-0 rounded-full" />}
                   </div>
                 </Link>
               );

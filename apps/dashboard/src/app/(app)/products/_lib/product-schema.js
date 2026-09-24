@@ -74,6 +74,7 @@ export const productFormSchema = z
     is_bestseller: z.boolean().default(false),
     meta_title: z.string().trim().optional(),
     meta_description: z.string().trim().optional(),
+    schema_org_jsonld: z.string().trim().optional().nullable(),
     default_variant: defaultVariantSchema,
     assets: z.array(productAssetSchema).default([]),
   })
@@ -122,6 +123,7 @@ export function getProductFormDefaults(overrides = {}) {
     is_bestseller: false,
     meta_title: "",
     meta_description: "",
+    schema_org_jsonld: "",
     default_variant: {
       sku: "",
       barcode: "",

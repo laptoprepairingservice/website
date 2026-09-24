@@ -38,7 +38,7 @@ export default async function HomePage() {
       <MobileCategoryPills categories={categories} />
 
       {/* 3. Bento Category Grid */}
-      <FeaturedCategories categories={categories} />
+      <FeaturedCategories categories={categories} brands={brands} />
 
       {/* 4. Core Value & Trust Propositions */}
       <WhyChooseUs />

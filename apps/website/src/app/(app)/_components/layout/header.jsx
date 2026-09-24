@@ -28,13 +28,14 @@ export function Header({ categories = [] }) {
           <div className="flex min-w-0 items-center gap-1.5 sm:gap-4">
             <MobileNavSheet initialCategories={categories} />
 
-            <Link href="/" className="flex aspect-video min-w-0 items-center gap-2">
+            <Link href="/" className="flex aspect-video min-w-0 items-center">
               <Image
-                src="/logo.png"
+                src="/logo.svg"
                 alt="logo"
-                width={100}
+                width={200}
                 height={100}
-                className="object-contain"
+                priority
+                className="w-28 object-contain md:w-56"
               />
             </Link>
           </div>

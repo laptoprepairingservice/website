@@ -67,6 +67,7 @@ export function mapSupabaseProduct(product) {
           .filter(Boolean)
       : [],
     specs: defaultVariant?.options || {},
+    schema_org_jsonld: product.schema_org_jsonld ?? null,
     variants,
   };
 }

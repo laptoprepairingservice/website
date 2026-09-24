@@ -25,6 +25,16 @@ export function toProductInsertPayload(values) {
     is_bestseller: Boolean(values.is_bestseller),
     meta_title: emptyToNull(values.meta_title?.trim()),
     meta_description: emptyToNull(values.meta_description?.trim()),
+    schema_org_jsonld: values.schema_org_jsonld
+      ? (() => {
+          if (typeof values.schema_org_jsonld === "object") return values.schema_org_jsonld;
+          try {
+            return JSON.parse(values.schema_org_jsonld);
+          } catch {
+            return null;
+          }
+        })()
+      : null,
   };
 }
 
@@ -110,6 +120,11 @@ export function toProductFormValues(product, defaultVariant) {
     is_bestseller: product.is_bestseller ?? false,
     meta_title: product.meta_title ?? "",
     meta_description: product.meta_description ?? "",
+    schema_org_jsonld: product.schema_org_jsonld
+      ? typeof product.schema_org_jsonld === "string"
+        ? product.schema_org_jsonld
+        : JSON.stringify(product.schema_org_jsonld, null, 2)
+      : "",
     default_variant: {
       public_id: variant.public_id || "",
       sku: variant.sku ?? "",

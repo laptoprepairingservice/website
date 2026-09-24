@@ -37,6 +37,7 @@ export async function fetchProductWithDefaultVariant(supabase, identifier) {
     is_bestseller,
     meta_title,
     meta_description,
+    schema_org_jsonld,
     product_variants (
       id,
       public_id,

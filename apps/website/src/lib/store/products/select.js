@@ -14,6 +14,7 @@ export const PRODUCT_DETAIL_SELECT = `
   is_bestseller,
   created_at,
   status,
+  schema_org_jsonld,
   categories (id, name, slug),
   brands (id, name, slug),
   product_variants (
