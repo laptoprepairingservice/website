@@ -36,7 +36,7 @@ export {
 
 // Brand Mappers & Queries
 export { mapSupabaseBrand } from "./brands/mapper";
-export { fetchStoreBrands } from "./brands/queries";
+export { fetchStoreBrands, fetchBrandBySlug } from "./brands/queries";
 
 // Home Data Queries
 export { fetchStoreHomeData } from "./home/queries";

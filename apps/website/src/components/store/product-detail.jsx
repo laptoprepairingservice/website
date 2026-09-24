@@ -1,1 +1,1 @@
-export { ProductDetail } from "@/app/(app)/[categorySlug]/[productSlug]/_components/product-detail";
+export { ProductDetail } from "@/app/(app)/[brandSlug]/[categorySlug]/[productSlug]/_components/product-detail";

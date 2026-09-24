@@ -6,10 +6,17 @@ import { fetchProductBySlug, fetchRelatedProducts } from "@/lib/store";
 export const revalidate = 60;
 
 export default async function ProductDetailPage({ params }) {
-  const { categorySlug, productSlug } = await params;
+  const { brandSlug, categorySlug, productSlug } = await params;
   const product = await fetchProductBySlug(productSlug);
   if (!product) {
     notFound();
+  }
+
+  // Validate brand slug match (case-insensitive) if product has a brand
+  if (product.brandSlug && brandSlug) {
+    if (product.brandSlug.toLowerCase() !== brandSlug.toLowerCase()) {
+      notFound();
+    }
   }
 
   // Validate category slug match (case-insensitive) if product has a category

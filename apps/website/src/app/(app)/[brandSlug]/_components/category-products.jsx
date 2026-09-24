@@ -33,32 +33,39 @@ function ProductGridSkeleton({ columns = 12 }) {
 }
 
 /**
- * Client-side product grid for a category page.
- * Uses the shared List wrapper (which wraps @7span/react-list) for data fetching
- * and pagination. URL-based filters (brand, price, inStock, sort) are applied
- * client-side in the children render prop — matching the existing behaviour.
- *
- * @param {{
- *   categoryId: number,
- *   categorySlug: string,
- *   categoryName: string,
- *   brand: string,
- *   minPrice: string,
- *   maxPrice: string,
- *   inStock: string,
- *   sort: string,
- * }} props
+ * Client-side product grid for Brand and Brand+Category pages.
+ * Uses the shared List wrapper for Supabase querying and pagination.
  */
 export function CategoryProducts({
+  brandId,
+  brandSlug = "",
+  brandName = "",
   categoryId,
-  categorySlug,
-  categoryName,
-  brand = "",
+  categorySlug = "",
+  categoryName = "",
   minPrice = "",
   maxPrice = "",
   inStock = "",
   sort = "relevance",
 }) {
+  // Construct dynamic filters for the List component
+  const listFilters = {
+    status: "active",
+    ...(brandId ? { brand_id: brandId } : {}),
+    ...(categoryId ? { category_id: categoryId } : {}),
+  };
+
+  const metaFilters = {
+    status: { column: "status", operator: "eq" },
+    ...(brandId ? { brand_id: { column: "brand_id", operator: "eq" } } : {}),
+    ...(categoryId ? { category_id: { column: "category_id", operator: "eq" } } : {}),
+  };
+
+  const clearHref = categorySlug ? `/${brandSlug}/${categorySlug}` : `/${brandSlug}`;
+  const pageTitle = categoryName
+    ? `${brandName} ${categoryName}`.trim()
+    : brandName || "Products";
+
   return (
     <List
       endpoint="products"
@@ -69,16 +76,10 @@ export function CategoryProducts({
       showListHeader={false}
       showSearch={false}
       hidePagination={false}
-      filters={{
-        status: "active",
-        category_id: categoryId,
-      }}
+      filters={listFilters}
       meta={{
         select: PRODUCT_CATEGORY_SELECT,
-        filters: {
-          status: { column: "status", operator: "eq" },
-          category_id: { column: "category_id", operator: "eq" },
-        },
+        filters: metaFilters,
       }}
       shimmer={<ProductGridSkeleton />}
     >
@@ -86,19 +87,20 @@ export function CategoryProducts({
         // Map raw rows → normalised product objects
         let products = items.map(mapSupabaseProduct).filter(Boolean);
 
-        // Client-side brand filter
-        if (brand) {
-          const brandList = brand
-            .split(",")
-            .map((s) => s.trim().toLowerCase())
-            .filter(Boolean);
-          if (brandList.length > 0) {
-            products = products.filter((p) => {
-              const bSlug = (p.brandSlug || "").toLowerCase();
-              const bName = (p.brand || "").toLowerCase();
-              return brandList.some((b) => b === bSlug || b === bName);
-            });
-          }
+        // Fallback filter by brandSlug if brandId was not provided
+        if (brandSlug && !brandId) {
+          products = products.filter((p) => {
+            const bSlug = (p.brandSlug || "").toLowerCase();
+            return bSlug === brandSlug.toLowerCase();
+          });
+        }
+
+        // Fallback filter by categorySlug if categoryId was not provided
+        if (categorySlug && !categoryId) {
+          products = products.filter((p) => {
+            const cSlug = (p.category || "").toLowerCase();
+            return cSlug === categorySlug.toLowerCase();
+          });
         }
 
         // Client-side price range filter
@@ -124,7 +126,7 @@ export function CategoryProducts({
             (a, b) => (b.isBestSeller ? 1 : 0) - (a.isBestSeller ? 1 : 0)
           );
         } else if (sort === "newest") {
-          // already ordered by created_at desc from the server
+          // already ordered by created_at desc from server
         }
 
         if (products.length === 0) {
@@ -134,14 +136,14 @@ export function CategoryProducts({
                 <span className="text-xl font-bold">✕</span>
               </div>
               <h2 className="text-foreground mt-4 text-lg font-bold">
-                No products match the selected filters in {categoryName}
+                No products match the selected filters in {pageTitle}
               </h2>
               <p className="text-muted-foreground mx-auto mt-1 max-w-sm text-xs sm:text-sm">
-                Try widening your price range, clearing brand filters, or checking availability.
+                Try widening your price range, clearing filters, or checking availability.
               </p>
               <div className="mt-5">
                 <Button asChild variant="outline" className="rounded-full">
-                  <Link href={`/${categorySlug}`}>Clear Filters</Link>
+                  <Link href={clearHref}>Clear Filters</Link>
                 </Button>
               </div>
             </div>

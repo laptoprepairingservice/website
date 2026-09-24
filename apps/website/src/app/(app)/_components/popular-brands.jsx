@@ -20,7 +20,7 @@ export function PopularBrands({ brands = [] }) {
           {brands.map((brand) => (
             <Link
               key={brand.id || brand.slug}
-              href={`/search?q=${encodeURIComponent(brand.name)}`}
+              href={`/${brand.slug}`}
               className="group flex flex-col items-center justify-center rounded-xl border border-border bg-card p-4 text-center hover:border-foreground/40 transition-colors min-h-[76px]"
             >
               <span className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">

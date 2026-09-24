@@ -6,7 +6,7 @@ import { getProductAssetUrl } from "@/lib/store/storage/product-assets";
 export function mapSupabaseBrand(brand) {
   if (!brand) return null;
   return {
-    id: brand.slug,
+    id: brand.id,
     publicId: brand.public_id,
     name: brand.name,
     slug: brand.slug,

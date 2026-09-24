@@ -9,14 +9,19 @@ import { SORT_OPTIONS } from "./filter-constants";
 import { formatPrice } from "@/lib/format";
 
 /**
- * ActiveFilterChips - Displays active filter chips for brand, price, inStock, sort
+ * ActiveFilterChips - Displays active filter chips for category, price, inStock, sort
  */
-export function ActiveFilterChips({ brands = [], activeCategorySlug = "", className }) {
+export function ActiveFilterChips({
+  brands = [],
+  categories = [],
+  activeBrandSlug = "",
+  activeCategorySlug = "",
+  className,
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const brandParam = searchParams.get("brand");
   const minPrice = searchParams.get("minPrice");
   const maxPrice = searchParams.get("maxPrice");
   const inStock = searchParams.get("inStock");
@@ -25,16 +30,15 @@ export function ActiveFilterChips({ brands = [], activeCategorySlug = "", classN
   const chips = useMemo(() => {
     const list = [];
 
-    // Brands chips
-    if (brandParam) {
-      const slugs = brandParam.split(",").map((s) => s.trim().toLowerCase());
-      slugs.forEach((slug) => {
-        const brandObj = brands.find((b) => (b.slug || "").toLowerCase() === slug);
-        list.push({
-          type: "brand",
-          value: slug,
-          label: brandObj ? brandObj.name : slug,
-        });
+    // Category chip (when filtered to a specific category)
+    if (activeCategorySlug) {
+      const catObj = categories.find(
+        (c) => (c.slug || "").toLowerCase() === activeCategorySlug.toLowerCase()
+      );
+      list.push({
+        type: "category",
+        value: activeCategorySlug,
+        label: `Category: ${catObj ? catObj.name : activeCategorySlug}`,
       });
     }
 
@@ -75,7 +79,7 @@ export function ActiveFilterChips({ brands = [], activeCategorySlug = "", classN
     }
 
     return list;
-  }, [brandParam, minPrice, maxPrice, inStock, sort, brands]);
+  }, [activeCategorySlug, categories, minPrice, maxPrice, inStock, sort]);
 
   if (chips.length === 0) return null;
 
@@ -83,15 +87,14 @@ export function ActiveFilterChips({ brands = [], activeCategorySlug = "", classN
     const params = new URLSearchParams(searchParams.toString());
     params.delete("page");
 
-    if (chip.type === "brand") {
-      const current = (params.get("brand") || "")
-        .split(",")
-        .map((s) => s.trim().toLowerCase())
-        .filter(Boolean);
-      const remaining = current.filter((b) => b !== chip.value);
-      if (remaining.length > 0) params.set("brand", remaining.join(","));
-      else params.delete("brand");
-    } else if (chip.type === "price") {
+    if (chip.type === "category") {
+      // Removing category navigates to /brandSlug with preserved query params
+      const qs = params.toString();
+      router.push(`/${activeBrandSlug}${qs ? `?${qs}` : ""}`, { scroll: false });
+      return;
+    }
+
+    if (chip.type === "price") {
       params.delete("minPrice");
       params.delete("maxPrice");
     } else if (chip.type === "inStock") {
@@ -101,11 +104,12 @@ export function ActiveFilterChips({ brands = [], activeCategorySlug = "", classN
     }
 
     const qs = params.toString();
-    router.push(`${pathname}${qs ? `?${qs}` : ""}`);
+    router.push(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
   };
 
   const clearAllFilters = () => {
-    router.push(pathname);
+    // Reset to base brand URL without category or query params
+    router.push(`/${activeBrandSlug}`, { scroll: false });
   };
 
   return (

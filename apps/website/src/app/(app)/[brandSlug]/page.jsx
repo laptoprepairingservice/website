@@ -1,5 +1,5 @@
 import {
-  fetchCategoryBySlug,
+  fetchBrandBySlug,
   fetchStoreBrands,
   fetchStoreCategoriesWithCount,
 } from "@/lib/store";
@@ -17,40 +17,37 @@ import {
   ActiveFilterChips,
   DesktopProductFilters,
   MobileFilterHeader,
+  CategoryProducts,
 } from "./_components/product-filters";
-import { CategoryProducts } from "./_components/category-products";
 
 export const revalidate = 60;
 
 export async function generateMetadata({ params }) {
-  const { categorySlug } = await params;
-  const category = await fetchCategoryBySlug(categorySlug);
-  if (!category) return { title: "Category Not Found" };
+  const { brandSlug } = await params;
+  const brand = await fetchBrandBySlug(brandSlug);
+  if (!brand) return { title: "Brand Not Found" };
 
   return {
-    title: `${category.name} | Hardware & PC Components`,
-    description: category.description || `Browse ${category.name} and related laptop components.`,
+    title: `${brand.name} Products | Hardware & PC Components`,
+    description:
+      brand.description || `Browse ${brand.name} laptops, components, and hardware.`,
   };
 }
 
-export default async function CategoryPage({ params, searchParams }) {
-  const { categorySlug } = await params;
+export default async function BrandPage({ params, searchParams }) {
+  const { brandSlug } = await params;
   const queryParams = await searchParams;
 
-  // Fetch category data for notFound check + sidebar (categories, brands)
-  const [categoryData, categories, brands] = await Promise.all([
-    fetchCategoryBySlug(categorySlug),
+  const [brandData, categories, brands] = await Promise.all([
+    fetchBrandBySlug(brandSlug),
     fetchStoreCategoriesWithCount(),
     fetchStoreBrands(),
   ]);
 
-  if (!categoryData) {
+  if (!brandData) {
     notFound();
   }
 
-  // Read URL filter params — passed to CategoryProducts so the List re-fetches
-  // when the URL (and therefore server props) change
-  const brand = queryParams?.brand || "";
   const minPrice = queryParams?.minPrice || "";
   const maxPrice = queryParams?.maxPrice || "";
   const inStock = queryParams?.inStock || "";
@@ -68,7 +65,7 @@ export default async function CategoryPage({ params, searchParams }) {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>{categoryData.name}</BreadcrumbPage>
+            <BreadcrumbPage>{brandData.name}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -77,14 +74,20 @@ export default async function CategoryPage({ params, searchParams }) {
       <div className="mt-4 flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h1 className="text-foreground truncate text-xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
-            {categoryData.name}
+            {brandData.name}
           </h1>
+          {brandData.description && (
+            <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
+              {brandData.description}
+            </p>
+          )}
         </div>
 
         <MobileFilterHeader
           categories={categories}
           brands={brands}
-          activeCategorySlug={categorySlug}
+          activeBrandSlug={brandSlug}
+          activeCategorySlug=""
         />
       </div>
 
@@ -94,20 +97,25 @@ export default async function CategoryPage({ params, searchParams }) {
         <DesktopProductFilters
           categories={categories}
           brands={brands}
-          activeCategorySlug={categorySlug}
+          activeBrandSlug={brandSlug}
+          activeCategorySlug=""
         />
 
         {/* Products Section */}
         <div className="w-full min-w-0 flex-1">
           {/* Active Filter Chips Bar */}
-          <ActiveFilterChips brands={brands} activeCategorySlug={categorySlug} />
+          <ActiveFilterChips
+            brands={brands}
+            categories={categories}
+            activeBrandSlug={brandSlug}
+            activeCategorySlug=""
+          />
 
-          {/* Product grid + pagination via List wrapper */}
+          {/* Product grid + pagination */}
           <CategoryProducts
-            categoryId={categoryData.id}
-            categorySlug={categorySlug}
-            categoryName={categoryData.name}
-            brand={brand}
+            brandId={brandData.id}
+            brandSlug={brandSlug}
+            brandName={brandData.name}
             minPrice={minPrice}
             maxPrice={maxPrice}
             inStock={inStock}
