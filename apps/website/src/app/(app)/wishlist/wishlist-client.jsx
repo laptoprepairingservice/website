@@ -6,7 +6,7 @@ import { Heart, ShoppingBag, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@ui/shadcn/components/button";
 import { EmptyState } from "@ui/shadcn/components/empty-state";
-import { ProductGrid } from "@/components/store/product-card";
+import { ProductCard } from "@/components/store/product-card";
 import { useAppContext } from "@/app/_context";
 
 export function WishlistClient({ isAccountView = false }) {
@@ -152,8 +152,10 @@ export function WishlistClient({ isAccountView = false }) {
         </div>
       </div>
 
-      <div className="pt-2">
-        <ProductGrid products={wishlistItems} />
+      <div className="grid grid-cols-2 gap-3 pt-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4">
+        {wishlistItems.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
       </div>
     </div>
   );

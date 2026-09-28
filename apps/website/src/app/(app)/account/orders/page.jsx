@@ -1,5 +1,13 @@
 import Link from "next/link";
-import { Package } from "lucide-react";
+import {
+  Package,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  Truck,
+  XCircle,
+  CircleDot,
+} from "lucide-react";
 import { Badge } from "@ui/shadcn/components/badge";
 import { Button } from "@ui/shadcn/components/button";
 import { EmptyState } from "@ui/shadcn/components/empty-state";
@@ -8,36 +16,153 @@ import { getCurrentUserOrders } from "@/lib/orders";
 
 export const dynamic = "force-dynamic";
 
-const statusVariant = {
-  delivered: "success",
-  shipped: "secondary",
-  pending: "warning",
-  processing: "warning",
-  cancelled: "destructive",
+/* ------------------------------------------------------------------ */
+/* Status config – icon, color, label, and "completion" indicator       */
+/* ------------------------------------------------------------------ */
+const STATUS_CONFIG = {
+  delivered: {
+    icon: CheckCircle2,
+    badgeVariant: "success",
+    label: "Delivered",
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
+    isComplete: true,
+    description: "Order delivered",
+  },
+  shipped: {
+    icon: Truck,
+    badgeVariant: "secondary",
+    label: "Shipped",
+    color: "text-blue-500",
+    bg: "bg-blue-500/10",
+    isComplete: false,
+    description: "On the way",
+  },
+  processing: {
+    icon: CircleDot,
+    badgeVariant: "warning",
+    label: "Processing",
+    color: "text-amber-500",
+    bg: "bg-amber-500/10",
+    isComplete: false,
+    description: "Being prepared",
+  },
+  pending: {
+    icon: Clock,
+    badgeVariant: "warning",
+    label: "Pending",
+    color: "text-amber-500",
+    bg: "bg-amber-500/10",
+    isComplete: false,
+    description: "Awaiting confirmation",
+  },
+  confirmed: {
+    icon: CheckCircle2,
+    badgeVariant: "secondary",
+    label: "Confirmed",
+    color: "text-blue-500",
+    bg: "bg-blue-500/10",
+    isComplete: false,
+    description: "Order confirmed",
+  },
+  cancelled: {
+    icon: XCircle,
+    badgeVariant: "destructive",
+    label: "Cancelled",
+    color: "text-rose-500",
+    bg: "bg-rose-500/10",
+    isComplete: false,
+    description: "Order cancelled",
+  },
 };
+
+function getStatusConfig(status) {
+  return STATUS_CONFIG[status?.toLowerCase()] ?? {
+    icon: Package,
+    badgeVariant: "secondary",
+    label: status || "Unknown",
+    color: "text-muted-foreground",
+    bg: "bg-muted",
+    isComplete: false,
+    description: "",
+  };
+}
+
+/* Pill that shows confirmed vs not complete */
+function CompletionPill({ isComplete, status }) {
+  if (isComplete) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+        <CheckCircle2 className="size-3" />
+        Complete
+      </span>
+    );
+  }
+  if (status?.toLowerCase() === "cancelled") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-0.5 text-xs font-medium text-rose-600 dark:text-rose-400">
+        <XCircle className="size-3" />
+        Cancelled
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+      <Clock className="size-3" />
+      In Progress
+    </span>
+  );
+}
 
 export default async function OrdersPage() {
   const orders = await getCurrentUserOrders();
 
+  const completedCount = orders.filter(
+    (o) => getStatusConfig(o.status).isComplete,
+  ).length;
+  const activeCount = orders.filter(
+    (o) =>
+      !getStatusConfig(o.status).isComplete &&
+      o.status?.toLowerCase() !== "cancelled",
+  ).length;
+
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold md:text-3xl">Orders</h1>
-        <p className="mt-1 text-muted-foreground">
-          {orders.length} {orders.length === 1 ? "order" : "orders"} placed
-        </p>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold md:text-3xl">Orders</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {orders.length} {orders.length === 1 ? "order" : "orders"} placed
+          </p>
+        </div>
+        {orders.length > 0 && (
+          <div className="flex gap-2">
+            {activeCount > 0 && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-center dark:border-amber-900/50 dark:bg-amber-950/30">
+                <p className="text-lg font-semibold text-amber-600 dark:text-amber-400">
+                  {activeCount}
+                </p>
+                <p className="text-xs text-amber-600/70 dark:text-amber-400/70">Active</p>
+              </div>
+            )}
+            {completedCount > 0 && (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-center dark:border-emerald-900/50 dark:bg-emerald-950/30">
+                <p className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">
+                  {completedCount}
+                </p>
+                <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70">Completed</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {orders.length > 0 ? (
-        <div className="overflow-hidden rounded-xl border border-border">
-          <div className="hidden grid-cols-12 gap-4 border-b border-border bg-muted/30 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground md:grid">
-            <div className="col-span-3">Order</div>
-            <div className="col-span-2">Date</div>
-            <div className="col-span-2">Status</div>
-            <div className="col-span-3">Items</div>
-            <div className="col-span-2 text-right">Total</div>
-          </div>
+        <div className="space-y-3">
           {orders.map((order) => {
+            const config = getStatusConfig(order.status);
+            const StatusIcon = config.icon;
             const itemNames = (order.order_items || [])
               .map((i) => i.product_name)
               .filter(Boolean)
@@ -47,28 +172,54 @@ export default async function OrdersPage() {
               <Link
                 key={order.id}
                 href={`/account/orders/${order.order_number || order.id}`}
-                className="grid grid-cols-1 gap-2 border-b border-border px-6 py-4 transition-colors last:border-0 hover:bg-accent/30 md:grid-cols-12 md:items-center md:gap-4"
+                className="group flex flex-col gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/30 hover:bg-accent/40 sm:flex-row sm:items-center sm:gap-4"
               >
-                <div className="font-medium md:col-span-3">
-                  {order.order_number || `Order #${order.id}`}
+                {/* Status Icon */}
+                <div
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${config.bg}`}
+                >
+                  <StatusIcon className={`size-5 ${config.color}`} />
                 </div>
-                <div className="text-sm text-muted-foreground md:col-span-2">
-                  {new Date(order.created_at).toLocaleDateString("en-IN", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
+
+                {/* Order Info */}
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-semibold leading-none">
+                      {order.order_number || `Order #${order.id}`}
+                    </p>
+                    <CompletionPill
+                      isComplete={config.isComplete}
+                      status={order.status}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(order.created_at).toLocaleDateString("en-IN", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                    {" · "}
+                    {order.order_items?.length || 0}{" "}
+                    {order.order_items?.length === 1 ? "item" : "items"}
+                  </p>
+                  {itemNames && (
+                    <p className="line-clamp-1 text-xs text-muted-foreground/70">
+                      {itemNames}
+                    </p>
+                  )}
                 </div>
-                <div className="md:col-span-2">
-                  <Badge variant={statusVariant[order.status?.toLowerCase()] || "secondary"}>
-                    {order.status}
+
+                {/* Right side: badge + amount + arrow */}
+                <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end sm:justify-center">
+                  <Badge variant={config.badgeVariant} className="text-xs shrink-0">
+                    {config.label}
                   </Badge>
-                </div>
-                <div className="line-clamp-1 text-sm text-muted-foreground md:col-span-3">
-                  {itemNames || `${order.order_items?.length || 0} items`}
-                </div>
-                <div className="font-semibold md:col-span-2 md:text-right">
-                  {formatPrice(order.total_amount)}
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold tabular-nums">
+                      {formatPrice(order.total_amount)}
+                    </span>
+                    <ArrowRight className="size-4 text-muted-foreground/50 transition-transform group-hover:translate-x-0.5" />
+                  </div>
                 </div>
               </Link>
             );
