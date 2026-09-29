@@ -290,14 +290,16 @@ export async function fetchCategoryProducts(categorySlug, limit = 20) {
 }
 
 /**
- * Fetches all product slugs from Supabase
+ * Fetches all product slugs from Supabase for sitemap generation.
+ * Returns slug, updated_at, and the joined brand + category slugs
+ * so callers can build canonical URLs: /{brandSlug}/{categorySlug}/{productSlug}
  */
 export async function fetchAllProductSlugs() {
   try {
     const supabase = getPublicSupabaseClient();
     const { data } = await supabase
       .from("products")
-      .select("slug, updated_at, categories(slug)")
+      .select("slug, updated_at, categories(slug), brands(slug)")
       .eq("status", "active");
     return data || [];
   } catch {

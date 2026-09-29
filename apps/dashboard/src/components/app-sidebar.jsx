@@ -19,6 +19,8 @@ import {
   SidebarRail,
 } from "@ui/shadcn/components/sidebar";
 import packageJson from "../../package.json";
+import Image from "next/image";
+import { Package2 } from "lucide-react";
 
 export function AppSidebar({ ...props }) {
   const { user } = useAppContext();
@@ -61,6 +63,12 @@ export function AppSidebar({ ...props }) {
           ],
         },
         {
+          title: "Orders",
+          url: "/orders",
+          icon: Package2,
+          isActive: pathname.startsWith("/orders"),
+        },
+        {
           title: "Users",
           url: "/users",
           icon: Users,
@@ -77,13 +85,9 @@ export function AppSidebar({ ...props }) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/">
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg text-xs font-bold">
-                  RA
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">Ranuja</span>
-                  <span className="truncate text-xs">Admin</span>
+              <Link href="/" className="bg-muted dark:bg-foreground/30">
+                <div className="flex aspect-square size-full items-center justify-center rounded-lg">
+                  <Image src="/logo.svg" alt="Logo" width={300} height={300} />
                 </div>
               </Link>
             </SidebarMenuButton>

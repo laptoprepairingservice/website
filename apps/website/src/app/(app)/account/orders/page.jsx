@@ -1,13 +1,5 @@
 import Link from "next/link";
-import {
-  Package,
-  ArrowRight,
-  CheckCircle2,
-  Clock,
-  Truck,
-  XCircle,
-  CircleDot,
-} from "lucide-react";
+import { Package, ArrowRight, CheckCircle2, Clock, Truck, XCircle, CircleDot } from "lucide-react";
 import { Badge } from "@ui/shadcn/components/badge";
 import { Button } from "@ui/shadcn/components/button";
 import { EmptyState } from "@ui/shadcn/components/empty-state";
@@ -77,22 +69,24 @@ const STATUS_CONFIG = {
 };
 
 function getStatusConfig(status) {
-  return STATUS_CONFIG[status?.toLowerCase()] ?? {
-    icon: Package,
-    badgeVariant: "secondary",
-    label: status || "Unknown",
-    color: "text-muted-foreground",
-    bg: "bg-muted",
-    isComplete: false,
-    description: "",
-  };
+  return (
+    STATUS_CONFIG[status?.toLowerCase()] ?? {
+      icon: Package,
+      badgeVariant: "secondary",
+      label: status || "Unknown",
+      color: "text-muted-foreground",
+      bg: "bg-muted",
+      isComplete: false,
+      description: "",
+    }
+  );
 }
 
 /* Pill that shows confirmed vs not complete */
 function CompletionPill({ isComplete, status }) {
   if (isComplete) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600">
         <CheckCircle2 className="size-3" />
         Complete
       </span>
@@ -100,14 +94,14 @@ function CompletionPill({ isComplete, status }) {
   }
   if (status?.toLowerCase() === "cancelled") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-0.5 text-xs font-medium text-rose-600 dark:text-rose-400">
+      <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-0.5 text-xs font-medium text-rose-600">
         <XCircle className="size-3" />
         Cancelled
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600">
       <Clock className="size-3" />
       In Progress
     </span>
@@ -117,13 +111,9 @@ function CompletionPill({ isComplete, status }) {
 export default async function OrdersPage() {
   const orders = await getCurrentUserOrders();
 
-  const completedCount = orders.filter(
-    (o) => getStatusConfig(o.status).isComplete,
-  ).length;
+  const completedCount = orders.filter((o) => getStatusConfig(o.status).isComplete).length;
   const activeCount = orders.filter(
-    (o) =>
-      !getStatusConfig(o.status).isComplete &&
-      o.status?.toLowerCase() !== "cancelled",
+    (o) => !getStatusConfig(o.status).isComplete && o.status?.toLowerCase() !== "cancelled"
   ).length;
 
   return (
@@ -132,26 +122,22 @@ export default async function OrdersPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold md:text-3xl">Orders</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mt-1 text-sm">
             {orders.length} {orders.length === 1 ? "order" : "orders"} placed
           </p>
         </div>
         {orders.length > 0 && (
           <div className="flex gap-2">
             {activeCount > 0 && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-center dark:border-amber-900/50 dark:bg-amber-950/30">
-                <p className="text-lg font-semibold text-amber-600 dark:text-amber-400">
-                  {activeCount}
-                </p>
-                <p className="text-xs text-amber-600/70 dark:text-amber-400/70">Active</p>
+              <div className="text-cente rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5">
+                <p className="text-lg font-semibold text-amber-600">{activeCount}</p>
+                <p className="text-xs text-amber-600/70">Active</p>
               </div>
             )}
             {completedCount > 0 && (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-center dark:border-emerald-900/50 dark:bg-emerald-950/30">
-                <p className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">
-                  {completedCount}
-                </p>
-                <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70">Completed</p>
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-center">
+                <p className="text-lg font-semibold text-emerald-600">{completedCount}</p>
+                <p className="text-xs text-emerald-600/70">Completed</p>
               </div>
             )}
           </div>
@@ -172,7 +158,7 @@ export default async function OrdersPage() {
               <Link
                 key={order.id}
                 href={`/account/orders/${order.order_number || order.id}`}
-                className="group flex flex-col gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/30 hover:bg-accent/40 sm:flex-row sm:items-center sm:gap-4"
+                className="group border-border bg-card hover:border-primary/30 hover:bg-accent/40 flex flex-col gap-3 rounded-xl border p-4 transition-colors sm:flex-row sm:items-center sm:gap-4"
               >
                 {/* Status Icon */}
                 <div
@@ -184,15 +170,12 @@ export default async function OrdersPage() {
                 {/* Order Info */}
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-semibold leading-none">
+                    <p className="leading-none font-semibold">
                       {order.order_number || `Order #${order.id}`}
                     </p>
-                    <CompletionPill
-                      isComplete={config.isComplete}
-                      status={order.status}
-                    />
+                    <CompletionPill isComplete={config.isComplete} status={order.status} />
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {new Date(order.created_at).toLocaleDateString("en-IN", {
                       month: "short",
                       day: "numeric",
@@ -203,22 +186,20 @@ export default async function OrdersPage() {
                     {order.order_items?.length === 1 ? "item" : "items"}
                   </p>
                   {itemNames && (
-                    <p className="line-clamp-1 text-xs text-muted-foreground/70">
-                      {itemNames}
-                    </p>
+                    <p className="text-muted-foreground/70 line-clamp-1 text-xs">{itemNames}</p>
                   )}
                 </div>
 
                 {/* Right side: badge + amount + arrow */}
                 <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end sm:justify-center">
-                  <Badge variant={config.badgeVariant} className="text-xs shrink-0">
+                  <Badge variant={config.badgeVariant} className="shrink-0 text-xs">
                     {config.label}
                   </Badge>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold tabular-nums">
                       {formatPrice(order.total_amount)}
                     </span>
-                    <ArrowRight className="size-4 text-muted-foreground/50 transition-transform group-hover:translate-x-0.5" />
+                    <ArrowRight className="text-muted-foreground/50 size-4 transition-transform group-hover:translate-x-0.5" />
                   </div>
                 </div>
               </Link>

@@ -26,6 +26,10 @@ export const metadata = {
   },
   description:
     "We are currently building something amazing. Genuine laptop repairing services, computer hardware, and spare parts in Ahmedabad.",
+  icons: {
+    icon: "/logo.svg",
+    apple: "/logo.svg",
+  },
   robots: {
     index: false,
     follow: false,

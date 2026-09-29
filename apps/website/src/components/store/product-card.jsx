@@ -186,7 +186,7 @@ export function ProductCard({ product, className }) {
             <span
               className={cn(
                 "shrink-0 text-[11px] font-medium",
-                product.inStock ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500"
+                product.inStock ? "text-emerald-600" : "text-rose-500"
               )}
             >
               {product.inStock ? "In Stock" : "Out of Stock"}
@@ -216,7 +216,7 @@ export function ProductCard({ product, className }) {
             </div>
 
             {savings > 0 && (
-              <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+              <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 text-[11px] font-medium text-emerald-600">
                 Save {formatPrice(savings)}
               </span>
             )}
@@ -293,10 +293,10 @@ export function ProductGrid({ products = [], className, showNavigation = false }
             spaceBetween: 24,
           },
         }}
-        className="!overflow-visible"
+        className="overflow-visible!"
       >
         {products.map((product) => (
-          <SwiperSlide key={product.id} className="!h-auto">
+          <SwiperSlide key={product.id} className="h-auto!">
             <ProductCard product={product} />
           </SwiperSlide>
         ))}
