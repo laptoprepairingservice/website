@@ -8,6 +8,7 @@ import Link from "next/link";
 import { AnnouncementBar } from "../announcement-bar";
 
 import { MobileNavSheet } from "./mobile-nav-sheet";
+import { DesktopNav } from "./desktop-nav";
 import { SearchCombobox } from "./search-combobox";
 import Image from "next/image";
 
@@ -40,8 +41,11 @@ export function Header({ categories = [] }) {
             </Link>
           </div>
 
+          {/* Desktop primary navigation — mega-menu for Products */}
+          <DesktopNav categories={categories} />
+
           {/* Desktop search combobox */}
-          <SearchCombobox className="hidden max-w-xl flex-1 px-4 md:block" />
+          <SearchCombobox className="hidden max-w-sm flex-1 px-2 md:block" />
 
           {/* Right side */}
           <div className="flex shrink-0 items-center gap-1 sm:gap-2">
