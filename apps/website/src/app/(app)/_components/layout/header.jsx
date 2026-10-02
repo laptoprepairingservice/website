@@ -79,7 +79,7 @@ export function Header({ categories = [] }) {
 
             <Button
               variant="outline"
-              size="icon"
+              size={isSignedIn ? "icon" : "default"}
               className="hidden rounded-full sm:inline-flex"
               asChild
             >

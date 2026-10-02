@@ -63,6 +63,35 @@ export function AppProvider({
 
   const isAuthenticated = Boolean(user && !user.isGuest);
 
+  // Sync state if root layout re-renders with fresh user / cart / wishlist props
+  const [prevUser, setPrevUser] = useState(initialUser);
+  if (initialUser !== prevUser) {
+    setPrevUser(initialUser);
+    setUser(initialUser);
+  }
+
+  const [prevCart, setPrevCart] = useState(initialCart);
+  if (initialCart !== prevCart) {
+    setPrevCart(initialCart);
+    if (initialCart) {
+      setUserCart({
+        id: initialCart.id ?? null,
+        items: initialCart.items ?? [],
+      });
+    }
+  }
+
+  const [prevWishlist, setPrevWishlist] = useState(initialWishlist);
+  if (initialWishlist !== prevWishlist) {
+    setPrevWishlist(initialWishlist);
+    if (initialWishlist) {
+      setUserWishlist({
+        id: initialWishlist.id ?? null,
+        items: initialWishlist.items ?? [],
+      });
+    }
+  }
+
   /*
    * Load guest cart / sync cart and load wishlist after authentication.
    */

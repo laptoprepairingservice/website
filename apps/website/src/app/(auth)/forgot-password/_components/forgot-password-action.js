@@ -1,8 +1,7 @@
 "use server";
 
-import { z } from "zod";
-import { getAppUrl } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod";
 
 const emailSchema = z.object({
   email: z.string().trim().email("Enter a valid email"),
@@ -14,17 +13,23 @@ export async function forgotPasswordAction(formData) {
   });
 
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message || "Please check the form and try again." };
+    return {
+      error: parsed.error.issues[0]?.message || "Please check the form and try again.",
+    };
   }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: `${getAppUrl()}/auth/confirm?next=${encodeURIComponent("/reset-password")}`,
+    redirectTo: `${process.env.AUTH_URL}/reset-password`,
   });
 
   if (error) {
-    return { error: error.message };
+    return {
+      error: error.message,
+    };
   }
 
-  return { success: true };
+  return {
+    success: true,
+  };
 }

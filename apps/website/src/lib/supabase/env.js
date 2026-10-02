@@ -16,5 +16,5 @@ export function getSupabaseAnonKey() {
 }
 
 export function getAppUrl() {
-  return process.env.AUTH_URL || process.env.NEXTAUTH_URL;
+  return process.env.AUTH_URL;
 }

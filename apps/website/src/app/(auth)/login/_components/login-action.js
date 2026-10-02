@@ -34,12 +34,16 @@ export async function loginAction(formData) {
     return { error: "Invalid email or password." };
   }
 
+  const nextPath = getSafeNextPath(formData.get("next"));
+
   try {
     await signIn("credentials", {
       email: parsed.data.email,
       password: parsed.data.password,
-      redirectTo: getSafeNextPath(formData.get("next")),
+      redirect: false,
     });
+
+    return { success: true, redirectTo: nextPath };
   } catch (signInError) {
     if (signInError instanceof AuthError) {
       const cause = signInError.cause?.err?.message || signInError.cause?.message || "";
@@ -47,6 +51,9 @@ export async function loginAction(formData) {
         return { error: "Please verify your email before signing in." };
       }
       return { error: "Invalid email or password." };
+    }
+    if (signInError?.digest?.startsWith?.("NEXT_REDIRECT")) {
+      return { success: true, redirectTo: nextPath };
     }
     throw signInError;
   }

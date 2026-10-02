@@ -25,6 +25,11 @@ export default function LoginForm() {
     if (result?.error) {
       setError(result.error);
       setPending(false);
+      return;
+    }
+
+    if (result?.success) {
+      window.location.href = result.redirectTo || nextPath || "/";
     }
   };
 
