@@ -327,3 +327,35 @@ export async function fetchAllProductSlugs() {
     return [];
   }
 }
+
+/**
+ * Fetches best-selling active products for storefront sections.
+ * Prioritizes is_bestseller = true, then is_featured, then latest created.
+ *
+ * @param {{ limit?: number }} [options]
+ * @returns {Promise<object[]>}
+ */
+export async function fetchBestSellerProducts({ limit = 4 } = {}) {
+  try {
+    const supabase = getPublicSupabaseClient();
+    const { data, error } = await supabase
+      .from("products")
+      .select(PRODUCT_DETAIL_SELECT)
+      .eq("status", "active")
+      .order("is_bestseller", { ascending: false })
+      .order("is_featured", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error("Error fetching best seller products:", error);
+      return [];
+    }
+
+    return (data || []).map(mapSupabaseProduct).filter(Boolean);
+  } catch (err) {
+    console.error("Failed to fetch best seller products:", err);
+    return [];
+  }
+}
+

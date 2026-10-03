@@ -47,6 +47,7 @@ export function CategoryProducts({
   maxPrice = "",
   inStock = "",
   sort = "relevance",
+  clearHref: customClearHref,
 }) {
   // Construct dynamic filters for the List component
   const listFilters = {
@@ -61,7 +62,15 @@ export function CategoryProducts({
     ...(categoryId ? { category_id: { column: "category_id", operator: "eq" } } : {}),
   };
 
-  const clearHref = categorySlug ? `/${brandSlug}/${categorySlug}` : `/${brandSlug}`;
+  const clearHref =
+    customClearHref ||
+    (brandSlug
+      ? categorySlug
+        ? `/${brandSlug}/${categorySlug}`
+        : `/${brandSlug}`
+      : categorySlug
+        ? `/collection/${categorySlug}`
+        : "/collection");
   const pageTitle = categoryName
     ? `${brandName} ${categoryName}`.trim()
     : brandName || "Products";

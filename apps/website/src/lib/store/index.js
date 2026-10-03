@@ -16,6 +16,7 @@ export {
 export { mapSupabaseProduct } from "./products/mapper";
 export {
   fetchAllProductSlugs,
+  fetchBestSellerProducts,
   fetchCategoryProducts,
   fetchProductBySlug,
   fetchRelatedProducts,
@@ -32,6 +33,7 @@ export {
   fetchStoreCategories,
   fetchStoreCategoriesWithCount,
   fetchStoreCategoryTree,
+  fetchStoreNavCategoriesWithBrands,
 } from "./categories/queries";
 
 // Brand Mappers & Queries

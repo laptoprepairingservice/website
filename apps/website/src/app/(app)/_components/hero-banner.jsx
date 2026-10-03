@@ -139,7 +139,10 @@ export function HeroBanner({ categories = [] }) {
                         asChild
                         className="group shadow-primary/20 hover:shadow-primary/35 cursor-pointer rounded-xl font-semibold shadow-lg transition-all hover:scale-[1.02]"
                       >
-                        <Link href={`/${category.slug}`} className="flex items-center gap-2">
+                        <Link
+                          href={`/collection/${category.slug}`}
+                          className="flex items-center gap-2"
+                        >
                           <span>Explore {category.name}</span>
                           <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                         </Link>

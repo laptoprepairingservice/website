@@ -16,7 +16,7 @@ function CategoryCard({ category, variant = "md" }) {
 
   return (
     <Link
-      href={`/${category.slug}`}
+      href={`/collection/${category.slug}`}
       className={cn(
         "group relative block h-full w-full overflow-hidden rounded-2xl",
         "ring-border/50 ring-1",

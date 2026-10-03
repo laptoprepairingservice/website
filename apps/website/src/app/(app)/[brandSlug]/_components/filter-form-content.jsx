@@ -32,6 +32,7 @@ export function FilterFormContent({
   onPresetPrice = () => {},
   idPrefix = "f",
   onNavigate,
+  routeMode = "brand",
 }) {
   const searchParams = useSearchParams();
 
@@ -65,12 +66,26 @@ export function FilterFormContent({
 
       {/* 2. Brands Section */}
       {brands.length > 0 && (
-        <FilterAccordion title="Brands" defaultOpen={true}>
+        <FilterAccordion title="Brands" defaultOpen={true} badge={activeBrandSlug ? "1" : null}>
           <div className="space-y-1 overflow-y-auto pr-1">
             {brands.map((brand) => {
               const bSlug = (brand.slug || "").toLowerCase();
               const isCurrent = (activeBrandSlug || "").toLowerCase() === bSlug;
-              const href = `/${brand.slug}${currentQs}`;
+              let href = `/${brand.slug}${currentQs}`;
+
+              if (routeMode === "collection") {
+                if (isCurrent) {
+                  // Toggle brand off -> stay on category collection
+                  href = activeCategorySlug
+                    ? `/collection/${activeCategorySlug}${currentQs}`
+                    : `/collection${currentQs}`;
+                } else {
+                  // Filter to this brand in active category
+                  href = activeCategorySlug
+                    ? `/collection/${activeCategorySlug}/${brand.slug}${currentQs}`
+                    : `/collection/${brand.slug}${currentQs}`;
+                }
+              }
 
               return (
                 <Link
@@ -105,11 +120,20 @@ export function FilterFormContent({
               const cSlug = (cat.slug || "").toLowerCase();
               const isCurrent = (activeCategorySlug || "").toLowerCase() === cSlug;
 
-              // If clicked on current active category, toggle off and go to /brandSlug
-              // Otherwise, go to /brandSlug/categorySlug
-              const href = isCurrent
+              let href = isCurrent
                 ? `/${activeBrandSlug}${currentQs}`
                 : `/${activeBrandSlug}/${cat.slug}${currentQs}`;
+
+              if (routeMode === "collection") {
+                if (isCurrent) {
+                  // Toggle category off -> back to root collections
+                  href = `/collection${currentQs}`;
+                } else {
+                  href = activeBrandSlug
+                    ? `/collection/${cat.slug}/${activeBrandSlug}${currentQs}`
+                    : `/collection/${cat.slug}${currentQs}`;
+                }
+              }
 
               return (
                 <Link

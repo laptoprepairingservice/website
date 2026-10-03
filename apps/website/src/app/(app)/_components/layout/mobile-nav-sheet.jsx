@@ -5,12 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowRight,
   ChevronRight,
   Heart,
   Home,
   Laptop,
-  Layers,
   Menu,
   NotepadText,
   PackageOpen,
@@ -30,7 +28,6 @@ import {
   SheetTrigger,
 } from "@ui/shadcn/components/sheet";
 import { useAppContext } from "@/app/_context";
-import { buildCategoryTree } from "@/lib/store";
 import { getUserShortName } from "@/lib/utils";
 import { getNavCategoriesAction } from "../../_actions/mobile-nav-actions";
 
@@ -39,54 +36,37 @@ export function MobileNavSheet({ initialCategories = [] }) {
   const { user, cartCount, wishlistCount } = useAppContext();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [rawCategories, setRawCategories] = useState(initialCategories);
+  const [fetchedCategories, setFetchedCategories] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategoryId, setActiveCategoryId] = useState(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
 
   const isSignedIn = Boolean(user && !user.isGuest);
   const accountHref = isSignedIn ? "/account" : "/login";
   const accountLabel = isSignedIn ? getUserShortName(user) : "Login";
 
-  // Organize categories into a 1-level deep tree (Main Category -> Sub-categories)
-  const categoryTree = useMemo(() => {
-    return buildCategoryTree(rawCategories);
-  }, [rawCategories]);
-
-  // Sync active category ID with first available category
-  useEffect(() => {
-    if (categoryTree.length > 0 && !activeCategoryId) {
-      setActiveCategoryId(categoryTree[0].id);
-    }
-  }, [categoryTree, activeCategoryId]);
+  const categories = initialCategories.length > 0 ? initialCategories : fetchedCategories;
+  const activeCategoryId = selectedCategoryId ?? categories[0]?.id ?? null;
 
   // Load categories if initial categories were empty
   useEffect(() => {
-    if (isOpen && rawCategories.length === 0) {
+    if (isOpen && initialCategories.length === 0 && fetchedCategories.length === 0) {
       getNavCategoriesAction().then((data) => {
-        if (Array.isArray(data)) {
-          setRawCategories(data);
-          if (data.length > 0 && !activeCategoryId) {
-            setActiveCategoryId(data[0].id);
-          }
+        if (Array.isArray(data) && data.length > 0) {
+          setFetchedCategories(data);
         }
       });
     }
-  }, [isOpen, rawCategories.length, activeCategoryId]);
-
-  // Sync if initialCategories updates
-  useEffect(() => {
-    if (initialCategories.length > 0 && rawCategories.length === 0) {
-      setRawCategories(initialCategories);
-      if (!activeCategoryId) {
-        setActiveCategoryId(initialCategories[0].id);
-      }
-    }
-  }, [initialCategories, rawCategories.length, activeCategoryId]);
+  }, [isOpen, initialCategories.length, fetchedCategories.length]);
 
   const activeCategory = useMemo(() => {
-    if (!categoryTree.length) return null;
-    return categoryTree.find((c) => String(c.id) === String(activeCategoryId)) || categoryTree[0];
-  }, [categoryTree, activeCategoryId]);
+    if (!categories.length) return null;
+    return categories.find((c) => String(c.id) === String(activeCategoryId)) || categories[0];
+  }, [categories, activeCategoryId]);
+
+  const activeBrands = useMemo(() => {
+    if (!activeCategory || !Array.isArray(activeCategory.brands)) return [];
+    return activeCategory.brands;
+  }, [activeCategory]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -98,11 +78,6 @@ export function MobileNavSheet({ initialCategories = [] }) {
   const handleNavigate = () => {
     setIsOpen(false);
   };
-
-  const activeSubcategories = useMemo(() => {
-    if (!activeCategory || !Array.isArray(activeCategory.subcategories)) return [];
-    return activeCategory.subcategories;
-  }, [activeCategory]);
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -124,7 +99,7 @@ export function MobileNavSheet({ initialCategories = [] }) {
       >
         <SheetTitle className="sr-only">Mobile Navigation</SheetTitle>
         <SheetDescription className="sr-only">
-          Browse hardware categories and sub-categories
+          Browse hardware categories and available product brands
         </SheetDescription>
 
         {/* 1. Sheet Header: Store Branding + Search + Close */}
@@ -166,29 +141,29 @@ export function MobileNavSheet({ initialCategories = [] }) {
           </form>
         </div>
 
-        {/* 2. Scrollable Body: Two-Section Split View (Main Categories on Left, Subcategories on Right) */}
+        {/* 2. Scrollable Body: Two-Section Split View (Categories on Left, Available Brands on Right) */}
         <div className="flex min-h-0 flex-1 overflow-hidden">
-          {/* LEFT SECTION: Main Categories */}
+          {/* LEFT SECTION: Categories */}
           <div className="border-border bg-muted/20 flex w-24 shrink-0 flex-col overflow-y-auto border-r sm:w-28">
-            {/* Main Categories Header */}
+            {/* Categories Header */}
             <div className="px-2 pt-2.5 pb-1 text-center">
               <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
                 Categories
               </span>
             </div>
 
-            {/* Main Categories Navigation List */}
+            {/* Categories Navigation List */}
             <div className="flex-1 space-y-1.5 p-1.5">
-              {categoryTree.map((cat) => {
+              {categories.map((cat) => {
                 const isSelected = activeCategory?.id === cat.id;
 
                 return (
                   <button
                     key={cat.id || cat.slug}
                     type="button"
-                    onMouseEnter={() => setActiveCategoryId(cat.id)}
-                    onFocus={() => setActiveCategoryId(cat.id)}
-                    onClick={() => setActiveCategoryId(cat.id)}
+                    onMouseEnter={() => setSelectedCategoryId(cat.id)}
+                    onFocus={() => setSelectedCategoryId(cat.id)}
+                    onClick={() => setSelectedCategoryId(cat.id)}
                     className={`group relative flex w-full cursor-pointer flex-col items-center justify-center rounded-xl p-2 text-center transition-all ${
                       isSelected
                         ? "bg-card text-foreground border-border/80 border font-semibold shadow-xs"
@@ -237,7 +212,7 @@ export function MobileNavSheet({ initialCategories = [] }) {
             </div>
           </div>
 
-          {/* RIGHT SECTION: Sub-Categories of Hovered / Selected Category */}
+          {/* RIGHT SECTION: Available Brands of Selected Category */}
           <div className="bg-background flex min-w-0 flex-1 flex-col overflow-y-auto">
             {activeCategory ? (
               <div className="space-y-4 p-3.5 sm:p-4">
@@ -271,101 +246,81 @@ export function MobileNavSheet({ initialCategories = [] }) {
                       </div>
                     </div>
 
-                    {/* View All Parent Category Products */}
-                    <Link
-                      href={`/${activeCategory.slug}`}
-                      onClick={handleNavigate}
-                      className="bg-primary/10 hover:bg-primary/20 text-primary flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition-colors"
-                    >
-                      <span>View All</span>
-                      <ArrowRight className="size-3" />
-                    </Link>
+                    <span className="text-muted-foreground/80 bg-muted/40 border-border/80 shrink-0 rounded-md border px-2 py-0.5 text-[10px] font-medium">
+                      {activeBrands.length} {activeBrands.length === 1 ? "Brand" : "Brands"}
+                    </span>
                   </div>
                 </div>
 
-                {/* Sub-categories Section */}
+                {/* Available Brands Section */}
                 <div>
                   <div className="flex items-center justify-between pb-2">
                     <h4 className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
-                      Sub-Categories
+                      Available Brands
                     </h4>
                     <span className="text-muted-foreground text-[11px]">
-                      {activeSubcategories.length}{" "}
-                      {activeSubcategories.length === 1 ? "item" : "items"}
+                      {activeBrands.length}{" "}
+                      {activeBrands.length === 1 ? "brand" : "brands"}
                     </span>
                   </div>
 
-                  {activeSubcategories.length > 0 ? (
+                  {activeBrands.length > 0 ? (
                     <div className="grid grid-cols-1 gap-1.5">
-                      {activeSubcategories.map((sub) => (
+                      {activeBrands.map((brand) => (
                         <Link
-                          key={sub.id || sub.slug}
-                          href={`/${sub.slug}`}
+                          key={brand.id || brand.slug}
+                          href={`/${brand.slug}/${activeCategory.slug}`}
                           onClick={handleNavigate}
                           className="border-border/60 bg-card/60 hover:bg-muted/50 hover:border-primary/40 group flex items-center justify-between rounded-xl border p-2.5 text-xs transition-all"
                         >
                           <div className="flex min-w-0 items-center gap-2.5">
-                            {/* Subcategory Icon/Image */}
-                            <div className="border-border/50 bg-muted/20 relative flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-md border">
-                              {sub.image ? (
+                            {/* Brand Logo / Icon */}
+                            <div className="border-border/50 bg-background relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border p-1 shadow-2xs group-hover:scale-105 transition-transform">
+                              {brand.logo ? (
                                 <Image
-                                  src={sub.image}
-                                  alt={sub.name}
+                                  src={brand.logo}
+                                  alt={brand.name}
                                   fill
                                   unoptimized
-                                  sizes="28px"
+                                  sizes="32px"
                                   className="object-contain p-0.5"
                                 />
                               ) : (
-                                <span className="bg-primary/70 size-1.5 rounded-full" />
+                                <span className="text-muted-foreground text-[11px] font-bold">
+                                  {brand.name.slice(0, 2).toUpperCase()}
+                                </span>
                               )}
                             </div>
 
-                            <span className="text-foreground group-hover:text-primary truncate font-medium transition-colors">
-                              {sub.name}
+                            <span className="text-foreground group-hover:text-primary truncate font-semibold transition-colors">
+                              {brand.name}
                             </span>
                           </div>
 
                           <div className="text-muted-foreground flex shrink-0 items-center gap-1.5 text-[11px]">
-                            {sub.count > 0 && (
-                              <span className="text-muted-foreground/80 font-normal">
-                                {sub.count} {sub.count === 1 ? "item" : "items"}
-                              </span>
-                            )}
+                            <span className="text-muted-foreground/80 font-normal">
+                              {brand.productCount} {brand.productCount === 1 ? "item" : "items"}
+                            </span>
                             <ChevronRight className="text-muted-foreground/60 group-hover:text-primary size-3.5 transition-all group-hover:translate-x-0.5" />
                           </div>
                         </Link>
                       ))}
                     </div>
                   ) : (
-                    /* Empty Sub-categories State */
+                    /* Empty Brands State */
                     <div className="border-border rounded-xl border border-dashed p-6 text-center">
                       <PackageOpen className="text-muted-foreground/40 mx-auto mb-2 size-8" />
-                      <p className="text-foreground text-xs font-semibold">No sub-categories</p>
-                      <p className="text-muted-foreground mt-0.5 mb-3 text-[11px]">
-                        All products are listed directly under {activeCategory.name}.
+                      <p className="text-foreground text-xs font-semibold">No brands available</p>
+                      <p className="text-muted-foreground mt-0.5 text-[11px]">
+                        There are currently no active products in {activeCategory.name}.
                       </p>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="w-full cursor-pointer text-xs font-medium"
-                        asChild
-                      >
-                        <Link
-                          href={`/${activeCategory.slug}`}
-                          onClick={handleNavigate}
-                        >
-                          <span>Browse {activeCategory.name}</span>
-                          <ArrowRight className="ml-1 size-3.5" />
-                        </Link>
-                      </Button>
                     </div>
                   )}
                 </div>
               </div>
             ) : (
               <div className="text-muted-foreground flex h-full items-center justify-center p-6 text-center text-xs">
-                Hover over a category on the left to view sub-categories.
+                Select a category on the left to view available brands.
               </div>
             )}
           </div>

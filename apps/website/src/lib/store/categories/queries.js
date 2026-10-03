@@ -1,4 +1,5 @@
 import { getPublicSupabaseClient } from "@/lib/store/client";
+import { getProductAssetUrl } from "@/lib/store/storage/product-assets";
 import { mapSupabaseCategory } from "./mapper";
 
 /**
@@ -133,9 +134,101 @@ export function buildCategoryTree(categories = []) {
 }
 
 /**
- * Fetches all active categories organized into a 1-level deep tree hierarchy.
+ * Fetches all active categories along with the available brands that have at least one active product.
+ * Returns categories each containing a `brands` array with brand details and product count.
+ */
+export async function fetchStoreNavCategoriesWithBrands() {
+  try {
+    const supabase = getPublicSupabaseClient();
+    const [categoriesRes, productsRes] = await Promise.all([
+      supabase
+        .from("categories")
+        .select("id, public_id, parent_id, name, slug, image_path, is_active, sort_order")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true })
+        .order("name", { ascending: true }),
+      supabase
+        .from("products")
+        .select(`
+          id,
+          name,
+          slug,
+          category_id,
+          brand_id,
+          brands:brand_id (
+            id,
+            public_id,
+            name,
+            slug,
+            logo_path,
+            is_active
+          )
+        `)
+        .eq("status", "active")
+        .not("brand_id", "is", null)
+        .not("category_id", "is", null),
+    ]);
+
+    if (categoriesRes.error) {
+      console.error("fetchStoreNavCategoriesWithBrands categories error:", categoriesRes.error);
+      return [];
+    }
+
+    // Map active products to (category_id -> brands with count)
+    const categoryBrandMap = new Map();
+    const categoryProductCounts = new Map();
+
+    (productsRes.data || []).forEach((p) => {
+      const catId = p.category_id;
+      const brand = p.brands;
+      if (!catId || !brand || brand.is_active === false) return;
+
+      categoryProductCounts.set(catId, (categoryProductCounts.get(catId) || 0) + 1);
+
+      if (!categoryBrandMap.has(catId)) {
+        categoryBrandMap.set(catId, new Map());
+      }
+      const bMap = categoryBrandMap.get(catId);
+      if (!bMap.has(brand.id)) {
+        bMap.set(brand.id, {
+          id: brand.id,
+          publicId: brand.public_id,
+          name: brand.name,
+          slug: brand.slug,
+          logo: getProductAssetUrl(brand.logo_path),
+          productCount: 1,
+        });
+      } else {
+        bMap.get(brand.id).productCount += 1;
+      }
+    });
+
+    const mappedCategories = (categoriesRes.data || []).map((cat) => {
+      const totalCount = categoryProductCounts.get(cat.id) || 0;
+      const mapped = mapSupabaseCategory(cat, totalCount);
+      const bMap = categoryBrandMap.get(cat.id);
+      const brands = bMap
+        ? Array.from(bMap.values()).sort(
+            (a, b) => b.productCount - a.productCount || a.name.localeCompare(b.name)
+          )
+        : [];
+
+      return {
+        ...mapped,
+        brands,
+      };
+    });
+
+    return mappedCategories;
+  } catch (err) {
+    console.error("fetchStoreNavCategoriesWithBrands error:", err);
+    return [];
+  }
+}
+
+/**
+ * Fetches all active categories organized into navigation categories with their available brands.
  */
 export async function fetchStoreCategoryTree() {
-  const flatCategories = await fetchStoreCategoriesWithCount();
-  return buildCategoryTree(flatCategories);
+  return fetchStoreNavCategoriesWithBrands();
 }

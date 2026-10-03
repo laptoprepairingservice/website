@@ -16,6 +16,7 @@ export function ActiveFilterChips({
   categories = [],
   activeBrandSlug = "",
   activeCategorySlug = "",
+  routeMode = "brand",
   className,
 }) {
   const router = useRouter();
@@ -39,6 +40,18 @@ export function ActiveFilterChips({
         type: "category",
         value: activeCategorySlug,
         label: `Category: ${catObj ? catObj.name : activeCategorySlug}`,
+      });
+    }
+
+    // Brand chip (when in collection mode and filtered to a brand)
+    if (routeMode === "collection" && activeBrandSlug) {
+      const brandObj = brands.find(
+        (b) => (b.slug || "").toLowerCase() === activeBrandSlug.toLowerCase()
+      );
+      list.push({
+        type: "brand",
+        value: activeBrandSlug,
+        label: `Brand: ${brandObj ? brandObj.name : activeBrandSlug}`,
       });
     }
 
@@ -79,7 +92,7 @@ export function ActiveFilterChips({
     }
 
     return list;
-  }, [activeCategorySlug, categories, minPrice, maxPrice, inStock, sort]);
+  }, [activeCategorySlug, activeBrandSlug, routeMode, categories, brands, minPrice, maxPrice, inStock, sort]);
 
   if (chips.length === 0) return null;
 
@@ -87,10 +100,19 @@ export function ActiveFilterChips({
     const params = new URLSearchParams(searchParams.toString());
     params.delete("page");
 
-    if (chip.type === "category") {
-      // Removing category navigates to /brandSlug with preserved query params
+    if (chip.type === "brand" && routeMode === "collection") {
       const qs = params.toString();
-      router.push(`/${activeBrandSlug}${qs ? `?${qs}` : ""}`, { scroll: false });
+      router.push(`/collection/${activeCategorySlug}${qs ? `?${qs}` : ""}`, { scroll: false });
+      return;
+    }
+
+    if (chip.type === "category") {
+      const qs = params.toString();
+      if (routeMode === "collection") {
+        router.push(`/collection${qs ? `?${qs}` : ""}`, { scroll: false });
+      } else {
+        router.push(`/${activeBrandSlug}${qs ? `?${qs}` : ""}`, { scroll: false });
+      }
       return;
     }
 
@@ -108,8 +130,14 @@ export function ActiveFilterChips({
   };
 
   const clearAllFilters = () => {
-    // Reset to base brand URL without category or query params
-    router.push(`/${activeBrandSlug}`, { scroll: false });
+    if (routeMode === "collection") {
+      const basePath = activeCategorySlug
+        ? (activeBrandSlug ? `/collection/${activeCategorySlug}/${activeBrandSlug}` : `/collection/${activeCategorySlug}`)
+        : "/collection";
+      router.push(basePath, { scroll: false });
+    } else {
+      router.push(`/${activeBrandSlug}`, { scroll: false });
+    }
   };
 
   return (

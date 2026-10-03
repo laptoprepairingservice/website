@@ -25,6 +25,7 @@ export function MobileFilterHeader({
   brands = [],
   activeBrandSlug = "",
   activeCategorySlug = "",
+  routeMode = "brand",
   className,
 }) {
   const router = useRouter();
@@ -41,14 +42,17 @@ export function MobileFilterHeader({
   // Local state for debounced Min/Max price inputs
   const [minPriceInput, setMinPriceInput] = useState(minPriceParam);
   const [maxPriceInput, setMaxPriceInput] = useState(maxPriceParam);
+  const [prevMinParam, setPrevMinParam] = useState(minPriceParam);
+  const [prevMaxParam, setPrevMaxParam] = useState(maxPriceParam);
 
-  useEffect(() => {
+  if (prevMinParam !== minPriceParam) {
+    setPrevMinParam(minPriceParam);
     setMinPriceInput(minPriceParam);
-  }, [minPriceParam]);
-
-  useEffect(() => {
+  }
+  if (prevMaxParam !== maxPriceParam) {
+    setPrevMaxParam(maxPriceParam);
     setMaxPriceInput(maxPriceParam);
-  }, [maxPriceParam]);
+  }
 
   // Central filter update helper that updates URL immediately
   const updateFilter = useCallback(
@@ -191,6 +195,7 @@ export function MobileFilterHeader({
               onFilterChange={updateFilter}
               onPresetPrice={handlePresetPrice}
               idPrefix="mobile"
+              routeMode={routeMode}
               onNavigate={() => setSheetOpen(false)}
             />
           </div>

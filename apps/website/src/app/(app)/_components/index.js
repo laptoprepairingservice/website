@@ -13,4 +13,6 @@ export { PromotionalBanner } from "./promotional-banner";
 export { PopularBrands } from "./popular-brands";
 export { CustomerReviews } from "./customer-reviews";
 export { HardwareFAQSection } from "./hardware-faq-section";
+export { BestSellerSection } from "./best-seller-section";
+export { LatestBlogsSection } from "./latest-blogs-section";
 export { ThemeToggle } from "./theme-toggle";

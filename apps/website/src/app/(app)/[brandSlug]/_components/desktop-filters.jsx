@@ -17,6 +17,7 @@ export function DesktopProductFilters({
   brands = [],
   activeBrandSlug = "",
   activeCategorySlug = "",
+  routeMode = "brand",
   className,
 }) {
   const router = useRouter();
@@ -31,15 +32,17 @@ export function DesktopProductFilters({
   // Local state for debounced Min/Max price inputs
   const [minPriceInput, setMinPriceInput] = useState(minPriceParam);
   const [maxPriceInput, setMaxPriceInput] = useState(maxPriceParam);
+  const [prevMinParam, setPrevMinParam] = useState(minPriceParam);
+  const [prevMaxParam, setPrevMaxParam] = useState(maxPriceParam);
 
-  // Synchronize inputs when URL changes from outside (e.g. preset or chip removal)
-  useEffect(() => {
+  if (prevMinParam !== minPriceParam) {
+    setPrevMinParam(minPriceParam);
     setMinPriceInput(minPriceParam);
-  }, [minPriceParam]);
-
-  useEffect(() => {
+  }
+  if (prevMaxParam !== maxPriceParam) {
+    setPrevMaxParam(maxPriceParam);
     setMaxPriceInput(maxPriceParam);
-  }, [maxPriceParam]);
+  }
 
   // Central filter update helper that updates URL immediately
   const updateFilter = useCallback(
@@ -165,6 +168,7 @@ export function DesktopProductFilters({
           onFilterChange={updateFilter}
           onPresetPrice={handlePresetPrice}
           idPrefix="desktop"
+          routeMode={routeMode}
         />
       </div>
     </aside>

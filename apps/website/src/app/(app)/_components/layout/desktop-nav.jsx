@@ -3,9 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronDown, ChevronRight, Laptop, ArrowRight, PackageOpen } from "lucide-react";
-import { buildCategoryTree } from "@/lib/store";
-import { getCategoryProductsAction } from "../../_actions/mobile-nav-actions";
+import { ChevronDown, ChevronRight, Laptop, ArrowRight, PackageOpen, Package } from "lucide-react";
 
 /* ─── Static primary nav links (non-product) ───────────────────────────────── */
 const NAV_LINKS = [
@@ -14,214 +12,161 @@ const NAV_LINKS = [
   { label: "Privacy Policy", href: "/privacy-policy" },
 ];
 
-/* ─── Skeleton row ──────────────────────────────────────────────────────────── */
-function SkeletonRow() {
-  return (
-    <div className="border-border/40 flex items-center gap-2 rounded-lg border p-2">
-      <div className="bg-muted size-6 animate-pulse rounded" />
-      <div className="bg-muted h-3 flex-1 animate-pulse rounded" />
-      <div className="bg-muted h-3 w-10 animate-pulse rounded" />
-    </div>
-  );
-}
-
-/* ─── Products fallback panel (no subcategories) ───────────────────────────── */
-function CategoryProductsPanel({ category, onNavigate }) {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setProducts([]);
-    getCategoryProductsAction(category.slug).then((data) => {
-      if (!cancelled) {
-        setProducts(Array.isArray(data) ? data : []);
-        setLoading(false);
-      }
-    });
-    return () => { cancelled = true; };
-  }, [category.slug]);
-
-  if (loading) {
+/* ─── Available Brands Panel for selected category ─────────────────────────── */
+function CategoryBrandsPanel({ category, onNavigate }) {
+  if (!category) {
     return (
-      <div className="grid grid-cols-2 gap-1.5">
-        {Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)}
+      <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center p-8 text-center text-xs">
+        <PackageOpen className="text-muted-foreground/40 mb-2 size-8" />
+        <span>Select a category on the left to view available brands.</span>
       </div>
     );
   }
 
-  if (products.length === 0) {
-    return (
-      <div className="text-muted-foreground flex flex-col items-center gap-1.5 py-8 text-center text-xs">
-        <PackageOpen className="text-muted-foreground/40 size-7" />
-        <span>No products found in {category.name}</span>
-      </div>
-    );
-  }
+  const brands = Array.isArray(category.brands) ? category.brands : [];
 
   return (
-    <div className="grid grid-cols-2 gap-1.5">
-      {products.map((product) => {
-        const href = product.brandSlug && product.categorySlug && product.slug
-          ? `/${product.brandSlug}/${product.categorySlug}/${product.slug}`
-          : `/${product.slug}`;
-
-        return (
-          <Link
-            key={product.id ?? product.slug}
-            href={href}
-            onClick={onNavigate}
-            className="border-border/60 bg-card/60 hover:bg-muted/60 hover:border-primary/30 group flex items-center gap-2 rounded-lg border p-2 text-xs transition"
-          >
-            <div className="border-border/50 bg-muted/30 relative flex size-7 shrink-0 items-center justify-center overflow-hidden rounded border">
-              {product.image ? (
-                <Image
-                  src={product.image}
-                  alt={product.name}
-                  fill
-                  unoptimized
-                  sizes="28px"
-                  className="object-contain p-0.5"
-                />
-              ) : (
-                <Laptop className="text-muted-foreground/60 size-3.5" />
-              )}
-            </div>
-            <span className="text-foreground group-hover:text-primary min-w-0 flex-1 truncate font-medium transition-colors">
-              {product.name}
-            </span>
-            {product.price != null && (
-              <span className="text-muted-foreground/70 ml-auto shrink-0 font-mono text-[10px]">
-                ₹{Number(product.price).toLocaleString("en-IN")}
-              </span>
-            )}
-          </Link>
-        );
-      })}
-    </div>
-  );
-}
-
-/* ─── Subcategory column ────────────────────────────────────────────────────── */
-function SubcategoryPanel({ category, onNavigate }) {
-  if (!category) return null;
-  const subs = category.subcategories ?? [];
-
-  return (
-    <div className="flex min-w-0 flex-1 flex-col overflow-y-auto p-4">
-      {/* Category header */}
-      <div className="border-border/60 mb-3 flex items-center justify-between border-b pb-2">
-        <div className="flex items-center gap-2">
-          <div className="border-border bg-muted relative flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-md border">
+    <div className="flex min-w-0 flex-1 flex-col overflow-y-auto p-4 sm:p-5">
+      {/* Category header banner */}
+      <div className="border-border/60 bg-muted/20 mb-4 flex items-center justify-between rounded-xl border p-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="border-border bg-background relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border shadow-2xs">
             {category.image ? (
               <Image
                 src={category.image}
                 alt={category.name}
                 fill
                 unoptimized
-                sizes="28px"
-                className="object-contain p-0.5"
+                sizes="36px"
+                className="object-contain p-1"
               />
             ) : (
-              <Laptop className="text-muted-foreground size-3.5" />
+              <Laptop className="text-muted-foreground size-4" />
             )}
           </div>
-          <span className="text-foreground text-sm font-semibold">{category.name}</span>
+          <div className="min-w-0">
+            <h3 className="text-foreground truncate text-sm font-bold tracking-tight">
+              {category.name}
+            </h3>
+            <p className="text-muted-foreground text-[11px]">
+              {brands.length > 0
+                ? `${brands.length} ${brands.length === 1 ? "brand" : "brands"} available • ${category.count || 0} products`
+                : "No products currently available"}
+            </p>
+          </div>
         </div>
-        <Link
-          href={`/${category.slug}`}
-          onClick={onNavigate}
-          className="text-primary hover:text-primary/80 flex items-center gap-0.5 text-xs font-medium transition"
-        >
-          View all <ArrowRight className="size-3" />
-        </Link>
       </div>
 
-      {/* Subcategories or products fallback */}
-      {subs.length > 0 ? (
-        <div className="grid grid-cols-2 gap-1.5">
-          {subs.map((sub) => (
+      {/* Available Brands Label */}
+      <div className="mb-2.5 flex items-center justify-between">
+        <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+          Available Brands
+        </p>
+        <span className="text-muted-foreground text-xs">
+          {brands.length} {brands.length === 1 ? "brand" : "brands"} with products
+        </span>
+      </div>
+
+      {/* Brands Cards Grid or Empty State */}
+      {brands.length > 0 ? (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {brands.map((brand) => (
             <Link
-              key={sub.id ?? sub.slug}
-              href={`/${sub.slug}`}
+              key={brand.id || brand.slug}
+              href={`/${brand.slug}/${category.slug}`}
               onClick={onNavigate}
-              className="border-border/60 bg-card/60 hover:bg-muted/60 hover:border-primary/30 group flex items-center gap-2 rounded-lg border p-2 text-xs transition"
+              className="border-border/70 bg-card/70 hover:bg-muted/60 hover:border-primary/40 group relative flex flex-col justify-between rounded-xl border p-3 transition-all duration-150 hover:shadow-xs"
             >
-              <div className="border-border/50 bg-muted/30 relative flex size-6 shrink-0 items-center justify-center overflow-hidden rounded border">
-                {sub.image ? (
-                  <Image
-                    src={sub.image}
-                    alt={sub.name}
-                    fill
-                    unoptimized
-                    sizes="24px"
-                    className="object-contain p-0.5"
-                  />
-                ) : (
-                  <span className="bg-primary/70 size-1.5 rounded-full" />
-                )}
+              {/* Top row: Brand logo + Arrow */}
+              <div className="flex items-start justify-between gap-2">
+                <div className="border-border/60 bg-background relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border p-1 shadow-2xs transition-transform group-hover:scale-105">
+                  {brand.logo ? (
+                    <Image
+                      src={brand.logo}
+                      alt={brand.name}
+                      fill
+                      unoptimized
+                      sizes="36px"
+                      className="object-contain p-0.5"
+                    />
+                  ) : (
+                    <span className="text-muted-foreground text-xs font-bold">
+                      {brand.name.slice(0, 2).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+
+                <div className="text-muted-foreground/50 group-hover:text-primary flex size-6 items-center justify-center rounded-full transition-colors">
+                  <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+                </div>
               </div>
-              <span className="text-foreground group-hover:text-primary min-w-0 truncate font-medium transition-colors">
-                {sub.name}
-              </span>
-              {sub.count > 0 && (
-                <span className="text-muted-foreground/70 ml-auto shrink-0 font-mono text-[10px]">
-                  {sub.count}
+
+              {/* Brand name & product count */}
+              <div className="mt-2.5 min-w-0">
+                <span className="text-foreground group-hover:text-primary block truncate text-xs font-semibold transition-colors">
+                  {brand.name}
                 </span>
-              )}
+                <span className="text-muted-foreground flex items-center gap-1 text-[11px]">
+                  <Package className="text-primary/70 size-3" />
+                  {brand.productCount} {brand.productCount === 1 ? "Product" : "Products"}
+                </span>
+              </div>
             </Link>
           ))}
         </div>
       ) : (
-        /* No subcategories → show actual products */
-        <>
-          <p className="text-muted-foreground mb-2 text-[10px] font-semibold uppercase tracking-wider">
-            Products
+        /* Empty State */
+        <div className="border-border/80 flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed p-6 text-center">
+          <PackageOpen className="text-muted-foreground/40 mb-2 size-8" />
+          <p className="text-foreground text-xs font-semibold">No brands available</p>
+          <p className="text-muted-foreground mt-0.5 max-w-xs text-[11px]">
+            There are currently no active products in {category.name}. Check back soon as we restock
+            items!
           </p>
-          <CategoryProductsPanel category={category} onNavigate={onNavigate} />
-        </>
+        </div>
       )}
     </div>
   );
 }
 
-
 /* ─── Products mega-menu ────────────────────────────────────────────────────── */
-function ProductsMegaMenu({ categories, onNavigate }) {
-  const tree = buildCategoryTree(categories);
-  const [activeId, setActiveId] = useState(tree[0]?.id ?? null);
-  const activeCategory = tree.find((c) => String(c.id) === String(activeId)) ?? tree[0] ?? null;
+function ProductsMegaMenu({ categories = [], onNavigate }) {
+  const [activeId, setActiveId] = useState(categories[0]?.id ?? null);
+  const activeCategory =
+    categories.find((c) => String(c.id) === String(activeId)) ?? categories[0] ?? null;
 
-  if (!tree.length) return null;
+  if (!categories || !categories.length) return null;
 
   return (
-    <div className="border-border bg-popover text-popover-foreground flex h-105 w-170 overflow-hidden rounded-xl border shadow-2xl">
+    <div className="border-border bg-popover text-popover-foreground flex h-110 w-[720px] max-w-[90vw] overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-md">
       {/* Left: category list */}
-      <div className="border-border bg-muted/30 w-44 shrink-0 overflow-y-auto border-r">
-        <p className="text-muted-foreground px-3 pt-3 pb-1 text-[10px] font-semibold tracking-wider uppercase">
-          Categories
-        </p>
-        <div className="space-y-0.5 p-1.5">
-          {tree.map((cat) => {
-            const isActive = String(cat.id) === String(activeId ?? tree[0]?.id);
+      <div className="border-border bg-muted/20 w-52 shrink-0 overflow-y-auto border-r p-2 sm:w-56">
+        <div className="flex items-center justify-between px-2 pt-1.5 pb-2">
+          <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+            Categories
+          </span>
+          <span className="text-muted-foreground text-xs">{categories.length}</span>
+        </div>
+        <div className="space-y-1">
+          {categories.map((cat) => {
+            const isActive = String(cat.id) === String(activeCategory?.id);
             return (
               <button
                 key={cat.id ?? cat.slug}
                 type="button"
                 onMouseEnter={() => setActiveId(cat.id)}
                 onClick={() => setActiveId(cat.id)}
-                className={`group flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm transition-all ${
+                className={`group flex w-full cursor-pointer items-center gap-2 rounded-xl px-2.5 py-2 text-left text-xs transition-all ${
                   isActive
-                    ? "bg-background text-foreground font-semibold shadow-xs"
+                    ? "bg-background text-foreground border-border/80 border font-semibold shadow-xs"
                     : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
                 }`}
               >
                 <div
-                  className={`relative flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-md border transition ${
+                  className={`relative flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-lg border transition ${
                     isActive
-                      ? "border-primary/40 bg-background shadow-xs"
-                      : "border-border/60 bg-background/60"
+                      ? "border-primary/50 bg-background ring-primary/20 shadow-xs ring-1"
+                      : "border-border/60 bg-background/70"
                   }`}
                 >
                   {cat.image ? (
@@ -240,6 +185,9 @@ function ProductsMegaMenu({ categories, onNavigate }) {
                   )}
                 </div>
                 <span className="min-w-0 flex-1 truncate leading-tight">{cat.name}</span>
+                {cat.count > 0 && (
+                  <span className="text-muted-foreground/70 font-mono text-xs">{cat.count}</span>
+                )}
                 {isActive && <ChevronRight className="text-primary size-3 shrink-0" />}
               </button>
             );
@@ -247,8 +195,8 @@ function ProductsMegaMenu({ categories, onNavigate }) {
         </div>
       </div>
 
-      {/* Right: subcategory panel */}
-      <SubcategoryPanel category={activeCategory} onNavigate={onNavigate} />
+      {/* Right: Available Brands panel for active category */}
+      <CategoryBrandsPanel category={activeCategory} onNavigate={onNavigate} />
     </div>
   );
 }
