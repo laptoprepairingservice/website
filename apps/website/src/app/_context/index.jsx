@@ -468,10 +468,12 @@ export function AppProvider({
       refreshWishlist,
 
       // User
+      setUser,
       refreshUser,
     }),
     [
       user,
+      setUser,
       isAuthenticated,
       userCart,
       cartItems,

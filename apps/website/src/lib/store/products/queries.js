@@ -213,12 +213,33 @@ export async function fetchProductBySlug(slug) {
       .eq("slug", slug)
       .maybeSingle();
 
-    if (error) {
-      console.error("Error fetching product by slug:", error);
+    if (error || !data) {
+      if (error) console.error("Error fetching product by slug:", error);
       return null;
     }
 
-    return mapSupabaseProduct(data);
+    // Fetch approved reviews for this product
+    const { data: reviewsData } = await supabase
+      .from("product_reviews")
+      .select("id, public_id, reviewer_name, rating, title, comment, is_verified_purchase, created_at")
+      .eq("product_id", data.id)
+      .eq("status", "approved")
+      .order("created_at", { ascending: false });
+
+    const product = mapSupabaseProduct(data);
+    if (!product) return null;
+
+    const reviews = reviewsData || [];
+    if (reviews.length > 0) {
+      const sum = reviews.reduce((acc, r) => acc + (Number(r.rating) || 5), 0);
+      product.rating = Number((sum / reviews.length).toFixed(1));
+      product.reviewCount = reviews.length;
+      product.reviews = reviews;
+    } else {
+      product.reviews = [];
+    }
+
+    return product;
   } catch (err) {
     console.error("Failed to fetch product by slug:", err);
     return null;

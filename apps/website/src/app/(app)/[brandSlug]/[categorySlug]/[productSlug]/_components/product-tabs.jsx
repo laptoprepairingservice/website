@@ -277,9 +277,55 @@ export function ProductTabs({ product }) {
               </p>
             </div>
           </div>
-          <p className="text-muted-foreground text-sm">
-            Verified customer reviews and feedback will be displayed here.
-          </p>
+
+          {Array.isArray(product.reviews) && product.reviews.length > 0 ? (
+            <div className="space-y-4 divide-y divide-border/60">
+              {product.reviews.map((rev) => (
+                <div key={rev.id || rev.public_id} className="pt-4 first:pt-0 space-y-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-foreground">
+                        {rev.reviewer_name}
+                      </span>
+                      {rev.is_verified_purchase && (
+                        <Badge
+                          variant="outline"
+                          className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[10px] px-1.5 py-0 gap-1 font-medium"
+                        >
+                          <ShieldCheck className="size-2.5" />
+                          Verified Buyer
+                        </Badge>
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {rev.created_at ? new Date(rev.created_at).toLocaleDateString("en-IN", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      }) : ""}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <StarRating rating={rev.rating || 5} showCount={false} size="sm" />
+                    {rev.title && (
+                      <span className="text-xs font-semibold text-foreground ml-1">
+                        {rev.title}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
+                    {rev.comment}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              Verified customer reviews and feedback will be displayed here.
+            </p>
+          )}
         </div>
       </AccordionSection>
     </div>

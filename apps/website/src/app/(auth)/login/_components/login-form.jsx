@@ -2,15 +2,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@ui/shadcn/components/button";
 import { FormField } from "@ui/shadcn/components/form-field";
 import { Input } from "@ui/shadcn/components/input";
 import { Checkbox } from "@ui/shadcn/components/form-controls";
+import { useAppContext } from "@/app/_context";
 import { loginAction } from "./login-action";
 
 export default function LoginForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const { setUser, refreshUser } = useAppContext();
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const verified = searchParams.get("verified") === "1";
@@ -29,7 +32,14 @@ export default function LoginForm() {
     }
 
     if (result?.success) {
-      window.location.href = result.redirectTo || nextPath || "/";
+      if (result.user) {
+        setUser(result.user);
+      } else {
+        await refreshUser();
+      }
+      const target = result.redirectTo || nextPath || "/";
+      router.push(target);
+      router.refresh();
     }
   };
 

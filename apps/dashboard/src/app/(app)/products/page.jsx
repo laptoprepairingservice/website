@@ -6,6 +6,7 @@ import {
   Folder,
   LayoutGrid,
   List as ListIcon,
+  MessageSquare,
   Package,
   Pencil,
   Plus,
@@ -202,6 +203,17 @@ export default function ProductsPage() {
         header: "Actions",
         cell: ({ row }) => (
           <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+            <Button
+              asChild
+              variant="ghost"
+              size="icon-sm"
+              className="text-muted-foreground hover:text-foreground size-8 cursor-pointer"
+              title="Manage reviews"
+            >
+              <Link href={`/products/${row.original.public_id}/reviews`}>
+                <MessageSquare className="size-4" />
+              </Link>
+            </Button>
             <Button
               asChild
               variant="ghost"
@@ -410,7 +422,17 @@ export default function ProductsPage() {
                       </div>
 
                       {/* Row Action Buttons */}
-                      <div className="flex items-center gap-1 pt-1">
+                      <div className="flex items-center gap-1.5 pt-1">
+                        <Button
+                          asChild
+                          variant="outline"
+                          size="sm"
+                          className="h-8 cursor-pointer px-2.5 text-xs font-medium"
+                        >
+                          <Link href={`/products/${product.public_id}/reviews`}>
+                            <MessageSquare className="mr-1 size-3.5" /> Reviews
+                          </Link>
+                        </Button>
                         <Button
                           asChild
                           variant="outline"

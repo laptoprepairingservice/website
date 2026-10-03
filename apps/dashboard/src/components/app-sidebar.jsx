@@ -46,6 +46,7 @@ export function AppSidebar({ ...props }) {
             pathname.startsWith("/brands"),
           items: [
             { title: "Products", url: "/products" },
+            { title: "Reviews", url: "/products/reviews" },
             { title: "Categories", url: "/categories" },
             { title: "Brands", url: "/brands" },
           ],

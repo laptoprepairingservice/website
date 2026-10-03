@@ -1,10 +1,11 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { AuthError } from "next-auth";
 import { z } from "zod";
 import { signIn } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { getSafeNextPath } from "@/lib/user";
+import { getSafeNextPath, mapAuthUser } from "@/lib/user";
 
 const loginSchema = z.object({
   email: z.string().trim().email("Enter a valid email"),
@@ -22,7 +23,7 @@ export async function loginAction(formData) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email: parsed.data.email,
     password: parsed.data.password,
   });
@@ -42,8 +43,6 @@ export async function loginAction(formData) {
       password: parsed.data.password,
       redirect: false,
     });
-
-    return { success: true, redirectTo: nextPath };
   } catch (signInError) {
     if (signInError instanceof AuthError) {
       const cause = signInError.cause?.err?.message || signInError.cause?.message || "";
@@ -52,9 +51,16 @@ export async function loginAction(formData) {
       }
       return { error: "Invalid email or password." };
     }
-    if (signInError?.digest?.startsWith?.("NEXT_REDIRECT")) {
-      return { success: true, redirectTo: nextPath };
+    if (!signInError?.digest?.startsWith?.("NEXT_REDIRECT")) {
+      console.error("signIn error:", signInError);
     }
-    throw signInError;
   }
+
+  revalidatePath("/", "layout");
+
+  return {
+    success: true,
+    redirectTo: nextPath,
+    user: data?.user ? mapAuthUser(data.user) : null,
+  };
 }

@@ -1,6 +1,7 @@
 "use server";
 
 import { AuthError } from "next-auth";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { signIn } from "@/lib/auth";
@@ -82,6 +83,7 @@ export async function signupAction(formData) {
   }
 
   try {
+    revalidatePath("/", "layout");
     await signIn("credentials", {
       email: parsed.data.email,
       password: parsed.data.password,

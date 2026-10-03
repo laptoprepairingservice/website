@@ -12,8 +12,6 @@ export default async function EditProductPage({ params }) {
     getProductForEditAction(productIdentifier),
   ]);
 
-  console.log(productResult);
-
   if (productResult.error || !productResult.product) {
     notFound();
   }
