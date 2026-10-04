@@ -152,7 +152,7 @@ export default function BrandsPage() {
         key={refreshToken}
         title="Brands"
         endpoint="brands"
-        select="id, name, slug, logo_path, website_url, description, sort_order, is_active, created_at"
+        select="id, name, slug, logo_path, website_url, description, sort_order, is_active, meta_title, meta_description, created_at"
         columns={columns}
         searchPlaceholder="Search brands"
         meta={{ search: "name" }}

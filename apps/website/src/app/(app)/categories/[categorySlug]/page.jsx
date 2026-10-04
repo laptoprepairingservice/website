@@ -1,11 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import {
-  fetchCategoryBySlug,
-  fetchStoreBrands,
-  fetchStoreCategoriesWithCount,
-} from "@/lib/store";
+import { fetchCategoryBySlug, fetchStoreBrands, fetchStoreCategoriesWithCount } from "@/lib/store";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -29,10 +25,8 @@ export async function generateMetadata({ params }) {
   if (!category) return { title: "Collection Not Found" };
 
   return {
-    title: `${category.name} Collection | Laptop Hardware & Components`,
-    description:
-      category.description ||
-      `Browse genuine OEM and replacement ${category.name} for all major laptop brands.`,
+    title: category?.metaTitle || "",
+    description: category?.metaDescription || "",
   };
 }
 
@@ -86,7 +80,7 @@ export default async function CategoryCollectionPage({ params, searchParams }) {
             {categoryData.name} Collection
           </h1>
           {categoryData.description && (
-            <p className="text-muted-foreground mt-1 text-xs sm:text-sm line-clamp-1">
+            <p className="text-muted-foreground mt-1 line-clamp-1 text-xs sm:text-sm">
               {categoryData.description}
             </p>
           )}

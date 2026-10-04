@@ -223,6 +223,27 @@ export function BrandSheetForm({ open, onOpenChange, brand, onSuccess }) {
           />
         </div>
 
+        <div className="space-y-2">
+          <Label htmlFor="brand-meta-title">Meta title</Label>
+          <Input
+            id="brand-meta-title"
+            className={inputClassName}
+            placeholder="Optional SEO title"
+            {...register("meta_title")}
+          />
+          <FieldError message={errors.meta_title?.message} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="brand-meta-description">Meta description</Label>
+          <Textarea
+            id="brand-meta-description"
+            placeholder="Optional SEO description"
+            {...register("meta_description")}
+          />
+          <FieldError message={errors.meta_description?.message} />
+        </div>
+
         <Controller
           name="is_active"
           control={control}

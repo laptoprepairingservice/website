@@ -18,6 +18,8 @@ export const brandFormSchema = z.object({
   description: z.string().trim().optional(),
   sort_order: z.coerce.number().int().default(0),
   is_active: z.boolean().default(true),
+  meta_title: z.string().trim().optional(),
+  meta_description: z.string().trim().optional(),
 });
 
 export const updateBrandFormSchema = brandFormSchema.extend({
@@ -33,6 +35,8 @@ export function getBrandFormDefaults(overrides = {}) {
     description: "",
     sort_order: 0,
     is_active: true,
+    meta_title: "",
+    meta_description: "",
     ...overrides,
   };
 }
@@ -47,5 +51,7 @@ export function toBrandFormValues(brand) {
     description: brand.description ?? "",
     sort_order: brand.sort_order ?? 0,
     is_active: brand.is_active ?? true,
+    meta_title: brand.meta_title ?? "",
+    meta_description: brand.meta_description ?? "",
   });
 }

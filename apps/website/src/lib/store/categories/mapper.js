@@ -12,6 +12,8 @@ export function mapSupabaseCategory(category, count = 0) {
     name: category.name,
     slug: category.slug,
     description: category.description || "",
+    metaTitle: category.meta_title || "",
+    metaDescription: category.meta_description || "",
     image: getProductAssetUrl(category.image_path),
     count: count ?? 0,
   };

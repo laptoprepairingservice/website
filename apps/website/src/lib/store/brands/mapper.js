@@ -10,6 +10,9 @@ export function mapSupabaseBrand(brand) {
     publicId: brand.public_id,
     name: brand.name,
     slug: brand.slug,
+    description: brand.description || "",
+    metaTitle: brand.meta_title || "",
+    metaDescription: brand.meta_description || "",
     logo: getProductAssetUrl(brand.logo_path),
   };
 }

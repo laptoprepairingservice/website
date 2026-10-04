@@ -25,6 +25,8 @@ function toBrandPayload(values) {
     description: emptyToNull(values.description?.trim()),
     sort_order: values.sort_order ?? 0,
     is_active: values.is_active,
+    meta_title: emptyToNull(values.meta_title?.trim()),
+    meta_description: emptyToNull(values.meta_description?.trim()),
   };
 }
 

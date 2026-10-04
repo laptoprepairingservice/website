@@ -7,15 +7,7 @@
  */
 export function getProductUrl(product) {
   if (!product) return "/";
-  const brandSlug = product.brandSlug || product.brands?.slug;
-  const categorySlug = product.category || product.categories?.slug;
-  if (brandSlug && categorySlug && product.slug) {
-    return `/${brandSlug}/${categorySlug}/${product.slug}`;
-  }
-  if (categorySlug && product.slug) {
-    return `/${categorySlug}/${product.slug}`;
-  }
-  return `/${product.slug || ""}`;
+  return `/collection/${product.slug || ""}`;
 }
 
 /**

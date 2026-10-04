@@ -34,7 +34,7 @@ export async function fetchBrandBySlug(slug) {
     const supabase = getPublicSupabaseClient();
     const { data: brand, error } = await supabase
       .from("brands")
-      .select("id, public_id, name, slug, logo_path, description, is_active")
+      .select("id, public_id, name, slug, logo_path, description, meta_title, meta_description, is_active")
       .eq("slug", slug.toLowerCase())
       .eq("is_active", true)
       .maybeSingle();

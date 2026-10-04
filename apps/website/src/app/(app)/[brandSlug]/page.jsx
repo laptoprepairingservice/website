@@ -1,8 +1,4 @@
-import {
-  fetchBrandBySlug,
-  fetchStoreBrands,
-  fetchStoreCategoriesWithCount,
-} from "@/lib/store";
+import { fetchBrandBySlug, fetchStoreBrands, fetchStoreCategoriesWithCount } from "@/lib/store";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -28,9 +24,8 @@ export async function generateMetadata({ params }) {
   if (!brand) return { title: "Brand Not Found" };
 
   return {
-    title: `${brand.name} Products | Hardware & PC Components`,
-    description:
-      brand.description || `Browse ${brand.name} laptops, components, and hardware.`,
+    title: brand.metaTitle || "",
+    description: brand.metaDescription,
   };
 }
 
@@ -77,9 +72,7 @@ export default async function BrandPage({ params, searchParams }) {
             {brandData.name}
           </h1>
           {brandData.description && (
-            <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
-              {brandData.description}
-            </p>
+            <p className="text-muted-foreground mt-1 text-xs sm:text-sm">{brandData.description}</p>
           )}
         </div>
 
