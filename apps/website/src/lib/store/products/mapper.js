@@ -49,7 +49,13 @@ export function mapSupabaseProduct(product) {
     originalPrice,
     rating: 5,
     reviewCount: 0,
-    inStock: defaultVariant?.is_active ?? true,
+    inStock: defaultVariant
+      ? Boolean(
+          defaultVariant.is_active &&
+            !defaultVariant.is_out_of_stock &&
+            !defaultVariant.options?.force_out_of_stock
+        )
+      : true,
     stockCount: 10,
     isNew: product.created_at
       ? Date.now() - new Date(product.created_at).getTime() < 30 * 24 * 60 * 60 * 1000

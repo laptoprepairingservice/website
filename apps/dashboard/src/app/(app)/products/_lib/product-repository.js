@@ -50,7 +50,15 @@ export async function fetchProductWithDefaultVariant(supabase, identifier) {
       cost_price,
       weight_grams,
       is_default,
-      is_active
+      is_active,
+      is_out_of_stock,
+      options,
+      inventory (
+        quantity,
+        reserved_quantity,
+        available_quantity,
+        low_stock_threshold
+      )
     ),
     product_images (
       id,
@@ -109,7 +117,15 @@ export async function fetchProductWithDefaultVariant(supabase, identifier) {
         cost_price,
         weight_grams,
         is_default,
-        is_active
+        is_active,
+        is_out_of_stock,
+        options,
+        inventory (
+          quantity,
+          reserved_quantity,
+          available_quantity,
+          low_stock_threshold
+        )
       ),
       product_images (
         id,

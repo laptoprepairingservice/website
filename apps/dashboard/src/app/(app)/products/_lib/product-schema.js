@@ -32,6 +32,9 @@ export const defaultVariantSchema = z.object({
   cost_price: optionalNumber,
   weight_grams: optionalPositiveInt,
   is_active: z.boolean().default(true),
+  stock_quantity: optionalPositiveInt,
+  low_stock_threshold: optionalPositiveInt,
+  is_out_of_stock: z.boolean().default(false),
 });
 
 export const productAssetSchema = z.object({
@@ -134,6 +137,9 @@ export function getProductFormDefaults(overrides = {}) {
       cost_price: "",
       weight_grams: "",
       is_active: true,
+      stock_quantity: 0,
+      low_stock_threshold: 5,
+      is_out_of_stock: false,
     },
     assets: [],
     ...overrides,

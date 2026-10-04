@@ -46,7 +46,9 @@ export function toVariantInsertPayload(productId, values) {
     sku: variant.sku.trim(),
     barcode: emptyToNull(variant.barcode?.trim()),
     variant_name: emptyToNull(variant.variant_name?.trim()),
-    options: {},
+    options: {
+      ...(variant.is_out_of_stock ? { force_out_of_stock: true } : {}),
+    },
     condition: variant.condition,
     price: variant.price,
     compare_at_price: variant.compare_at_price ?? null,
@@ -54,6 +56,7 @@ export function toVariantInsertPayload(productId, values) {
     weight_grams: variant.weight_grams ?? null,
     is_default: true,
     is_active: variant.is_active,
+    is_out_of_stock: Boolean(variant.is_out_of_stock),
     sort_order: 0,
   };
 }
@@ -69,12 +72,16 @@ export function toVariantUpdatePayload(values) {
     sku: variant.sku.trim(),
     barcode: emptyToNull(variant.barcode?.trim()),
     variant_name: emptyToNull(variant.variant_name?.trim()),
+    options: {
+      ...(variant.is_out_of_stock ? { force_out_of_stock: true } : {}),
+    },
     condition: variant.condition,
     price: variant.price,
     compare_at_price: variant.compare_at_price ?? null,
     cost_price: variant.cost_price ?? null,
     weight_grams: variant.weight_grams ?? null,
     is_active: variant.is_active,
+    is_out_of_stock: Boolean(variant.is_out_of_stock),
   };
 }
 
@@ -101,6 +108,10 @@ export function toProductFormValues(product, defaultVariant) {
   }));
 
   const variant = defaultVariant || {};
+  const inv = Array.isArray(variant.inventory) ? variant.inventory[0] : variant.inventory;
+  const stockQuantity = inv?.quantity ?? 0;
+  const lowStockThreshold = inv?.low_stock_threshold ?? 5;
+  const isOutOfStock = Boolean(variant.is_out_of_stock || variant.options?.force_out_of_stock);
 
   return getProductFormDefaults({
     id: product.id,
@@ -136,6 +147,9 @@ export function toProductFormValues(product, defaultVariant) {
       cost_price: variant.cost_price ?? "",
       weight_grams: variant.weight_grams ?? "",
       is_active: variant.is_active ?? true,
+      stock_quantity: stockQuantity,
+      low_stock_threshold: lowStockThreshold,
+      is_out_of_stock: isOutOfStock,
     },
     assets,
   });

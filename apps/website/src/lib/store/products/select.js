@@ -26,6 +26,7 @@ export const PRODUCT_DETAIL_SELECT = `
     variant_name,
     is_default,
     is_active,
+    is_out_of_stock,
     options
   ),
   product_images (
@@ -55,7 +56,8 @@ export const PRODUCT_LIVE_SEARCH_SELECT = `
     price,
     compare_at_price,
     is_default,
-    is_active
+    is_active,
+    is_out_of_stock
   ),
   product_images (
     id,
@@ -88,7 +90,8 @@ export const PRODUCT_CATEGORY_SELECT = `
     compare_at_price,
     variant_name,
     is_default,
-    is_active
+    is_active,
+    is_out_of_stock
   ),
   product_images (
     id,

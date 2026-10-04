@@ -41,13 +41,32 @@ export async function createProductAction(values) {
   }
 
   const variantPayload = toVariantInsertPayload(product.id, parsed.data);
-  const { error: variantError } = await insertDefaultVariant(supabase, variantPayload);
+  const { data: insertedVariant, error: variantError } = await insertDefaultVariant(supabase, variantPayload);
 
-  if (variantError) {
+  if (variantError || !insertedVariant) {
     await deleteProductById(supabase, product.id);
     return {
       error: formatSupabaseError(variantError, "Product was created but the default variant failed."),
     };
+  }
+
+  // Handle initial inventory if quantity is specified
+  const initialStock = parsed.data.default_variant.stock_quantity;
+  const lowThreshold = parsed.data.default_variant.low_stock_threshold;
+  if (initialStock != null && Number(initialStock) > 0) {
+    await supabase.from("inventory_movements").insert({
+      variant_id: insertedVariant.id,
+      quantity_change: Number(initialStock),
+      movement_type: "restock",
+      reference_type: "manual",
+      note: "Initial stock on product creation",
+    });
+  }
+  if (lowThreshold != null) {
+    await supabase
+      .from("inventory")
+      .update({ low_stock_threshold: Number(lowThreshold) })
+      .eq("variant_id", insertedVariant.id);
   }
 
   if (Array.isArray(parsed.data.assets) && parsed.data.assets.length > 0) {

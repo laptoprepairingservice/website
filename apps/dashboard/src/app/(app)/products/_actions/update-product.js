@@ -64,6 +64,40 @@ export async function updateProductAction(values) {
     };
   }
 
+  // Synchronize inventory levels and alert thresholds
+  const variantId = existing.defaultVariant.id;
+  const newStockQty = parsed.data.default_variant.stock_quantity;
+  const newLowThreshold = parsed.data.default_variant.low_stock_threshold;
+
+  if (variantId && newStockQty != null) {
+    const { data: inv } = await supabase
+      .from("inventory")
+      .select("quantity, low_stock_threshold")
+      .eq("variant_id", variantId)
+      .maybeSingle();
+
+    const currentQty = inv?.quantity ?? 0;
+    const targetQty = Number(newStockQty);
+    const diff = targetQty - currentQty;
+
+    if (diff !== 0) {
+      await supabase.from("inventory_movements").insert({
+        variant_id: variantId,
+        quantity_change: diff,
+        movement_type: diff > 0 ? "restock" : "adjustment",
+        reference_type: "manual",
+        note: "Stock quantity adjusted via product form",
+      });
+    }
+
+    if (newLowThreshold != null && Number(newLowThreshold) !== inv?.low_stock_threshold) {
+      await supabase
+        .from("inventory")
+        .update({ low_stock_threshold: Number(newLowThreshold) })
+        .eq("variant_id", variantId);
+    }
+  }
+
   // Synchronize product assets (banner and gallery images)
   const syncError = await syncProductImages(supabase, existing.product.id, assets);
   if (syncError) {
