@@ -95,10 +95,13 @@ export function CheckoutOrderSummary({
   cartItems = [],
   cartSubtotal = 0,
   deliveryMethod = "standard",
+  shippingFee = null,
+  shippingCourierName = "",
 }) {
   const expressFee = 199;
   const standardShipping = cartSubtotal >= STORE.freeShippingThreshold ? 0 : STORE.standardShipping;
-  const shipping = deliveryMethod === "express" ? expressFee : standardShipping;
+  const defaultShipping = deliveryMethod === "express" ? expressFee : standardShipping;
+  const shipping = shippingFee !== null ? shippingFee : defaultShipping;
   const total = cartSubtotal + shipping;
 
   return (
@@ -154,7 +157,12 @@ export function CheckoutOrderSummary({
           <span className="text-foreground">{formatPrice(cartSubtotal)}</span>
         </div>
         <div className="text-muted-foreground flex justify-between">
-          <span>Shipping{deliveryMethod === "express" ? " (Express)" : ""}</span>
+          <div>
+            <span>Shipping{deliveryMethod === "express" ? " (Express Air)" : " (Standard)"}</span>
+            {shippingCourierName && (
+              <span className="text-[11px] text-muted-foreground/80 block">via {shippingCourierName}</span>
+            )}
+          </div>
           <span className={shipping === 0 ? "font-medium text-emerald-600" : "text-foreground"}>
             {shipping === 0 ? "Free" : formatPrice(shipping)}
           </span>

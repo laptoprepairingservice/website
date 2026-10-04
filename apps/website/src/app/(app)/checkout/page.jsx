@@ -70,10 +70,91 @@ export default function CheckoutPage() {
   const [submitted, setSubmitted] = useState(false);
   const [placing, setPlacing] = useState(false);
 
-  // Computed totals — no COD fee
-  const standardShipping = cartSubtotal >= STORE.freeShippingThreshold ? 0 : STORE.standardShipping;
-  const shipping = deliveryMethod === "express" ? 199 : standardShipping;
+  // Shiprocket live shipping state
+  const [shippingData, setShippingData] = useState(null);
+  const [checkingShipping, setCheckingShipping] = useState(false);
+  const [shippingError, setShippingError] = useState(null);
+
+  const deliveryPincode = selectedAddress?.postal_code || selectedAddress?.pincode;
+
+  // Real-time Shiprocket serviceability & shipping rate check
+  useEffect(() => {
+    const cleanPincode = String(deliveryPincode || "").trim();
+    if (!cleanPincode || !/^\d{6}$/.test(cleanPincode)) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    async function checkRates() {
+      setCheckingShipping(true);
+      setShippingError(null);
+
+      try {
+        const res = await fetch("/api/checkout/shipping", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            deliveryPostcode: cleanPincode,
+            cartItems,
+            cartSubtotal,
+          }),
+        });
+
+        const data = await res.json();
+        if (isCancelled) return;
+
+        if (data?.success && data?.serviceable) {
+          setShippingData(data);
+          setShippingError(null);
+        } else {
+          setShippingData(null);
+          setShippingError(
+            data?.reason || data?.message || "Delivery is unavailable to this PIN code."
+          );
+        }
+      } catch (err) {
+        if (isCancelled) return;
+        console.error("Shipping serviceability check failed:", err);
+        setShippingError("Unable to calculate shipping rates at this time.");
+      } finally {
+        if (!isCancelled) {
+          setCheckingShipping(false);
+        }
+      }
+    }
+
+    checkRates();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [deliveryPincode, cartItems, cartSubtotal]);
+
+  const cleanPincode = String(deliveryPincode || "").trim();
+  const isPincodeValid = /^\d{6}$/.test(cleanPincode);
+  const effectiveShippingData = isPincodeValid ? shippingData : null;
+  const effectiveShippingError = isPincodeValid ? shippingError : null;
+
+  // Computed shipping fees based on live Shiprocket rates & store free-shipping policy
+  const activeCourier =
+    deliveryMethod === "express"
+      ? effectiveShippingData?.fastestOption
+      : effectiveShippingData?.cheapestOption;
+
+  const standardRate = effectiveShippingData?.standardRate ?? STORE.standardShipping;
+  const expressRate = effectiveShippingData?.expressRate ?? 199;
+
+  const standardShipping =
+    cartSubtotal >= STORE.freeShippingThreshold ? 0 : standardRate;
+  const shipping = deliveryMethod === "express" ? expressRate : standardShipping;
   const finalTotal = cartSubtotal + shipping;
+
+  const isDeliveryDisabled =
+    !selectedAddress ||
+    checkingShipping ||
+    Boolean(shippingError) ||
+    (shippingData && !shippingData.serviceable);
 
   // ── Razorpay flow ─────────────────────────────────────────────────────────
 
@@ -131,6 +212,15 @@ export default function CheckoutPage() {
                 cartItems,
                 shipping,
                 subtotal: cartSubtotal,
+                courier: activeCourier
+                  ? {
+                      courierCompanyId: activeCourier.courierCompanyId,
+                      courierName: activeCourier.courierName,
+                      etd: activeCourier.etd,
+                      rate: activeCourier.rate,
+                    }
+                  : null,
+                shippingWeightKg: shippingData?.packageDetails?.totalWeightKg || null,
               },
             }),
           });
@@ -158,6 +248,18 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async () => {
     if (!selectedAddress) {
       toast.error("Please select or add a delivery address.");
+      return;
+    }
+
+    if (checkingShipping) {
+      toast.error("Please wait while we calculate shipping rates for your address.");
+      return;
+    }
+
+    if (effectiveShippingError || (effectiveShippingData && !effectiveShippingData.serviceable)) {
+      toast.error(
+        effectiveShippingError || "Delivery is unavailable to this address. Please choose another address."
+      );
       return;
     }
 
@@ -247,6 +349,10 @@ export default function CheckoutPage() {
               deliveryMethod={deliveryMethod}
               onDeliveryChange={setDeliveryMethod}
               cartSubtotal={cartSubtotal}
+              shippingData={effectiveShippingData}
+              checkingShipping={checkingShipping}
+              shippingError={effectiveShippingError}
+              selectedAddress={selectedAddress}
             />
           </SectionCard>
         </div>
@@ -257,6 +363,8 @@ export default function CheckoutPage() {
             cartItems={cartItems}
             cartSubtotal={cartSubtotal}
             deliveryMethod={deliveryMethod}
+            shippingFee={shipping}
+            shippingCourierName={activeCourier?.courierName}
           />
 
           {/* Pay button */}
@@ -264,10 +372,19 @@ export default function CheckoutPage() {
             size="lg"
             className="w-full gap-2 text-base font-semibold"
             onClick={handlePlaceOrder}
-            disabled={placing || !selectedAddress}
+            disabled={
+              placing ||
+              !selectedAddress ||
+              checkingShipping ||
+              Boolean(effectiveShippingError || (effectiveShippingData && !effectiveShippingData.serviceable))
+            }
           >
             <Lock className="size-4" />
-            {placing ? "Processing..." : `Pay ${formatPrice(finalTotal)}`}
+            {placing
+              ? "Processing..."
+              : checkingShipping
+              ? "Calculating shipping..."
+              : `Pay ${formatPrice(finalTotal)}`}
           </Button>
 
           <p className="text-center text-xs text-muted-foreground">
