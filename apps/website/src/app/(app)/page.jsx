@@ -1,4 +1,3 @@
-import { OrganizationJsonLd } from "@/app/(app)/[brandSlug]/[categorySlug]/[productSlug]/_components/structured-data";
 import { fetchStoreHomeData } from "@/lib/store";
 import {
   HardwareFAQSection,
@@ -9,6 +8,8 @@ import {
   PopularBrands,
   WhyChooseUs,
 } from "./_components";
+import { OrganizationJsonLd } from "./collection/[productSlug]/_components/structured-data";
+import Image from "next/image";
 
 export const metadata = {
   title: "Premium Computer Hardware Store in Ahmedabad | Ranuja Enterprise",
@@ -39,6 +40,16 @@ export default async function HomePage() {
 
       {/* 3. Bento Category Grid */}
       <FeaturedCategories categories={categories} brands={brands} />
+
+      <div className="relative">
+        <Image
+          src="/banners/accessories-collection.png"
+          alt="Accessories collection"
+          width={1200}
+          height={600}
+          className="h-auto w-full object-contain"
+        />
+      </div>
 
       {/* 4. Core Value & Trust Propositions */}
       <WhyChooseUs />
